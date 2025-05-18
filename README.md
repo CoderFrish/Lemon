@@ -1,5 +1,5 @@
 <div align="center">
-<h1> Mint </h1>
+<h1> LemonMint </h1>
 
 一个还未完成的Mint服务端核心，目前开发者正在积极开发中......
 
