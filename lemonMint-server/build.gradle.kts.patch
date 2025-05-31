@@ -1,5 +1,46 @@
 --- a/mint-server/build.gradle.kts
 +++ b/mint-server/build.gradle.kts
+@@ -53,7 +_,22 @@
+         }
+     }
+ 
+-    activeFork = mint
++    val lemonMint = forks.register("lemonMint") {
++        forks = mint
++        upstream.patchRepo("paperServer") {
++            upstreamRepo = mint.patchedRepo("paperServer")
++            patchesDir = rootDirectory.dir("lemonMint-server/paper-patches")
++            outputDir = rootDirectory.dir("paper-server")
++        }
++        upstream.patchDir("mintServer") {
++            upstreamPath = "mint-server"
++            excludes = setOf("src/minecraft", "paper-patches", "minecraft-patches", "build.gradle.kts", "build.gradle.kts.patch")
++            patchesDir = rootDirectory.dir("lemonMint-server/mint-patches")
++            outputDir = rootDirectory.dir("mint-server")
++        }
++    }
++
++    activeFork = lemonMint
+ 
+     spigot {
+         buildDataRef = "702e1a0a5072b2c4082371d5228cb30525687efc"
+@@ -141,12 +_,16 @@
+         resources { srcDir("../paper-server/src/main/resources") }
+         java { srcDir("../folia-server/src/main/java") }
+         resources { srcDir("../folia-server/src/main/resources") }
++        java { srcDir("../mint-server/src/main/java") }
++        resources { srcDir("../mint-server/src/main/resources") }
+     }
+     test {
+         java { srcDir("../paper-server/src/test/java") }
+         resources { srcDir("../paper-server/src/test/resources") }
+         java { srcDir("../folia-server/src/test/java") }
+         resources { srcDir("../folia-server/src/test/resources") }
++        java { srcDir("../mint-server/src/test/java") }
++        resources { srcDir("../mint-server/src/test/resources") }
+     }
+ }
+ val log4jPlugins = sourceSets.create("log4jPlugins") {
 @@ -173,7 +_,7 @@
  }
  
