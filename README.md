@@ -1,8 +1,9 @@
-<img src="./public/Mint.png" alt="Logo" align="right" width="200">
+<img src="./public/Mint.png" alt="Logo" align="right" width="220">
 
 # LemonMint
 
 <h4>LemonMint（原Mint-radical）是在Mint的基础上努力让更多的Bukkit插件能够运行，并且在原基础上修复被破坏的特性和改进性能，添加新的玩意。</h4>
+
 ![GitHub Repo stars](https://img.shields.io/github/stars/MenthaMC/LemonMint?style=for-the-badge&logo=github&label=Stars&logoColor=white&color=ffda65)
 ![GitHub Release Date](https://img.shields.io/github/release-date/MenthaMC/LemonMint?style=for-the-badge&logo=github&label=Release&logoColor=white&color=06d094)
 ![GitHub Downloads](https://img.shields.io/github/downloads/MenthaMC/LemonMint/total?style=for-the-badge&logo=github&label=Downloads&logoColor=white&color=c4a400)
