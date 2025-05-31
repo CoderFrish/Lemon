@@ -1,0 +1,30 @@
+--- a/mint-server/build.gradle.kts
++++ b/mint-server/build.gradle.kts
+@@ -173,7 +_,7 @@
+ }
+ 
+ dependencies {
+-    implementation(project(":mint-api"))
++    implementation(project(":lemonMint-api"))
+     implementation("io.github.classgraph:classgraph:4.8.179") // Mint
+     implementation("com.electronwill.night-config:toml:3.6.6") // Mint
+     // Abomination start
+@@ -256,14 +_,14 @@
+         val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
+         attributes(
+             "Main-Class" to "org.bukkit.craftbukkit.Main",
+-            "Implementation-Title" to "Mint",
++            "Implementation-Title" to "LemonMint",
+             "Implementation-Version" to implementationVersion,
+             "Implementation-Vendor" to date,
+-            "Specification-Title" to "Mint",
++            "Specification-Title" to "LemonMint",
+             "Specification-Version" to project.version,
+             "Specification-Vendor" to "Mentha Team",
+-            "Brand-Id" to "menthamc:mint",
+-            "Brand-Name" to "Mint",
++            "Brand-Id" to "menthamc:lemonMint",
++            "Brand-Name" to "LemonMint",
+             "Build-Number" to (build ?: ""),
+             "Build-Time" to buildTime.toString(),
+             "Git-Branch" to gitBranch,
