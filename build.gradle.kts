@@ -29,9 +29,15 @@ paperweight {
             outputDir = file("paper-api")
         }
 
+        patchRepo("foliaApi") {
+            upstreamPath = "folia-api"
+            patchesDir = file("lemonMint-api/folia-patches")
+            outputDir = file("folia-api")
+        }
+
         patchDir("mintApi") {
             upstreamPath = "mint-api"
-            excludes = listOf("build.gradle.kts", "build.gradle.kts.patch", "paper-patches")
+            excludes = listOf("build.gradle.kts", "build.gradle.kts.patch", "paper-patches", "folia-patches")
             patchesDir = file("lemonMint-api/mint-patches")
             outputDir = file("mint-api")
         }
