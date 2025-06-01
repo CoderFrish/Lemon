@@ -39,3 +39,6 @@
 
 ## 3 | 📫联系
 QQ群: [1020403749](https://qm.qq.com/q/RKzZJH4JKW) | Discord群组: [点击加入](https://discord.com/invite/39K7Jz4F) | 邮箱: [3167717663@qq.com](mailto:3167717663@qq.com)
+
+## 4 | ✨贡献代码
+LemonMint欢迎大家来贡献代码，如果贡献的代码和优化有关并且你觉得激进的话，那么请务必添加可开关的选项。
