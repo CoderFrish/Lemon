@@ -5,7 +5,7 @@
 > [!IMPORTANT]\
 > 该服务端虽然努力让更多的Bukkit插件能够运行，但是并不稳定，不推荐在实际生产环境中应用。如果没打算要Bukkit插件正常运行，要更稳定和更好性能推荐使用[Mint](https://github.com/MenthaMC/Mint)
 
-<h4>LemonMint（原Mint-radical）是在Mint的基础上努力让更多的Bukkit插件能够运行，并且在原基础上修复被破坏的特性和改进性能、并添加独特的特性。</h4>
+<h4>LemonMint是在Mint的基础上努力让更多的Bukkit插件能够运行，并且在原基础上修复被破坏的特性和改进性能、并添加独特的特性。</h4>
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/MenthaMC/LemonMint?style=for-the-badge&logo=github&label=Stars&logoColor=white&color=ffda65)
 ![GitHub Release Date](https://img.shields.io/github/release-date/MenthaMC/LemonMint?style=for-the-badge&logo=github&label=Release&logoColor=white&color=06d094)
