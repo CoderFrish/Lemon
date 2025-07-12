@@ -36,8 +36,8 @@
          resources { srcDir("../paper-server/src/test/resources") }
          java { srcDir("../folia-server/src/test/java") }
          resources { srcDir("../folia-server/src/test/resources") }
-+        java { srcDir("../mint-api/src/test/java") }
-+        resources { srcDir("../mint-api/src/test/resources") }
++        java { srcDir("../mint-server/src/test/java") }
++        resources { srcDir("../mint-server/src/test/resources") }
      }
  }
  val log4jPlugins = sourceSets.create("log4jPlugins") {
