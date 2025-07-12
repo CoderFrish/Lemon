@@ -1,6 +1,6 @@
 --- a/mint-server/build.gradle.kts
 +++ b/mint-server/build.gradle.kts
-@@ -53,7 +_,22 @@
+@@ -51,7 +_,22 @@
          }
      }
  
@@ -22,8 +22,8 @@
 +
 +    activeFork = lemonMint
  
+ 
      spigot {
-         buildDataRef = "702e1a0a5072b2c4082371d5228cb30525687efc"
 @@ -141,12 +_,16 @@
          resources { srcDir("../paper-server/src/main/resources") }
          java { srcDir("../folia-server/src/main/java") }
@@ -50,7 +50,7 @@
      implementation("io.github.classgraph:classgraph:4.8.179") // Mint
      implementation("com.electronwill.night-config:toml:3.6.6") // Mint
      // Abomination start
-@@ -256,14 +_,14 @@
+@@ -263,14 +_,14 @@
          val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
          attributes(
              "Main-Class" to "org.bukkit.craftbukkit.Main",
