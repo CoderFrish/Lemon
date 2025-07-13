@@ -17,10 +17,7 @@
 ./gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar
 ```
 
-## 2 | ✨特性
-1. [x] 防止种子被爆破导致结构位置暴露
-
-## 3 | 🧪API
+## 2 | 🧪API
 ```xml
 <repositories>
     <repository>
@@ -39,8 +36,8 @@
 </dependencies>
 ```
 
-## 4 | 📫联系
+## 3 | 📫联系
 QQ群: [1020403749](https://qm.qq.com/q/RKzZJH4JKW) | Discord群组: [点击加入](https://discord.com/invite/39K7Jz4F) | 邮箱: [3167717663@qq.com](mailto:3167717663@qq.com)
 
-## 5 | ✨贡献代码
+## 4 | ✨贡献代码
 LemonMint欢迎大家来贡献代码，如果贡献的代码和优化有关并且你觉得激进的话，那么请务必添加可开关的选项。
