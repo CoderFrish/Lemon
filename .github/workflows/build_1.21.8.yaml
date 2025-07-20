@@ -3,6 +3,8 @@ name: LemonMint CI - ver/1.21.8
 on:
   push:
     branches: [ "ver/1.21.8" ]
+    paths:
+      - '.github/workflows/build_1.21.8.yaml'
   pull_request:
     branches: [ "ver/1.21.8" ]
     paths:
