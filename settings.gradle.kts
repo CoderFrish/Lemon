@@ -3,7 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         mavenLocal()
-        maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://repo.menthamc.com/repository/maven-public/")
     }
 }
 
