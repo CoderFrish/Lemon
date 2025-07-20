@@ -1,11 +1,12 @@
-name: LemonMint CI - ver/1.21.5
+name: LemonMint CI - ver/1.21.8
 
 on:
   push:
-    branches: [ "ver/1.21.5" ]
+    branches: [ "ver/1.21.8" ]
   pull_request:
-    branches: [ "ver/1.21.5" ]
-  workflow_dispatch:
+    branches: [ "ver/1.21.8" ]
+    paths:
+      - '.github/workflows/build_1.21.8.yaml'
 
 permissions: write-all
 
@@ -52,18 +53,10 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
-      - name : SetENV
-        run: |
-          bash scripts/set_env.sh
-
       - name: Upload artifacts
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.commit_tag }}
-          name: 'LemonMint ${{ env.mcversion }} - ${{ env.commit_tag }}'
-          body: |
-            📦Version: `${{ env.mcversion }}` | Commit ${{ env.commit_id }} ![downloads](https://img.shields.io/github/downloads/MenthaMC/LemonMint/${{ env.commit_tag }}/total?style=flat-square)
-            ### Commit Message
-            ${{ env.commit_msg }}
+          name: 'LemonMint 1.21.8'
           files: 'lemonMint-server/build/libs/*-paperclip.jar'
