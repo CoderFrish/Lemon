@@ -65,10 +65,10 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ env.release_tag }}
-          name: LemonMint ${{ env.mcversion }} - ${{ env.commit_tag }}
+          tag: ${{ env.version }}
+          name: LemonMint ${{ env.version }} - ${{ env.commit_tag }}
           body: |
-            ### 📦Version: `${{ env.mcversion }}` | Commit ${{ env.commit_tag }}
+            ### 📦Version: `${{ env.version }}` | Commit ${{ env.commit_tag }}
             This release is automatically compiled by GitHub Actions
             ### 📜 Commit Message:
             ${{ env.commit_msg }}
