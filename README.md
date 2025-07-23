@@ -17,7 +17,10 @@
 ./gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar
 ```
 
-## 2 | 🧪API
+## 2 | ✨特性
+ - 对于Bukkit Scoreboard API与原版Scoreboard command的恢复
+
+## 3 | 🧪API
 ```xml
 <repositories>
     <repository>
@@ -36,8 +39,12 @@
 </dependencies>
 ```
 
-## 3 | 📫联系
+## 4 | 📫联系
 QQ群: [1020403749](https://qm.qq.com/q/RKzZJH4JKW) | Discord群组: [点击加入](https://discord.com/invite/39K7Jz4F) | 邮箱: [3167717663@qq.com](mailto:3167717663@qq.com)
 
-## 4 | ✨贡献代码
-LemonMint欢迎大家来贡献代码，如果贡献的代码和优化有关并且你觉得激进的话，那么请务必添加可开关的选项。
+## 5 | ✨最后
+> [!TIP]
+> 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
+
+[![Star](https://api.star-history.com/svg?repos=MenthaMC/LemonMint&type=Date)](https://star-history.com/#MenthaMC/LemonMint&Date) \
+如果你想为LemonMint贡献代码，可以通过Fork此项目并发布Pull Request，如果贡献的代码和优化有关并且你觉得激进的话，那么请务必添加可开关的选项。
