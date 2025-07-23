@@ -1,17 +1,13 @@
 name: LemonMint CI - ver/1.21.8
 
 on:
-#  push:
-#    branches: [ "ver/1.21.8" ]
-#    paths:
-#      - '.github/workflows/build_1.21.8.yaml'
-#  pull_request:
-#    branches: [ "ver/1.21.8" ]
-#    paths:
-#      - '.github/workflows/build_1.21.8.yaml'
-  workflow_dispatch:
-
-permissions: write-all
+  push:
+    branches: [ "ver/1.21.8" ]
+    paths:
+      - "lemonMint-server/**/*"
+      - "lemonMint-api/**/*"
+      - ".github/workflows/build_*.yml"
+      - "scripts/*.sh"
 
 jobs:
   build:
@@ -32,34 +28,53 @@ jobs:
           distribution: 'zulu'
           architecture: x64
 
-      - name: Config Git
+      - name: Configure Git
         run: |
-          git config --global user.email "CI@menthamc.com" && git config --global user.name "MenthaMC-CI"
+          git config --global user.email "no-reply@github.com"
+          git config --global user.name "Github Actions"
 
-      - name: Grant execute permission for gradlew
+      - name: Grant execute permission for build scripts.
         run: |
           chmod +x gradlew
+          chmod +x scripts/set_env.sh
 
-      - name: Apply Patches
+      - name: Apply Server Patches
         run: |
           ./gradlew applyAllPatches
 
-      - name: CreateJar
+      - name: Create Server Jar
         run: |
           ./gradlew createMojmapPaperclipJar
 
-      - name: Push to API
-        continue-on-error: true
+      - name: Publish Server API
         run: |
-          ./gradlew publish
+          ./gradlew generateDevelopmentBundle publish -PpublishDevBundle=true
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
-      - name: Upload artifacts
-        uses: softprops/action-gh-release@v2
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: LemonMint CI Artifacts
+          path: lemonMint-server/build/libs/*-paperclip-*-mojmap.jar
+
+      - name : Configure environment
+        run: |
+          sh scripts/set_env.sh
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ env.release_tag }}
+          name: LemonMint ${{ env.mcversion }} - ${{ env.commit_tag }}
+          body: |
+            ### 📦Version: `${{ env.mcversion }}` | Commit ${{ env.commit_tag }}
+            This release is automatically compiled by GitHub Actions
+            ### 📜 Commit Message:
+            ${{ env.commit_msg }}
+          artifacts: |
+            lemonMint-server/build/libs/lemonMint-paperclip-*-mojmap.jar
+          generateReleaseNotes: true
+          makeLatest: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ env.commit_tag }}
-          name: 'LemonMint 1.21.8'
-          files: 'lemonMint-server/build/libs/*-paperclip.jar'
