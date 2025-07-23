@@ -2,7 +2,6 @@ name: LemonMint CI - ver/1.21.8
 
 on:
   push:
-    branches: [ "ver/1.21.8" ]
     paths:
       - "lemonMint-server/**/*"
       - "lemonMint-api/**/*"
