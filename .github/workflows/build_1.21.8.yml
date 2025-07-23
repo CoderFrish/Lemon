@@ -46,6 +46,7 @@ jobs:
           ./gradlew createMojmapPaperclipJar
 
       - name: Publish Server API
+        continue-on-error: true
         run: |
           ./gradlew generateDevelopmentBundle publish -PpublishDevBundle=true
         env:
