@@ -28,9 +28,9 @@
 
 <dependencies>
     <dependency>
-        <groupId>me.coderfrish.lemonmint</groupId>
-        <artifactId>lemonmint-api</artifactId>
-        <version>${LATEST_VERSION}</version>
+        <groupId>me.coderfrish.lemonMint</groupId>
+        <artifactId>lemonMint-api</artifactId>
+        <version>1.21.8-R0.1-SNAPSHOT</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>

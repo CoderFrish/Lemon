@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     java // TODO java launcher tasks
-    id("dev.menthamc.lightweight.patcher") version "2.0.0-SNAPSHOT"
+    id("dev.menthamc.lightweight.patcher") version "+"
 }
 
 paperweight {
@@ -45,6 +45,8 @@ paperweight {
 }
 
 val paperMavenPublicUrl = "https://repo.papermc.io/repository/maven-public/"
+val menthaMavenPublicUrl = "https://repo.menthamc.com/repository/maven-public/"
+val menthaMavenSnapshotsUrl = "https://repo.menthamc.com/repository/maven-snapshots/"
 
 subprojects {
     apply(plugin = "java-library")
@@ -56,9 +58,22 @@ subprojects {
         }
     }
 
+    extensions.configure<PublishingExtension> {
+        repositories {
+            maven(menthaMavenSnapshotsUrl) {
+                name = "MenthaMC_Snapshots"
+                credentials(PasswordCredentials::class) {
+                    username = System.getenv("MAVEN_USERNAME")
+                    password = System.getenv("MAVEN_PASSWORD")
+                }
+            }
+        }
+    }
+
     repositories {
         mavenCentral()
         maven(paperMavenPublicUrl)
+        maven(menthaMavenPublicUrl)
     }
 
     tasks.withType<AbstractArchiveTask>().configureEach {
