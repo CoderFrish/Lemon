@@ -11,17 +11,20 @@
 ![GitHub Release Date](https://img.shields.io/github/release-date/MenthaMC/LemonMint?style=for-the-badge&logo=github&label=Release&logoColor=white&color=06d094)
 ![GitHub Downloads](https://img.shields.io/github/downloads/MenthaMC/LemonMint/total?style=for-the-badge&logo=github&label=Downloads&logoColor=white&color=c4a400)
 
-## 1 | 📦下载与构建
+## 1 | 下载与构建
 任何版本都可以在 [Release](https://github.com/MenthaMC/LemonMint/releases) 中找到，也可以通过以下步骤构建
 ```shell
 ./gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar
 ```
 
-## 2 | ✨特性
+## 2 | 特性
  - 对于Bukkit Scoreboard API与原版Scoreboard command的恢复
  - 对于Bukkit Enity or Player Teleport API的基本恢复
 
-## 3 | 🧪API
+## 3 | 将来会添加的 (画饼)
+ - 恢复Bukkit Scheduler
+
+## 4 | API
 ```xml
 <repositories>
     <repository>
@@ -40,10 +43,10 @@
 </dependencies>
 ```
 
-## 4 | 📫联系
+## 5 | 联系
 QQ群: [1020403749](https://qm.qq.com/q/RKzZJH4JKW) | Discord群组: [点击加入](https://discord.com/invite/39K7Jz4F) | 邮箱: [3167717663@qq.com](mailto:3167717663@qq.com)
 
-## 5 | ✨最后
+## 6 | 最后
 > [!TIP]
 > 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
 
