@@ -19,6 +19,7 @@
 
 ## 2 | ✨特性
  - 对于Bukkit Scoreboard API与原版Scoreboard command的恢复
+ - 对于Bukkit Enity or Player Teleport API的基本恢复
 
 ## 3 | 🧪API
 ```xml
