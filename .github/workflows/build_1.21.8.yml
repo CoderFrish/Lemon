@@ -7,6 +7,9 @@ on:
       - "lemonMint-api/**/*"
       - ".github/workflows/build_*.yml"
       - "scripts/*.sh"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
 
 jobs:
   build:
