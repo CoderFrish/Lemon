@@ -64,7 +64,7 @@
              "Specification-Vendor" to "Mentha Team",
 -            "Brand-Id" to "menthamc:mint",
 -            "Brand-Name" to "Mint",
-+            "Brand-Id" to "menthamc:lemonMint",
++            "Brand-Id" to "menthamc:lemon_mint",
 +            "Brand-Name" to "LemonMint",
              "Build-Number" to (build ?: ""),
              "Build-Time" to buildTime.toString(),
