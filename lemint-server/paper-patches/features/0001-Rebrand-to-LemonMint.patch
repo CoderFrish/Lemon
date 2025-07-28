@@ -13,7 +13,7 @@ index e529f9c42fe9362400fb16c8b7e66e860844abba..45be16ad8cb4c9fd497620aa0691ef90
          String result = "Unknown-Version";
  
 -        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/dev.bacteriawa.mint/mint-api/pom.properties"); // Mint
-+        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/me.coderfrish.lemonmint/lemonMint-api/pom.properties"); // LemonMint
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/me.coderfrish.lemint/lemint-api/pom.properties"); // LemonMint
          Properties properties = new Properties();
  
          if (stream != null) {

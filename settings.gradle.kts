@@ -11,6 +11,6 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
 }
 
-rootProject.name = "lemonMint"
-include("lemonMint-api")
-include("lemonMint-server")
+rootProject.name = "LemonMint"
+include("lemint-api")
+include("lemint-server")
