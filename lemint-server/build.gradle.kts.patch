@@ -5,17 +5,17 @@
      }
  
 -    activeFork = mint
-+    val lemonMint = forks.register("lemonMint") {
++    val lemonMint = forks.register("lemint") {
 +        forks = mint
 +        upstream.patchRepo("paperServer") {
 +            upstreamRepo = mint.patchedRepo("paperServer")
-+            patchesDir = rootDirectory.dir("lemonMint-server/paper-patches")
++            patchesDir = rootDirectory.dir("lemint-server/paper-patches")
 +            outputDir = rootDirectory.dir("paper-server")
 +        }
 +        upstream.patchDir("mintServer") {
 +            upstreamPath = "mint-server"
 +            excludes = setOf("src/minecraft", "paper-patches", "minecraft-patches", "build.gradle.kts", "build.gradle.kts.patch")
-+            patchesDir = rootDirectory.dir("lemonMint-server/mint-patches")
++            patchesDir = rootDirectory.dir("lemint-server/mint-patches")
 +            outputDir = rootDirectory.dir("mint-server")
 +        }
 +    }
@@ -46,7 +46,7 @@
  
  dependencies {
 -    implementation(project(":mint-api"))
-+    implementation(project(":lemonMint-api"))
++    implementation(project(":lemint-api"))
      implementation("io.github.classgraph:classgraph:4.8.179") // Mint
      implementation("com.electronwill.night-config:toml:3.6.6") // Mint
      // Abomination start
@@ -64,7 +64,7 @@
              "Specification-Vendor" to "Mentha Team",
 -            "Brand-Id" to "menthamc:mint",
 -            "Brand-Name" to "Mint",
-+            "Brand-Id" to "menthamc:lemon_mint",
++            "Brand-Id" to "menthamc:lemint",
 +            "Brand-Name" to "LemonMint",
              "Build-Number" to (build ?: ""),
              "Build-Time" to buildTime.toString(),

@@ -13,32 +13,32 @@ paperweight {
 
         patchFile {
             path = "mint-server/build.gradle.kts"
-            outputFile = file("lemonMint-server/build.gradle.kts")
-            patchFile = file("lemonMint-server/build.gradle.kts.patch")
+            outputFile = file("lemint-server/build.gradle.kts")
+            patchFile = file("lemint-server/build.gradle.kts.patch")
         }
 
         patchFile {
             path = "mint-api/build.gradle.kts"
-            outputFile = file("lemonMint-api/build.gradle.kts")
-            patchFile = file("lemonMint-api/build.gradle.kts.patch")
+            outputFile = file("lemint-api/build.gradle.kts")
+            patchFile = file("lemint-api/build.gradle.kts.patch")
         }
 
         patchRepo("paperApi") {
             upstreamPath = "paper-api"
-            patchesDir = file("lemonMint-api/paper-patches")
+            patchesDir = file("lemint-api/paper-patches")
             outputDir = file("paper-api")
         }
 
         patchRepo("foliaApi") {
             upstreamPath = "folia-api"
-            patchesDir = file("lemonMint-api/folia-patches")
+            patchesDir = file("lemint-api/folia-patches")
             outputDir = file("folia-api")
         }
 
         patchDir("mintApi") {
             upstreamPath = "mint-api"
             excludes = listOf("build.gradle.kts", "build.gradle.kts.patch", "paper-patches", "folia-patches")
-            patchesDir = file("lemonMint-api/mint-patches")
+            patchesDir = file("lemint-api/mint-patches")
             outputDir = file("mint-api")
         }
     }
