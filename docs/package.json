@@ -1,0 +1,19 @@
+{
+  "name": "@lemint/docs",
+  "version": "1.0.0",
+  "description": "This is a docs of LemonMint.",
+  "main": "index.md",
+  "scripts": {
+    "dev": "vitepress dev --host 0.0.0.0",
+    "build": "vitepress build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CoderFrish/Lemint.git"
+  },
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  }
+}
