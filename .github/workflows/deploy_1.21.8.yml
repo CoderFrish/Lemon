@@ -5,7 +5,7 @@ on:
     paths:
       - "lemint-server/**/*"
       - "lemint-api/**/*"
-      - ".github/workflows/build_*.yml"
+      - ".github/workflows/deploy_1.21.8.yml"
       - "scripts/*.sh"
       - "build.gradle.kts"
       - "settings.gradle.kts"
@@ -72,9 +72,9 @@ jobs:
           tag: ${{ env.commit_tag }}
           name: LemonMint ${{ env.version }} - ${{ env.commit_tag }}
           body: |
-            ## 📦Version: `${{ env.version }}` | Commit ${{ env.commit_tag }}
+            ### 📦Version: `${{ env.version }}` | Commit ${{ env.commit_tag }}
             This release is automatically compiled by GitHub Actions
-            ## 📜 Commit Message:
+            ### 📜 Commit Message:
             ${{ env.commit_msg }}
           artifacts: |
             lemint-server/build/libs/*-paperclip-*-mojmap.jar
