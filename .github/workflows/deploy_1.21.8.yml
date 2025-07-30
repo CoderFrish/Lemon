@@ -77,6 +77,6 @@ jobs:
             ### 📜 Commit Message:
             ${{ env.commit_msg }}
           artifacts: |
-            lemint-server/build/libs/*-paperclip-*-mojmap.jar
+            target/**
           makeLatest: true
           token: ${{ secrets.GITHUB_TOKEN }}
