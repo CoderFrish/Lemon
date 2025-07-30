@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-    base: '/Lemint',
+    base: '/LemonMint',
     titleTemplate: 'LemonMint | :title',
     themeConfig: {
         siteTitle: 'LemonMint',
