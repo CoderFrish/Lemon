@@ -55,11 +55,11 @@
          attributes(
              "Main-Class" to "org.bukkit.craftbukkit.Main",
 -            "Implementation-Title" to "Mint",
-+            "Implementation-Title" to "Lemint",
++            "Implementation-Title" to "LemonMint",
              "Implementation-Version" to implementationVersion,
              "Implementation-Vendor" to date,
 -            "Specification-Title" to "Mint",
-+            "Specification-Title" to "Lemint",
++            "Specification-Title" to "LemonMint",
              "Specification-Version" to project.version,
              "Specification-Vendor" to "Mentha Team",
 -            "Brand-Id" to "menthamc:mint",
