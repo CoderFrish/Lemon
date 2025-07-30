@@ -12,4 +12,4 @@ echo "branch_name=$(git branch --show-current)" >> $GITHUB_ENV
 echo "version=${version}" >> $GITHUB_ENV
 
 mkdir "target"
-mv mint-server/build/libs/lemint-paperclip-$version-mojmap.jar target/LemonMint-$version.jar
+mv lemint-server/build/libs/lemint-paperclip-$version-mojmap.jar target/LemonMint-$version.jar
