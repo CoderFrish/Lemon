@@ -15,10 +15,7 @@ LemonMint 是Mint服务端衍生出来的一个服务端，其目的是为了保
  - Bukkit Teleport的调用正常化（不完全）
  - Bukkit Scoreboard API和原本Scoreboard命令的正常化（但是Bukkit API创建的Scoreboard并不受原版的Scoreboard指令控制）
  - 从Purpur搬过来的6格末影箱（某位用户提起的，其实在1.21.1还是1.21.5就开始提的具体忘了，1.21.8才正式搬过来）
-
-### LemonMint 可能会做到的（画饼）
- 
- - 让Bukkit Scheduler API调用正常化
+ - 对于Bukkit Scheduler API的简单恢复（并不代表全部恢复）
 
 ### 作者正在考虑的
  - 给LemonMint添加新的插件系统（用Lua开发插件的那种）

@@ -1,0 +1,71 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Wed, 30 Jul 2025 22:39:04 +0800
+Subject: [PATCH] Easily fixed bukkit scheduler api
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index b99b73ae7473e44f365957ec70115fefb9cd3bca..a22076e9743913bf516ce1ef43ddcfa6bb7125c9 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -42,6 +42,8 @@ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ import java.util.stream.Collectors;
+ import javax.imageio.ImageIO;
++
++import me.coderfrish.scheduler.LemonMintScheduler;
+ import net.kyori.adventure.text.Component;
+ import net.kyori.adventure.text.format.NamedTextColor;
+ import net.minecraft.Optionull;
+@@ -257,6 +259,7 @@ import org.bukkit.plugin.SimpleServicesManager;
+ import org.bukkit.plugin.messaging.Messenger;
+ import org.bukkit.plugin.messaging.StandardMessenger;
+ import org.bukkit.profile.PlayerProfile;
++import org.bukkit.scheduler.BukkitScheduler;
+ import org.bukkit.scheduler.BukkitWorker;
+ import org.bukkit.scoreboard.Criteria;
+ import org.bukkit.structure.StructureManager;
+@@ -949,8 +952,9 @@ public final class CraftServer implements Server {
+     }
+ 
+     @Override
+-    public CraftScheduler getScheduler() {
+-        return this.scheduler;
++    public BukkitScheduler getScheduler() {
++//        return this.scheduler;
++        return (me.coderfrish.config.experiment.BukkitSchedulerConfig.enabled) ? new LemonMintScheduler() : this.scheduler;
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftAsyncScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftAsyncScheduler.java
+index 0ca279fb71d39c81b1f608e0ee9ba3e498d55fa3..3c8ceb66b28da89c691cd03152c36efd8723ff55 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftAsyncScheduler.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftAsyncScheduler.java
+@@ -36,6 +36,7 @@ import java.util.concurrent.SynchronousQueue;
+ import java.util.concurrent.ThreadPoolExecutor;
+ import java.util.concurrent.TimeUnit;
+ 
++@Deprecated
+ public class CraftAsyncScheduler extends CraftScheduler {
+ 
+     private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+index fad85bea8643a3a88ec5c4194de7a5060e81c136..9218c2192a0f9513e62b9eaba6a64703d6e2100c 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+@@ -44,6 +44,7 @@ import org.bukkit.scheduler.BukkitWorker;
+  *     When executed from inside a synchronous method, the scheduler will be updated before next execution by virtue of the frequent {@link #parsePending()} calls.</li>
+  * </ul>
+  */
++@Deprecated(since = "1.21.8")
+ public class CraftScheduler implements BukkitScheduler {
+ 
+     /**
+@@ -450,6 +451,7 @@ public class CraftScheduler implements BukkitScheduler {
+     /**
+      * This method is designed to never block or wait for locks; an immediate execution of all current tasks.
+      */
++    @Deprecated
+     public void mainThreadHeartbeat() {
+         this.currentTick++;
+         // Paper start
