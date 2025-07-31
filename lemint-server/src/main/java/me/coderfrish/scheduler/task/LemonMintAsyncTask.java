@@ -39,4 +39,9 @@ public class LemonMintAsyncTask implements BukkitTask {
         LemonMintScheduler.tasks.remove(this);
         task.cancel();
     }
+
+    @Override
+    public ScheduledTask.ExecutionState getState() {
+        return task.getExecutionState();
+    }
 }

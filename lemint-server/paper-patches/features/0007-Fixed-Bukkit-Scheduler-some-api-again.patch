@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Thu, 31 Jul 2025 12:59:36 +0800
+Subject: [PATCH] Fixed Bukkit Scheduler some api again.
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftTask.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftTask.java
+index 17680f112d0c7e7aee07e34477daa21ef2ddaa6f..bba78b5a360285a1ac88a2468673371e546e5a72 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftTask.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftTask.java
+@@ -2,6 +2,7 @@ package org.bukkit.craftbukkit.scheduler;
+ 
+ import java.util.function.Consumer;
+ 
++import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+ import org.bukkit.Bukkit;
+ import org.bukkit.plugin.Plugin;
+ import org.bukkit.scheduler.BukkitTask;
+@@ -123,6 +124,11 @@ public class CraftTask implements BukkitTask, Runnable { // Spigot
+         Bukkit.getScheduler().cancelTask(this.id);
+     }
+ 
++    @Override
++    public ScheduledTask.ExecutionState getState() {
++        throw new UnsupportedOperationException("This method is not supported by the native Bukkit Scheduler.");
++    }
++
+     /**
+      * This method properly sets the status to cancelled, synchronizing when required.
+      *

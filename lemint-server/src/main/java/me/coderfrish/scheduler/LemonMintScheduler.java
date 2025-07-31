@@ -1,6 +1,6 @@
 package me.coderfrish.scheduler;
 
-import me.coderfrish.api.TemporarilyNotSupported;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import me.coderfrish.scheduler.task.LemonMintAsyncTask;
 import me.coderfrish.scheduler.task.LemonMintTask;
 import org.bukkit.Bukkit;
@@ -21,40 +21,34 @@ import java.util.function.Consumer;
 public class LemonMintScheduler implements BukkitScheduler {
     public static final LemonMintSchedulerTaskManager<BukkitTask> tasks = new LemonMintSchedulerTaskManager<>();
 
-    @TemporarilyNotSupported
     @Override
     public int scheduleSyncDelayedTask(@NotNull Plugin plugin, @NotNull Runnable task, long delay) {
-        throw new UnsupportedOperationException("Folia server temporarily isn`t supported yet.");
+        return this.scheduleSyncRepeatingTask(plugin, task, delay, 0L);
     }
 
-    @TemporarilyNotSupported
     @Override
     public int scheduleSyncDelayedTask(@NotNull Plugin plugin, @NotNull Runnable task) {
-        throw new UnsupportedOperationException("Folia server temporarily isn`t supported yet.");
+        return this.scheduleSyncDelayedTask(plugin, task, 0L);
     }
 
-    @TemporarilyNotSupported
     @Override
     public int scheduleSyncRepeatingTask(@NotNull Plugin plugin, @NotNull Runnable task, long delay, long period) {
-        throw new UnsupportedOperationException("Folia server temporarily isn`t supported yet.");
+        return this.runTaskTimer(plugin, task, delay, period).getTaskId();
     }
 
-    @TemporarilyNotSupported
     @Override
     public int scheduleAsyncDelayedTask(@NotNull Plugin plugin, @NotNull Runnable task, long delay) {
-        throw new UnsupportedOperationException("Folia server temporarily isn`t supported yet.");
+        return this.scheduleAsyncRepeatingTask(plugin, task, delay, 0L);
     }
 
-    @TemporarilyNotSupported
     @Override
     public int scheduleAsyncDelayedTask(@NotNull Plugin plugin, @NotNull Runnable task) {
-        throw new UnsupportedOperationException("Folia server temporarily isn`t supported yet.");
+        return this.scheduleAsyncDelayedTask(plugin, task, 0L);
     }
 
-    @TemporarilyNotSupported
     @Override
     public int scheduleAsyncRepeatingTask(@NotNull Plugin plugin, @NotNull Runnable task, long delay, long period) {
-        throw new UnsupportedOperationException("Folia server temporarily isn`t supported yet.");
+        return this.runTaskTimerAsynchronously(plugin, task, delay, period).getTaskId();
     }
 
     @Override
@@ -125,6 +119,16 @@ public class LemonMintScheduler implements BukkitScheduler {
     @Override
     public void runTaskTimerAsynchronously(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> task, long delay, long period) throws IllegalArgumentException {
         Bukkit.getAsyncScheduler().runAtFixedRate(plugin, scheduledTask -> task.accept(new LemonMintAsyncTask(scheduledTask)), delay * 50, period * 50, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public boolean isCurrentlyRunning(int taskId) {
+        return tasks.getElement(taskId).getState() == ScheduledTask.ExecutionState.RUNNING;
+    }
+
+    @Override
+    public boolean isQueued(int taskId) {
+        return tasks.getElement(taskId).getState() == ScheduledTask.ExecutionState.IDLE;
     }
 
     @Deprecated
@@ -202,18 +206,6 @@ public class LemonMintScheduler implements BukkitScheduler {
     @Override
     public BukkitTask runTaskTimerAsynchronously(Plugin plugin, BukkitRunnable task, long delay, long period) throws IllegalArgumentException {
         throw new UnsupportedOperationException("Use BukkitRunnable#runTaskTimerAsynchronously(Plugin, long, long)");
-    }
-
-    @Deprecated
-    @Override
-    public boolean isCurrentlyRunning(int taskId) {
-        throw new UnsupportedOperationException("Folia server isn`t supported yet.");
-    }
-
-    @Deprecated
-    @Override
-    public boolean isQueued(int taskId) {
-        throw new UnsupportedOperationException("Folia server isn`t supported yet.");
     }
 
     @Deprecated
