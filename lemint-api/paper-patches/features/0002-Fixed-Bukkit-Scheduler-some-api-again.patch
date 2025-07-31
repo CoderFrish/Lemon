@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Thu, 31 Jul 2025 12:58:37 +0800
+Subject: [PATCH] Fixed Bukkit Scheduler some api again.
+
+
+diff --git a/src/main/java/org/bukkit/scheduler/BukkitTask.java b/src/main/java/org/bukkit/scheduler/BukkitTask.java
+index 51251584937f2d184c88d5e1394125ec53779083..d0fdccd7f097bcb4733ec35767177aa075b96e9b 100644
+--- a/src/main/java/org/bukkit/scheduler/BukkitTask.java
++++ b/src/main/java/org/bukkit/scheduler/BukkitTask.java
+@@ -1,5 +1,6 @@
+ package org.bukkit.scheduler;
+ 
++import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+ import org.bukkit.plugin.Plugin;
+ import org.jetbrains.annotations.NotNull;
+ 
+@@ -41,4 +42,11 @@ public interface BukkitTask {
+      * Will attempt to cancel this task.
+      */
+     public void cancel();
++
++    /**
++     * Get execution state of folia scheduler
++     *
++     * @return #{@return io.papermc.paper.threadedregions.scheduler.ScheduledTask.ExecutionState}
++     */
++    public ScheduledTask.ExecutionState getState();
+ }
