@@ -78,5 +78,6 @@ jobs:
             ${{ env.commit_msg }}
           artifacts: |
             target/**
-          makeLatest: true
+          makeLatest: false
+          prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
