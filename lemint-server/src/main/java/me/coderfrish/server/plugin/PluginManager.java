@@ -1,6 +1,7 @@
 package me.coderfrish.server.plugin;
 
 import me.coderfrish.plugin.Plugin;
+import me.coderfrish.server.event.EventManager;
 import org.luaj.vm2.*;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
@@ -17,6 +18,7 @@ public class PluginManager implements me.coderfrish.plugin.PluginManager {
     public static Set<String> lemonMintPluginNameWithVersions = new TreeSet<>();
     public static Set<String> lemonMintPluginNames = new TreeSet<>();
     private final me.coderfrish.plugin.PluginManager pluginManager = this;
+    public static final EventManager eventManager = new EventManager();
     private final List<Plugin> plugins = new CopyOnWriteArrayList<>();
 
     public void loadPlugins(Path path) {
@@ -52,6 +54,7 @@ public class PluginManager implements me.coderfrish.plugin.PluginManager {
         for (Plugin plugin : plugins) {
             plugin.disable.call();
         }
+        eventManager.unregister();
     }
 
     private Globals setupLuaEnvironment() {
