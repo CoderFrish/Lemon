@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Fri, 1 Aug 2025 15:36:16 +0800
+Subject: [PATCH] New plugin system.
+
+
+diff --git a/net/minecraft/server/dedicated/DedicatedServer.java b/net/minecraft/server/dedicated/DedicatedServer.java
+index 4003c9f71d4a8c32a02ae6eb3ef7b59ca463470a..634bb4e10114a7313715aafaee952d2588e110d6 100644
+--- a/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -68,6 +68,8 @@ import net.minecraft.world.level.storage.LevelStorageSource;
+ import org.bukkit.Bukkit;
+ import org.slf4j.Logger;
+ 
++import static io.papermc.paper.plugin.PluginInitializerManager.lemonMintPluginManager;
++
+ public class DedicatedServer extends MinecraftServer implements ServerInterface {
+     static final Logger LOGGER = LogUtils.getLogger();
+     private static final int CONVERSION_RETRY_DELAY_MS = 5000;
+@@ -244,6 +246,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         // CraftBukkit start
+         this.server.loadPlugins();
+         this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.STARTUP);
++        lemonMintPluginManager.enablePlugins();
+         // CraftBukkit end
+ 
+         // Paper start - Add Velocity IP Forwarding Support

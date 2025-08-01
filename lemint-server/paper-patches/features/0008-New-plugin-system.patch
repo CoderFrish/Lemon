@@ -1,0 +1,138 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Fri, 1 Aug 2025 15:36:16 +0800
+Subject: [PATCH] New plugin system.
+
+
+diff --git a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+index d0a4e1642d1be33cd9e832f961301ab267e216bc..254537680b65fbb00827848ae8ca2be3a2a8b602 100644
+--- a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
++++ b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+@@ -19,7 +19,10 @@ import io.papermc.paper.plugin.provider.type.spigot.SpigotPluginProvider;
+ import java.lang.reflect.Type;
+ import java.util.ArrayList;
+ import java.util.List;
++import java.util.Set;
+ import java.util.TreeMap;
++
++import me.coderfrish.server.plugin.PluginManager;
+ import net.kyori.adventure.text.Component;
+ import net.kyori.adventure.text.JoinConfiguration;
+ import net.kyori.adventure.text.TextComponent;
+@@ -210,6 +213,25 @@ public class PaperPluginsCommand {
+             sender.sendMessage(component);
+         }
+ 
++        Set<String> lemonMintPlugins = PluginManager.lemonMintPluginNames;
++        if (!lemonMintPlugins.isEmpty()) {
++            sender.sendMessage(header("LemonMint Plugins", 0xED8106, lemonMintPlugins.size(), hasAllPluginTypes));
++
++            StringBuffer buffer = new StringBuffer(" - ");
++            int i = -1;
++            for (String lemonMintPlugin : lemonMintPlugins) {
++                if (i == 0) {
++                    buffer.append(", ").append(lemonMintPlugin);
++                } else {
++                    buffer.append(lemonMintPlugin);
++                }
++
++                i++;
++            }
++
++            sender.sendMessage(Component.text(buffer.toString()));
++        }
++
+         return Command.SINGLE_SUCCESS;
+     }
+ }
+diff --git a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+index 70413fddd23ca1165cb5090cce4fddcb1bbca93f..b90f2831df898e0a956b98eb7752dcf0c77df5a7 100644
+--- a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
++++ b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+@@ -12,6 +12,7 @@ import java.util.Set;
+ import java.util.TreeSet;
+ import java.util.function.Function;
+ import joptsimple.OptionSet;
++import me.coderfrish.server.plugin.PluginManager;
+ import net.minecraft.server.dedicated.DedicatedServer;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.bukkit.plugin.java.LibraryLoader;
+@@ -32,6 +33,9 @@ public class PluginInitializerManager {
+     private final Path updateDirectory;
+     public final io.papermc.paper.pluginremap.@org.checkerframework.checker.nullness.qual.MonotonicNonNull PluginRemapper pluginRemapper; // Paper
+ 
++    // LemonMint - new plugin system.
++    public static final me.coderfrish.server.plugin.PluginManager lemonMintPluginManager = new me.coderfrish.server.plugin.PluginManager();
++
+     PluginInitializerManager(final Path pluginDirectory, final Path updateDirectory) {
+         this.pluginDirectory = pluginDirectory;
+         this.updateDirectory = updateDirectory;
+@@ -108,6 +112,7 @@ public class PluginInitializerManager {
+         // We have to load the bukkit configuration inorder to get the update folder location.
+         io.papermc.paper.plugin.PluginInitializerManager pluginSystem = io.papermc.paper.plugin.PluginInitializerManager.init(optionSet);
+         if (pluginSystem.pluginRemapper != null) pluginSystem.pluginRemapper.loadingPlugins();
++        lemonMintPluginManager.loadPlugins(pluginSystem.pluginDirectory);
+ 
+         // Register the default plugin directory
+         io.papermc.paper.plugin.util.EntrypointUtil.registerProvidersFromSource(io.papermc.paper.plugin.provider.source.DirectoryProviderSource.INSTANCE, pluginSystem.pluginDirectoryPath());
+@@ -119,6 +124,7 @@ public class PluginInitializerManager {
+ 
+         final Set<String> paperPluginNames = new TreeSet<>();
+         final Set<String> legacyPluginNames = new TreeSet<>();
++        final Set<String> lemonMintPluginNames = PluginManager.lemonMintPluginNameWithVersions;
+         LaunchEntryPointHandler.INSTANCE.getStorage().forEach((entrypoint, providerStorage) -> {
+             providerStorage.getRegisteredProviders().forEach(provider -> {
+                 if (provider instanceof final SpigotPluginProvider legacy) {
+@@ -128,7 +134,7 @@ public class PluginInitializerManager {
+                 }
+             });
+         });
+-        final int total = paperPluginNames.size() + legacyPluginNames.size();
++        final int total = paperPluginNames.size() + legacyPluginNames.size() + lemonMintPluginNames.size();
+         LOGGER.info("Initialized {} plugin{}", total, total == 1 ? "" : "s");
+         if (!paperPluginNames.isEmpty()) {
+             if (LOGGER.isDebugEnabled()) {
+@@ -144,6 +150,13 @@ public class PluginInitializerManager {
+                 LOGGER.info("Bukkit plugins ({}):\n - {}", legacyPluginNames.size(), String.join(", ", legacyPluginNames));
+             }
+         }
++        if (!lemonMintPluginNames.isEmpty()) {
++            if (LOGGER.isDebugEnabled()) {
++                LOGGER.info("LemonMint plugins ({}):\n - {}", lemonMintPluginNames.size(), String.join("\n - ", lemonMintPluginNames));
++            } else {
++                LOGGER.info("LemonMint plugins ({}):\n - {}", lemonMintPluginNames.size(), String.join(", ", lemonMintPluginNames));
++            }
++        }
+     }
+ 
+     // This will be the end of me...
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index a22076e9743913bf516ce1ef43ddcfa6bb7125c9..07e1af0bb165cf7d9b66f08b61fa1442c1657088 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -274,6 +274,8 @@ import org.yaml.snakeyaml.error.MarkedYAMLException;
+ 
+ import net.md_5.bungee.api.chat.BaseComponent; // Spigot
+ 
++import static io.papermc.paper.plugin.PluginInitializerManager.lemonMintPluginManager;
++
+ public final class CraftServer implements Server {
+     private final String serverName = io.papermc.paper.ServerBuildInfo.buildInfo().brandName();
+     private final String serverVersion;
+@@ -430,7 +432,7 @@ public final class CraftServer implements Server {
+         this.pluginManager = new SimplePluginManager(this, commandMap);
+         this.paperPluginManager = new io.papermc.paper.plugin.manager.PaperPluginManagerImpl(this, this.commandMap, pluginManager);
+         this.pluginManager.paperPluginManager = this.paperPluginManager;
+-         // Paper end
++        // Paper end
+ 
+         CraftRegistry.setMinecraftRegistry(console.registryAccess());
+ 
+@@ -625,6 +627,7 @@ public final class CraftServer implements Server {
+ 
+     public void disablePlugins() {
+         this.pluginManager.disablePlugins();
++        lemonMintPluginManager.disablePlugins();
+     }
+ 
+     public void syncCommands() {
