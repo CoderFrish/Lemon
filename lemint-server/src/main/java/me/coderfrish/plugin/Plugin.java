@@ -3,15 +3,25 @@ package me.coderfrish.plugin;
 import me.coderfrish.plugin.function.EmptyFunction;
 import me.coderfrish.server.plugin.PluginEvent;
 import me.coderfrish.server.plugin.PluginLogger;
+import org.bukkit.Bukkit;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 
 public class Plugin {
     public final LuaTable meta;
     public final LuaValue logger;
     public final LuaValue event;
+
+    public final LuaFunction broadcastMessage = new OneArgFunction() {
+        @Override
+        public LuaValue call(LuaValue arg) {
+            Bukkit.broadcastMessage(arg.tojstring());
+            return NIL;
+        }
+    };
 
     public Plugin(LuaTable meta) {
         this.meta = meta;
