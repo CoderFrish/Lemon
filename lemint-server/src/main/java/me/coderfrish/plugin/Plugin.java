@@ -1,19 +1,24 @@
 package me.coderfrish.plugin;
 
 import me.coderfrish.plugin.function.EmptyFunction;
-import me.coderfrish.server.plugin.LuaLogger;
+import me.coderfrish.server.plugin.PluginEvent;
+import me.coderfrish.server.plugin.PluginLogger;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 
 public class Plugin {
-    public LuaTable meta;
-    public LuaValue logger;
+    public final LuaTable meta;
+    public final LuaValue logger;
+    public final LuaValue event;
 
     public Plugin(LuaTable meta) {
         this.meta = meta;
-        this.logger = CoerceJavaToLua.coerce(new LuaLogger(meta.get("name").tojstring()));
+
+        String pluginName = meta.get("name").tojstring();
+        this.logger = CoerceJavaToLua.coerce(new PluginLogger(pluginName));
+        this.event = CoerceJavaToLua.coerce(new PluginEvent());
     }
 
     public LuaFunction init = EmptyFunction.EMPTY_FUNCTION;
