@@ -1,0 +1,52 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sat, 2 Aug 2025 21:50:14 +0800
+Subject: [PATCH] Setup new plugin system.
+
+
+diff --git a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+index 70413fddd23ca1165cb5090cce4fddcb1bbca93f..392c20f9d2935cdcc51c9cc2ffa3b19e799fddd2 100644
+--- a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
++++ b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+@@ -12,6 +12,7 @@ import java.util.Set;
+ import java.util.TreeSet;
+ import java.util.function.Function;
+ import joptsimple.OptionSet;
++import me.coderfrish.plugin.LuaPluginManager;
+ import net.minecraft.server.dedicated.DedicatedServer;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.bukkit.plugin.java.LibraryLoader;
+@@ -108,6 +109,7 @@ public class PluginInitializerManager {
+         // We have to load the bukkit configuration inorder to get the update folder location.
+         io.papermc.paper.plugin.PluginInitializerManager pluginSystem = io.papermc.paper.plugin.PluginInitializerManager.init(optionSet);
+         if (pluginSystem.pluginRemapper != null) pluginSystem.pluginRemapper.loadingPlugins();
++        LuaPluginManager.loadPlugins(pluginSystem.pluginDirectory);
+ 
+         // Register the default plugin directory
+         io.papermc.paper.plugin.util.EntrypointUtil.registerProvidersFromSource(io.papermc.paper.plugin.provider.source.DirectoryProviderSource.INSTANCE, pluginSystem.pluginDirectoryPath());
+@@ -119,6 +121,11 @@ public class PluginInitializerManager {
+ 
+         final Set<String> paperPluginNames = new TreeSet<>();
+         final Set<String> legacyPluginNames = new TreeSet<>();
++        final Set<String> luaPluginNames = new TreeSet<>();
++        LuaPluginManager.getPlugins().forEach(plugin -> {
++            luaPluginNames.add(String.format("%s (%s)", plugin.meta.getName(), plugin.meta.getVersion()));
++        });
++
+         LaunchEntryPointHandler.INSTANCE.getStorage().forEach((entrypoint, providerStorage) -> {
+             providerStorage.getRegisteredProviders().forEach(provider -> {
+                 if (provider instanceof final SpigotPluginProvider legacy) {
+@@ -144,6 +151,13 @@ public class PluginInitializerManager {
+                 LOGGER.info("Bukkit plugins ({}):\n - {}", legacyPluginNames.size(), String.join(", ", legacyPluginNames));
+             }
+         }
++        if (!luaPluginNames.isEmpty()) {
++            if (LOGGER.isDebugEnabled()) {
++                LOGGER.info("LemonMint plugins ({}):\n - {}", luaPluginNames.size(), String.join("\n - ", luaPluginNames));
++            } else {
++                LOGGER.info("LemonMint plugins ({}):\n - {}", luaPluginNames.size(), String.join(", ", luaPluginNames));
++            }
++        }
+     }
+ 
+     // This will be the end of me...

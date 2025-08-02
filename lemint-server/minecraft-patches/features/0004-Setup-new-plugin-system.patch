@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sat, 2 Aug 2025 21:50:14 +0800
+Subject: [PATCH] Setup new plugin system.
+
+
+diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
+index 1c65118a3e6703ffc3480a8a9f85adee3141449d..fe6532274c92d83793423c4652ac3e9a27368ca6 100644
+--- a/net/minecraft/server/MinecraftServer.java
++++ b/net/minecraft/server/MinecraftServer.java
+@@ -50,6 +50,8 @@ import java.util.function.Function;
+ import java.util.stream.Collectors;
+ import javax.annotation.Nullable;
+ import javax.imageio.ImageIO;
++
++import me.coderfrish.plugin.LuaPluginManager;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.FileUtil;
+@@ -1069,6 +1071,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         if (this.server != null) {
+             this.server.spark.disable(); // Paper - spark
+             this.server.disablePlugins();
++            LuaPluginManager.disablePlugins();
+             if (!me.coderfrish.config.experiment.BukkitSchedulerConfig.enabled) this.server.waitForAsyncTasksShutdown(); // Paper - Wait for Async Tasks during shutdown
+         }
+         // CraftBukkit end
+diff --git a/net/minecraft/server/dedicated/DedicatedServer.java b/net/minecraft/server/dedicated/DedicatedServer.java
+index 4003c9f71d4a8c32a02ae6eb3ef7b59ca463470a..e35aff6e0a2d7e2a4368a92c1519b920fa98cb2d 100644
+--- a/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -27,6 +27,7 @@ import dev.bacteriawa.mint.config.MintConfig;
+ import dev.bacteriawa.mint.functions.GlobalServerMemoryBar;
+ import dev.bacteriawa.mint.functions.GlobalServerRegionBar;
+ import dev.bacteriawa.mint.functions.GlobalServerTpsBar;
++import me.coderfrish.plugin.LuaPluginManager;
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
+ import net.minecraft.SharedConstants;
+@@ -243,6 +244,8 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+ 
+         // CraftBukkit start
+         this.server.loadPlugins();
++        LuaPluginManager.loadPlugins();
++        LuaPluginManager.enablePlugins();
+         this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.STARTUP);
+         // CraftBukkit end
+ 
