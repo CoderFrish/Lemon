@@ -1,0 +1,59 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sat, 2 Aug 2025 14:07:35 +0800
+Subject: [PATCH] Added new Command system for new plugin system.
+
+
+diff --git a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+index 254537680b65fbb00827848ae8ca2be3a2a8b602..c8f6ce14527e8f57884a2e2cb578e93baa12d04e 100644
+--- a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
++++ b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+@@ -17,10 +17,7 @@ import io.papermc.paper.plugin.provider.ProviderStatusHolder;
+ import io.papermc.paper.plugin.provider.type.paper.PaperPluginParent;
+ import io.papermc.paper.plugin.provider.type.spigot.SpigotPluginProvider;
+ import java.lang.reflect.Type;
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.Set;
+-import java.util.TreeMap;
++import java.util.*;
+ 
+ import me.coderfrish.server.plugin.PluginManager;
+ import net.kyori.adventure.text.Component;
+@@ -213,11 +210,15 @@ public class PaperPluginsCommand {
+             sender.sendMessage(component);
+         }
+ 
+-        Set<String> lemonMintPlugins = PluginManager.lemonMintPluginNames;
++        Set<String> lemonMintPlugins = new TreeSet<>();
++        PluginManager.plugins.forEach(plugin -> {
++            lemonMintPlugins.add(plugin.meta.get("name").tojstring());
++        });
++
+         if (!lemonMintPlugins.isEmpty()) {
+-            sender.sendMessage(header("LemonMint Plugins", 0xED8106, lemonMintPlugins.size(), hasAllPluginTypes));
++            sender.sendMessage(header("LemonMint Plugins", 0xFFF44F, lemonMintPlugins.size(), hasAllPluginTypes));
+ 
+-            StringBuffer buffer = new StringBuffer(" - ");
++            StringBuilder buffer = new StringBuilder(" - ");
+             int i = -1;
+             for (String lemonMintPlugin : lemonMintPlugins) {
+                 if (i == 0) {
+diff --git a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+index b90f2831df898e0a956b98eb7752dcf0c77df5a7..b143fa617f6f60b963769a4c716a4ebb16bb1669 100644
+--- a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
++++ b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+@@ -124,7 +124,12 @@ public class PluginInitializerManager {
+ 
+         final Set<String> paperPluginNames = new TreeSet<>();
+         final Set<String> legacyPluginNames = new TreeSet<>();
+-        final Set<String> lemonMintPluginNames = PluginManager.lemonMintPluginNameWithVersions;
++        final Set<String> lemonMintPluginNames = new TreeSet<>();
++
++        PluginManager.plugins.forEach(plugin -> {
++            lemonMintPluginNames.add(String.format("%s (%s)", plugin.meta.get("name").tojstring(), plugin.meta.get("version").tojstring()));
++        });
++
+         LaunchEntryPointHandler.INSTANCE.getStorage().forEach((entrypoint, providerStorage) -> {
+             providerStorage.getRegisteredProviders().forEach(provider -> {
+                 if (provider instanceof final SpigotPluginProvider legacy) {
