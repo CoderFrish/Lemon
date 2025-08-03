@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sun, 3 Aug 2025 12:42:53 +0800
+Subject: [PATCH] ServerBuildInfo git rebase to LemonMint.
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+index d3d3d6468c09b5f33ac98f6938b849d413d1af3d..ca6c4e23b3ee75ceaf134baed84c9f12f7a3d90e 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+@@ -31,7 +31,7 @@ public record ServerBuildInfoImpl(
+     private static final String ATTRIBUTE_GIT_COMMIT = "Git-Commit";
+ 
+     private static final String BRAND_PAPER_NAME = "Paper";
+-    private static final String BRAND_MINT_NAME = "Mint"; // Mint
++    private static final String BRAND_MINT_NAME = "LemonMint"; // Mint
+ 
+     private static final String BUILD_DEV = "DEV";
+ 
