@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class LuaPluginManager implements PluginManager {
-    private static final String VALID_NAME = "^[A-Za-z0-9 _.-]+$";
+    private static final String VALID_NAME = "^[a-z0-9_]+$";
     private static final PluginManager pluginManager = new LuaPluginManager();
     private static final List<Plugin> plugins = new CopyOnWriteArrayList<>();
 
@@ -25,7 +25,10 @@ public class LuaPluginManager implements PluginManager {
     private static final AsyncScheduler asyncScheduler = new LuaAsyncScheduler();
     private static final RegionScheduler regionScheduler = new LuaRegionScheduler();
 
+    public static Path pluginFolder;
+
     public static void loadPlugins(Path path) {
+        pluginFolder = path;
         for (File file : path.toFile().listFiles()) {
             if (file.getName().endsWith(".lua")) {
                 loadPlugins(file);

@@ -31,7 +31,7 @@ public class JavaPlugin  extends PluginBase {
 
     @Override
     public File getDataFolder() {
-        throw new UnsupportedOperationException("Not supported.");
+        return new File(LuaPluginManager.pluginFolder.toFile(), pluginName);
     }
 
     @Override

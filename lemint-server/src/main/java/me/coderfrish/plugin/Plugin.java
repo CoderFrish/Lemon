@@ -10,6 +10,7 @@ public class Plugin {
     public final Logger logger;
     public final PluginEvent event;
     public final PluginCommand command;
+    public final PluginConfig config;
 
     public Plugin(PluginMeta meta) {
         this.meta = meta;
@@ -18,6 +19,7 @@ public class Plugin {
         this.logger = LoggerFactory.getLogger(meta.getName());
         this.event = new PluginEvent(this);
         this.command = new PluginCommand(this);
+        this.config = new PluginConfig(this);
     }
 
     public LuaFunction load = EmptyFunction.EMPTY_FUNCTION;
