@@ -73,6 +73,7 @@ jobs:
           name: LemonMint ${{ env.version }} - ${{ env.commit_tag }}
           body: |
             ### 📦Version: `${{ env.version }}` | Commit ${{ env.commit_tag }}
+            ![download](https://img.shields.io/github/downloads/MenthaMC/LemonMint/${{ env.commit_tag }}/total?style=for-the-badge&logo=github&label=Downloads&logoColor=white&color=c4a400)
             This release is automatically compiled by GitHub Actions
             ### 📜 Commit Message:
             ${{ env.commit_msg }}
