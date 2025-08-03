@@ -1,0 +1,58 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sun, 3 Aug 2025 17:23:42 +0800
+Subject: [PATCH] Further improve the API
+
+
+diff --git a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+index d0a4e1642d1be33cd9e832f961301ab267e216bc..10c2def089b99c263302c432c97276c2b3f354d1 100644
+--- a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
++++ b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+@@ -19,7 +19,10 @@ import io.papermc.paper.plugin.provider.type.spigot.SpigotPluginProvider;
+ import java.lang.reflect.Type;
+ import java.util.ArrayList;
+ import java.util.List;
++import java.util.Set;
+ import java.util.TreeMap;
++
++import me.coderfrish.plugin.LuaPluginManager;
+ import net.kyori.adventure.text.Component;
+ import net.kyori.adventure.text.JoinConfiguration;
+ import net.kyori.adventure.text.TextComponent;
+@@ -210,6 +213,23 @@ public class PaperPluginsCommand {
+             sender.sendMessage(component);
+         }
+ 
++        List<me.coderfrish.plugin.Plugin> lemonMintPlugins = LuaPluginManager.getPlugins();
++        if (!lemonMintPlugins.isEmpty()) {
++            sender.sendMessage(header("LemonMint Plugins", 0xFFF44F, lemonMintPlugins.size(), hasAllPluginTypes));
++
++            StringBuilder buffer = new StringBuilder(" - ");
++            int i = -1;
++            for (me.coderfrish.plugin.Plugin lemonMintPlugin : lemonMintPlugins) {
++                if (i == 0) {
++                    buffer.append(", ").append(lemonMintPlugin.meta.getName());
++                } else {
++                    buffer.append(lemonMintPlugin.meta.getName());
++                }
++                i++;
++            }
++            sender.sendMessage(Component.text(buffer.toString()));
++        }
++
+         return Command.SINGLE_SUCCESS;
+     }
+ }
+diff --git a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+index 392c20f9d2935cdcc51c9cc2ffa3b19e799fddd2..43e5a82416097da50edbb1df31bab0bb94ff54b6 100644
+--- a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
++++ b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+@@ -135,7 +135,7 @@ public class PluginInitializerManager {
+                 }
+             });
+         });
+-        final int total = paperPluginNames.size() + legacyPluginNames.size();
++        final int total = paperPluginNames.size() + legacyPluginNames.size() + luaPluginNames.size();
+         LOGGER.info("Initialized {} plugin{}", total, total == 1 ? "" : "s");
+         if (!paperPluginNames.isEmpty()) {
+             if (LOGGER.isDebugEnabled()) {
