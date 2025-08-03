@@ -13,9 +13,11 @@ public class Plugin {
 
     public Plugin(PluginMeta meta) {
         this.meta = meta;
+        JavaPluginManager.addPlugin(this);
+
         this.logger = LoggerFactory.getLogger(meta.getName());
-        this.event = new PluginEvent();
-        this.command = new PluginCommand();
+        this.event = new PluginEvent(this);
+        this.command = new PluginCommand(this);
     }
 
     public LuaFunction load = EmptyFunction.EMPTY_FUNCTION;

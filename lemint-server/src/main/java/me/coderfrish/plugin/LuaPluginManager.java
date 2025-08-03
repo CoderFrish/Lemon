@@ -1,5 +1,10 @@
 package me.coderfrish.plugin;
 
+import io.papermc.paper.threadedregions.scheduler.FoliaGlobalRegionScheduler;
+import me.coderfrish.plugin.scheduler.AsyncScheduler;
+import me.coderfrish.plugin.scheduler.GlobalRegionScheduler;
+import me.coderfrish.plugin.scheduler.LuaAsyncScheduler;
+import me.coderfrish.plugin.scheduler.LuaGlobalRegionScheduler;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaFunction;
@@ -18,6 +23,9 @@ public class LuaPluginManager implements PluginManager {
     private static final String VALID_NAME = "^[A-Za-z0-9 _.-]+$";
     private static final PluginManager pluginManager = new LuaPluginManager();
     private static final List<Plugin> plugins = new CopyOnWriteArrayList<>();
+
+    private static final GlobalRegionScheduler globalRegionScheduler = new LuaGlobalRegionScheduler();
+    private static final AsyncScheduler asyncScheduler = new LuaAsyncScheduler();
 
     public static void loadPlugins(Path path) {
         for (File file : path.toFile().listFiles()) {
@@ -50,6 +58,7 @@ public class LuaPluginManager implements PluginManager {
     public static void disablePlugins() {
         for (Plugin plugin : getPlugins()) {
             plugin.disable.call();
+            JavaPluginManager.removePlugin(plugin);
         }
     }
 
@@ -59,6 +68,16 @@ public class LuaPluginManager implements PluginManager {
 
         plugin.call(CoerceJavaToLua.coerce(javaPlugin));
         plugins.add(javaPlugin);
+    }
+
+    @Override
+    public GlobalRegionScheduler globalRegionScheduler() {
+        return globalRegionScheduler;
+    }
+
+    @Override
+    public AsyncScheduler asyncScheduler() {
+        return asyncScheduler;
     }
 
     public static List<Plugin> getPlugins() {
