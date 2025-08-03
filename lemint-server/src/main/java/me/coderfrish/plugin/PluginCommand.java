@@ -49,7 +49,7 @@ public class PluginCommand {
         String[] a = (String[]) CoerceLuaToJava.coerce(aliases, String[].class);
         List<String> buffer = new ArrayList<>(Arrays.asList(a));
 
-        Bukkit.getCommandMap().register(plugin.meta.getName(), command, new LuaCommand(command, description.tojstring(), usage.tojstring(), buffer) {
+        Bukkit.getCommandMap().register(command, plugin.meta.getName(), new LuaCommand(command, description.tojstring(), usage.tojstring(), buffer) {
             @Override
             public boolean execute(@NotNull CommandSender sender, @NotNull String name, @NotNull String @NotNull [] args) {
                 return executor.call(
