@@ -1,9 +1,11 @@
 package me.coderfrish.plugin;
 
+import me.coderfrish.functions.ImportFunction;
 import me.coderfrish.plugin.scheduler.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.luaj.vm2.*;
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.jse.*;
 
 import java.io.File;
@@ -39,7 +41,12 @@ public class LuaPluginManager implements PluginManager {
     }
 
     private static Globals setupPluginsGlobals() {
-        Globals globals = JsePlatform.standardGlobals();
+        Globals globals = new Globals();
+        globals.load(new JseBaseLib());
+        LoadState.install(globals);
+        LuaC.install(globals);
+
+        globals.set("import", new ImportFunction());
         globals.set("pluginManager", CoerceJavaToLua.coerce(pluginManager));
 
         return globals;
