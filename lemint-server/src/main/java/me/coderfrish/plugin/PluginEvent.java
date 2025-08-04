@@ -30,4 +30,15 @@ public class PluginEvent {
                 JavaPluginManager.getPlugin(plugin)
         );
     }
+
+    public void listen(Class<? extends Event> eventClazz, LuaFunction listenerFunction) {
+        Bukkit.getPluginManager().registerEvent(eventClazz,
+                new Listener() {},
+                EventPriority.NORMAL,
+                (listener, event) -> {
+                    listenerFunction.call(CoerceJavaToLua.coerce(event));
+                },
+                JavaPluginManager.getPlugin(plugin)
+        );
+    }
 }
