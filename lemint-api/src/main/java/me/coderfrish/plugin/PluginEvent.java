@@ -1,6 +1,5 @@
 package me.coderfrish.plugin;
 
-import me.coderfrish.event.EventMap;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
@@ -15,13 +14,8 @@ public class PluginEvent {
         this.plugin = plugin;
     }
 
-    public void listen(String eventName, LuaFunction listenerFunction) {
-        Class<? extends Event> eventClass = EventMap.getEvents().get(eventName);
-        if (eventClass == null) {
-            throw new RuntimeException("Event - " + eventName + " is not found.");
-        }
-
-        Bukkit.getPluginManager().registerEvent(eventClass,
+    public void listen(Class<? extends Event> eventClazz, LuaFunction listenerFunction) {
+        Bukkit.getPluginManager().registerEvent(eventClazz,
                 new Listener() {},
                 EventPriority.NORMAL,
                 (listener, event) -> {

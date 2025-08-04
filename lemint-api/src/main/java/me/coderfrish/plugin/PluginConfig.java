@@ -2,12 +2,11 @@ package me.coderfrish.plugin;
 
 import me.coderfrish.plugin.config.Config;
 import me.coderfrish.plugin.config.ConfigManager;
-import org.apache.commons.io.FileUtils;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 public class PluginConfig {
     private final Plugin plugin;
@@ -26,7 +25,7 @@ public class PluginConfig {
         if (!configFile.exists()) {
             try {
                 configFile.createNewFile();
-                FileUtils.writeStringToFile(configFile, config, StandardCharsets.UTF_8);
+                Files.writeString(configFile.toPath(), config);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

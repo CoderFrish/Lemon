@@ -1,15 +1,12 @@
 package me.coderfrish.plugin;
 
+import me.coderfrish.functions.ImportFunction;
 import me.coderfrish.plugin.scheduler.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.InvalidDescriptionException;
-import org.luaj.vm2.Globals;
-import org.luaj.vm2.LuaFunction;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.jse.CoerceJavaToLua;
-import org.luaj.vm2.lib.jse.CoerceLuaToJava;
-import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.*;
+import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lib.jse.*;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -37,11 +34,22 @@ public class LuaPluginManager implements PluginManager {
     }
 
     private static void loadPlugins(File file) {
-        Globals globals = JsePlatform.standardGlobals();
-        globals.set("pluginManager", CoerceJavaToLua.coerce(pluginManager));
+        Globals globals = setupPluginsGlobals();
         LuaValue chunk = globals.loadfile(file.getAbsolutePath());
 
         chunk.call();
+    }
+
+    private static Globals setupPluginsGlobals() {
+        Globals globals = new Globals();
+        globals.load(new JseBaseLib());
+        LoadState.install(globals);
+        LuaC.install(globals);
+
+        globals.set("import", new ImportFunction());
+        globals.set("pluginManager", CoerceJavaToLua.coerce(pluginManager));
+
+        return globals;
     }
 
     public static void loadPlugins() {
