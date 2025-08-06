@@ -83,42 +83,42 @@ public class LemonMintScheduler implements BukkitScheduler {
 
     @Override
     public @NotNull BukkitTask runTaskLater(@NotNull Plugin plugin, @NotNull Runnable task, long delay) throws IllegalArgumentException {
-        return new LemonMintTask(Bukkit.getGlobalRegionScheduler().runDelayed(plugin, scheduledTask -> task.run(), delay));
+        return new LemonMintTask(Bukkit.getGlobalRegionScheduler().runDelayed(plugin, scheduledTask -> task.run(), getOneIfNotPositive(delay)));
     }
 
     @Override
     public void runTaskLater(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> task, long delay) throws IllegalArgumentException {
-        Bukkit.getGlobalRegionScheduler().runDelayed(plugin, scheduledTask -> task.accept(new LemonMintTask(scheduledTask)), delay);
+        Bukkit.getGlobalRegionScheduler().runDelayed(plugin, scheduledTask -> task.accept(new LemonMintTask(scheduledTask)), getOneIfNotPositive(delay));
     }
 
     @Override
     public @NotNull BukkitTask runTaskLaterAsynchronously(@NotNull Plugin plugin, @NotNull Runnable task, long delay) throws IllegalArgumentException {
-        return new LemonMintAsyncTask(Bukkit.getAsyncScheduler().runDelayed(plugin, scheduledTask -> task.run(), delay * 50, TimeUnit.MILLISECONDS));
+        return new LemonMintAsyncTask(Bukkit.getAsyncScheduler().runDelayed(plugin, scheduledTask -> task.run(), getOneIfNotPositive(delay) * 50, TimeUnit.MILLISECONDS));
     }
 
     @Override
     public void runTaskLaterAsynchronously(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> task, long delay) throws IllegalArgumentException {
-        Bukkit.getAsyncScheduler().runDelayed(plugin, scheduledTask -> task.accept(new LemonMintAsyncTask(scheduledTask)), delay * 50, TimeUnit.MILLISECONDS);
+        Bukkit.getAsyncScheduler().runDelayed(plugin, scheduledTask -> task.accept(new LemonMintAsyncTask(scheduledTask)), getOneIfNotPositive(delay) * 50, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public @NotNull BukkitTask runTaskTimer(@NotNull Plugin plugin, @NotNull Runnable task, long delay, long period) throws IllegalArgumentException {
-        return new LemonMintTask(Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), delay, period));
+        return new LemonMintTask(Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), getOneIfNotPositive(delay), period));
     }
 
     @Override
     public void runTaskTimer(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> task, long delay, long period) throws IllegalArgumentException {
-        Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, scheduledTask -> task.accept(new LemonMintTask(scheduledTask)), delay, period);
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, scheduledTask -> task.accept(new LemonMintTask(scheduledTask)), getOneIfNotPositive(delay), period);
     }
 
     @Override
     public @NotNull BukkitTask runTaskTimerAsynchronously(@NotNull Plugin plugin, @NotNull Runnable task, long delay, long period) throws IllegalArgumentException {
-        return new LemonMintAsyncTask(Bukkit.getAsyncScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), delay * 50, period * 50, TimeUnit.MILLISECONDS));
+        return new LemonMintAsyncTask(Bukkit.getAsyncScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), getOneIfNotPositive(delay) * 50, period * 50, TimeUnit.MILLISECONDS));
     }
 
     @Override
     public void runTaskTimerAsynchronously(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> task, long delay, long period) throws IllegalArgumentException {
-        Bukkit.getAsyncScheduler().runAtFixedRate(plugin, scheduledTask -> task.accept(new LemonMintAsyncTask(scheduledTask)), delay * 50, period * 50, TimeUnit.MILLISECONDS);
+        Bukkit.getAsyncScheduler().runAtFixedRate(plugin, scheduledTask -> task.accept(new LemonMintAsyncTask(scheduledTask)), getOneIfNotPositive(delay) * 50, period * 50, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -212,5 +212,9 @@ public class LemonMintScheduler implements BukkitScheduler {
     @Override
     public @NotNull <T> Future<T> callSyncMethod(@NotNull Plugin plugin, @NotNull Callable<T> task) {
         throw new UnsupportedOperationException("Folia server isn`t supported yet.");
+    }
+
+    private static long getOneIfNotPositive(long delay) {
+        return delay <= 0 ? 1L : delay;
     }
 }
