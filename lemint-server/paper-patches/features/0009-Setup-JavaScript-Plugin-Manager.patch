@@ -1,0 +1,116 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Wed, 6 Aug 2025 18:30:13 +0800
+Subject: [PATCH] Setup JavaScript Plugin Manager.
+
+
+diff --git a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+index d0a4e1642d1be33cd9e832f961301ab267e216bc..6e9e5f55252ee65d9ce31e7ea18b399e59fba630 100644
+--- a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
++++ b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+@@ -17,9 +17,11 @@ import io.papermc.paper.plugin.provider.ProviderStatusHolder;
+ import io.papermc.paper.plugin.provider.type.paper.PaperPluginParent;
+ import io.papermc.paper.plugin.provider.type.spigot.SpigotPluginProvider;
+ import java.lang.reflect.Type;
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.TreeMap;
++import java.util.*;
++
++import me.coderfrish.plugin.ScriptPluginManager;
++import me.coderfrish.plugin.ScriptPluginMeta;
++import me.coderfrish.plugin.api.ScriptPlugin;
+ import net.kyori.adventure.text.Component;
+ import net.kyori.adventure.text.JoinConfiguration;
+ import net.kyori.adventure.text.TextComponent;
+@@ -27,6 +29,7 @@ import net.kyori.adventure.text.event.ClickEvent;
+ import net.kyori.adventure.text.format.NamedTextColor;
+ import net.kyori.adventure.text.format.TextColor;
+ import org.bukkit.Bukkit;
++import org.bukkit.ChatColor;
+ import org.bukkit.command.CommandSender;
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.bukkit.plugin.Plugin;
+@@ -210,6 +213,25 @@ public class PaperPluginsCommand {
+             sender.sendMessage(component);
+         }
+ 
++        Map<ScriptPlugin, ScriptPluginMeta> lemonMintPlugins = ScriptPluginManager.getPlugins();
++        if (!lemonMintPlugins.isEmpty()) {
++            sender.sendMessage(header("Script Plugins", 0xFFF44F, lemonMintPlugins.size(), hasAllPluginTypes));
++
++            StringBuilder buffer = new StringBuilder(" - ");
++            int i = -1;
++            for (Map.Entry<ScriptPlugin, ScriptPluginMeta> lemonMintPlugin : lemonMintPlugins.entrySet()) {
++                if (i == 0) {
++                    buffer.append(", ").append(lemonMintPlugin.getKey().isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getValue().getName());
++                } else {
++                    buffer.append(lemonMintPlugin.getKey().isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getValue().getName());
++                }
++
++                i++;
++            }
++
++            sender.sendMessage(buffer.toString());
++        }
++
+         return Command.SINGLE_SUCCESS;
+     }
+ }
+diff --git a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+index 70413fddd23ca1165cb5090cce4fddcb1bbca93f..63160643f4d517e89e7421d20507889eed087c59 100644
+--- a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
++++ b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+@@ -12,6 +12,8 @@ import java.util.Set;
+ import java.util.TreeSet;
+ import java.util.function.Function;
+ import joptsimple.OptionSet;
++import me.coderfrish.plugin.ScriptPluginManager;
++import me.coderfrish.plugin.ScriptPluginMeta;
+ import net.minecraft.server.dedicated.DedicatedServer;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.bukkit.plugin.java.LibraryLoader;
+@@ -108,6 +110,7 @@ public class PluginInitializerManager {
+         // We have to load the bukkit configuration inorder to get the update folder location.
+         io.papermc.paper.plugin.PluginInitializerManager pluginSystem = io.papermc.paper.plugin.PluginInitializerManager.init(optionSet);
+         if (pluginSystem.pluginRemapper != null) pluginSystem.pluginRemapper.loadingPlugins();
++        ScriptPluginManager.loadPlugins(pluginSystem.pluginDirectory.toFile().listFiles());
+ 
+         // Register the default plugin directory
+         io.papermc.paper.plugin.util.EntrypointUtil.registerProvidersFromSource(io.papermc.paper.plugin.provider.source.DirectoryProviderSource.INSTANCE, pluginSystem.pluginDirectoryPath());
+@@ -119,6 +122,7 @@ public class PluginInitializerManager {
+ 
+         final Set<String> paperPluginNames = new TreeSet<>();
+         final Set<String> legacyPluginNames = new TreeSet<>();
++        final Set<String> scriptPluginNames = new TreeSet<>();
+         LaunchEntryPointHandler.INSTANCE.getStorage().forEach((entrypoint, providerStorage) -> {
+             providerStorage.getRegisteredProviders().forEach(provider -> {
+                 if (provider instanceof final SpigotPluginProvider legacy) {
+@@ -128,7 +132,12 @@ public class PluginInitializerManager {
+                 }
+             });
+         });
+-        final int total = paperPluginNames.size() + legacyPluginNames.size();
++
++        for (ScriptPluginMeta value : ScriptPluginManager.getPlugins().values()) {
++            scriptPluginNames.add(String.format("%s (%s)", value.getName(), value.getVersion()));
++        }
++
++        final int total = paperPluginNames.size() + legacyPluginNames.size() + scriptPluginNames.size();
+         LOGGER.info("Initialized {} plugin{}", total, total == 1 ? "" : "s");
+         if (!paperPluginNames.isEmpty()) {
+             if (LOGGER.isDebugEnabled()) {
+@@ -144,6 +153,13 @@ public class PluginInitializerManager {
+                 LOGGER.info("Bukkit plugins ({}):\n - {}", legacyPluginNames.size(), String.join(", ", legacyPluginNames));
+             }
+         }
++        if (!scriptPluginNames.isEmpty()) {
++            if (LOGGER.isDebugEnabled()) {
++                LOGGER.info("Script plugins ({}):\n - {}", scriptPluginNames.size(), String.join("\n - ", scriptPluginNames));
++            } else {
++                LOGGER.info("Script plugins ({}):\n - {}", scriptPluginNames.size(), String.join(", ", scriptPluginNames));
++            }
++        }
+     }
+ 
+     // This will be the end of me...
