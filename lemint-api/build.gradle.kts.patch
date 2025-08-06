@@ -1,5 +1,14 @@
 --- a/mint-api/build.gradle.kts
 +++ b/mint-api/build.gradle.kts
+@@ -52,6 +_,8 @@
+     api("org.slf4j:slf4j-api:$slf4jVersion")
+     api("com.mojang:brigadier:1.3.10")
+     api("io.sentry:sentry:8.0.0-rc.2") // Pufferfish
++    implementation("org.graalvm.polyglot:polyglot:24.2.2")
++    implementation("org.graalvm.polyglot:js:24.2.2")
+ 
+     // Deprecate bungeecord-chat in favor of adventure
+     api("net.md-5:bungeecord-chat:$bungeeCordChatVersion") {
 @@ -103,20 +_,24 @@
              srcDir(generatedDir)
              srcDir(file("../paper-api/src/main/java"))

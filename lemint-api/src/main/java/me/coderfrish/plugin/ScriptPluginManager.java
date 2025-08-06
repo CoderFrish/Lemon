@@ -1,0 +1,151 @@
+package me.coderfrish.plugin;
+
+import me.coderfrish.plugin.api.JavaPlugin;
+import me.coderfrish.plugin.api.ScriptPlugin;
+import me.coderfrish.plugin.exception.InvalidScriptException;
+import org.bukkit.plugin.PluginBase;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.Source;
+import org.graalvm.polyglot.Value;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+public class ScriptPluginManager {
+    private static final Map<ScriptPlugin, ScriptPluginMeta> plugins = new ConcurrentHashMap<>();
+    private static final Map<ScriptPlugin, Value> installers = new ConcurrentHashMap<>();
+    private static final Set<Context> contexts = new CopyOnWriteArraySet<>();
+    private static final Map<ScriptPlugin, PluginBase> javaPlugins =  new ConcurrentHashMap<>();
+
+    public static void loadPlugins(File[] files) {
+        for (File file : files) {
+            if (file.getName().endsWith(".js") || file.getName().endsWith(".mjs")) {
+                loadSinglePlugin(file);
+            }
+        }
+    }
+
+    private static void loadSinglePlugin(File file) {
+        try {
+            Context context = Context.newBuilder()
+                    .logHandler(PrintStream.nullOutputStream())
+                    .allowHostAccess(HostAccess.ALL)
+                    .allowHostClassLookup(className -> true)
+                    .option("js.esm-eval-returns-exports", "true")
+                    .allowNativeAccess(false)
+                    .build();
+
+            Source source = Source.newBuilder("js", file)
+                    .mimeType("application/javascript+module").build();
+            Value module = context.eval(source);
+            Value plugin = module.getMember("default");
+            ScriptPluginMeta meta = conversionToMeta(plugin);
+            ScriptPlugin scriptPlugin = new ScriptPlugin();
+            Value installer = plugin.getMember("installer").execute(scriptPlugin);
+
+            plugins.put(scriptPlugin, meta);
+            installers.put(scriptPlugin, installer);
+            contexts.add(context);
+        } catch (IOException e) {
+            throw new InvalidScriptException(e);
+        }
+    }
+
+    public static void onLoad() {
+        installers.forEach((plugin, installer) -> {
+            Value onLoad = installer.getMember("onLoaded");
+            if (onLoad != null) {
+                onLoad.execute();
+            }
+
+            javaPlugins.put(plugin, new JavaPlugin(plugin));
+        });
+    }
+
+    public static void onEnabled() {
+        installers.forEach((plugin, ignore) -> {
+            plugin.setEnable(true);
+        });
+    }
+
+    public static void onDisabled() {
+        installers.forEach((plugin, ignore) -> {
+            plugin.setEnable(false);
+        });
+
+        contexts.forEach(Context::close);
+        contexts.clear();
+    }
+
+    public static void enablePlugin(ScriptPlugin plugin) {
+        Value installer = installers.get(plugin);
+        if (!plugin.isEnable()) {
+            Value onEnabled = installer.getMember("onEnabled");
+            if (onEnabled != null) {
+                onEnabled.execute();
+            }
+        }
+    }
+
+    public static void disablePlugin(ScriptPlugin plugin) {
+        Value installer = installers.get(plugin);
+        if (plugin.isEnable()) {
+            Value onDisabled = installer.getMember("onDisabled");
+            if (onDisabled != null) {
+                onDisabled.execute();
+            }
+        }
+    }
+
+    private static ScriptPluginMeta conversionToMeta(Value value) {
+        // name
+        Value name = value.getMember("name");
+        if (name == null) {
+            throw new InvalidScriptException("Missing plugin name");
+        }
+
+        String jName = name.asString();
+        if (!jName.matches("^[A-Za-z0-9]+$")) {
+            throw new InvalidScriptException("Plugin name is invalid");
+        }
+
+        // version
+        Value version = value.getMember("version");
+        if (version == null) {
+            throw new InvalidScriptException("Missing plugin version");
+        }
+
+        String jVersion = version.asString();
+
+        // description
+        Value description = value.getMember("description");
+        String jDescription;
+        if (description == null) {
+            jDescription = "";
+        } else {
+            jDescription = description.asString();
+        }
+
+        // installer
+        Value installer = value.getMember("installer");
+        if (installer == null) {
+            throw new InvalidScriptException("Missing plugin installer");
+        }
+
+        return new ScriptPluginMeta(jName, jVersion, jDescription, installer);
+    }
+
+    public static Map<ScriptPlugin, ScriptPluginMeta> getPlugins() {
+        return plugins;
+    }
+
+    public static Map<ScriptPlugin, PluginBase> getJavaPlugins() {
+        return javaPlugins;
+    }
+}
