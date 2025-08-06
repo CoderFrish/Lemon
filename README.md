@@ -22,7 +22,7 @@
  - 对于Bukkit Enity or Player Teleport API的基本恢复
  - 对于Bukkit Scheduler API的简单恢复（并不代表全部恢复）
  - Purpur的6格末影箱
- - JavaScript脚本插件支持（尚未完成）
+ - JavaScript脚本插件支持（进行中）
 
 ## 3 | API
 ```xml
