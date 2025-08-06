@@ -1,4 +1,4 @@
-package me.coderfrish.plugin;
+package me.coderfrish.plugin.api;
 
 import org.graalvm.polyglot.Value;
 

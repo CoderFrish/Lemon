@@ -1,0 +1,75 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Wed, 6 Aug 2025 21:56:34 +0800
+Subject: [PATCH] Update some api usage.
+
+
+diff --git a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+index 6e9e5f55252ee65d9ce31e7ea18b399e59fba630..e39f2d0d0b88bde93e0929116b782c393b3b6309 100644
+--- a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
++++ b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+@@ -20,7 +20,7 @@ import java.lang.reflect.Type;
+ import java.util.*;
+ 
+ import me.coderfrish.plugin.ScriptPluginManager;
+-import me.coderfrish.plugin.ScriptPluginMeta;
++import me.coderfrish.plugin.api.ScriptPluginMeta;
+ import me.coderfrish.plugin.api.ScriptPlugin;
+ import net.kyori.adventure.text.Component;
+ import net.kyori.adventure.text.JoinConfiguration;
+@@ -213,17 +213,17 @@ public class PaperPluginsCommand {
+             sender.sendMessage(component);
+         }
+ 
+-        Map<ScriptPlugin, ScriptPluginMeta> lemonMintPlugins = ScriptPluginManager.getPlugins();
++        List<ScriptPlugin> lemonMintPlugins = ScriptPluginManager.getPlugins();
+         if (!lemonMintPlugins.isEmpty()) {
+             sender.sendMessage(header("Script Plugins", 0xFFF44F, lemonMintPlugins.size(), hasAllPluginTypes));
+ 
+             StringBuilder buffer = new StringBuilder(" - ");
+             int i = -1;
+-            for (Map.Entry<ScriptPlugin, ScriptPluginMeta> lemonMintPlugin : lemonMintPlugins.entrySet()) {
++            for (ScriptPlugin lemonMintPlugin : lemonMintPlugins) {
+                 if (i == 0) {
+-                    buffer.append(", ").append(lemonMintPlugin.getKey().isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getValue().getName());
++                    buffer.append(", ").append(lemonMintPlugin.isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getMeta().getName());
+                 } else {
+-                    buffer.append(lemonMintPlugin.getKey().isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getValue().getName());
++                    buffer.append(lemonMintPlugin.isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getMeta().getName());
+                 }
+ 
+                 i++;
+diff --git a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+index 63160643f4d517e89e7421d20507889eed087c59..e32dafd72fb15933a020d5c6e806662222f0d6cd 100644
+--- a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
++++ b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+@@ -13,7 +13,8 @@ import java.util.TreeSet;
+ import java.util.function.Function;
+ import joptsimple.OptionSet;
+ import me.coderfrish.plugin.ScriptPluginManager;
+-import me.coderfrish.plugin.ScriptPluginMeta;
++import me.coderfrish.plugin.api.ScriptPlugin;
++import me.coderfrish.plugin.api.ScriptPluginMeta;
+ import net.minecraft.server.dedicated.DedicatedServer;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.bukkit.plugin.java.LibraryLoader;
+@@ -110,7 +111,7 @@ public class PluginInitializerManager {
+         // We have to load the bukkit configuration inorder to get the update folder location.
+         io.papermc.paper.plugin.PluginInitializerManager pluginSystem = io.papermc.paper.plugin.PluginInitializerManager.init(optionSet);
+         if (pluginSystem.pluginRemapper != null) pluginSystem.pluginRemapper.loadingPlugins();
+-        ScriptPluginManager.loadPlugins(pluginSystem.pluginDirectory.toFile().listFiles());
++        ScriptPluginManager.loadPlugins(pluginSystem.pluginDirectory.toFile());
+ 
+         // Register the default plugin directory
+         io.papermc.paper.plugin.util.EntrypointUtil.registerProvidersFromSource(io.papermc.paper.plugin.provider.source.DirectoryProviderSource.INSTANCE, pluginSystem.pluginDirectoryPath());
+@@ -133,8 +134,8 @@ public class PluginInitializerManager {
+             });
+         });
+ 
+-        for (ScriptPluginMeta value : ScriptPluginManager.getPlugins().values()) {
+-            scriptPluginNames.add(String.format("%s (%s)", value.getName(), value.getVersion()));
++        for (ScriptPlugin value : ScriptPluginManager.getPlugins()) {
++            scriptPluginNames.add(String.format("%s (%s)", value.getMeta().getName(), value.getMeta().getVersion()));
+         }
+ 
+         final int total = paperPluginNames.size() + legacyPluginNames.size() + scriptPluginNames.size();

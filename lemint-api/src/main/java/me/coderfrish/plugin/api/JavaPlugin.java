@@ -26,7 +26,6 @@ public class JavaPlugin extends PluginBase {
 
     public JavaPlugin(ScriptPlugin scriptPlugin) {
         this.scriptPlugin = scriptPlugin;
-
     }
 
     @Override

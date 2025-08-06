@@ -2,6 +2,7 @@ package me.coderfrish.plugin;
 
 import me.coderfrish.plugin.api.JavaPlugin;
 import me.coderfrish.plugin.api.ScriptPlugin;
+import me.coderfrish.plugin.api.ScriptPluginMeta;
 import me.coderfrish.plugin.exception.InvalidScriptException;
 import org.bukkit.plugin.PluginBase;
 import org.graalvm.polyglot.Context;
@@ -12,19 +13,21 @@ import org.graalvm.polyglot.Value;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class ScriptPluginManager {
-    private static final Map<ScriptPlugin, ScriptPluginMeta> plugins = new ConcurrentHashMap<>();
+    private static final List<ScriptPlugin> plugins = new CopyOnWriteArrayList<>();
     private static final Map<ScriptPlugin, Value> installers = new ConcurrentHashMap<>();
     private static final Set<Context> contexts = new CopyOnWriteArraySet<>();
     private static final Map<ScriptPlugin, PluginBase> javaPlugins =  new ConcurrentHashMap<>();
 
-    public static void loadPlugins(File[] files) {
-        for (File file : files) {
+    public static void loadPlugins(File pluginFolder) {
+        for (File file : pluginFolder.listFiles()) {
             if (file.getName().endsWith(".js") || file.getName().endsWith(".mjs")) {
                 loadSinglePlugin(file);
             }
@@ -46,10 +49,10 @@ public class ScriptPluginManager {
             Value module = context.eval(source);
             Value plugin = module.getMember("default");
             ScriptPluginMeta meta = conversionToMeta(plugin);
-            ScriptPlugin scriptPlugin = new ScriptPlugin();
+            ScriptPlugin scriptPlugin = new ScriptPlugin(meta);
             Value installer = plugin.getMember("installer").execute(scriptPlugin);
 
-            plugins.put(scriptPlugin, meta);
+            plugins.add(scriptPlugin);
             installers.put(scriptPlugin, installer);
             contexts.add(context);
         } catch (IOException e) {
@@ -59,12 +62,11 @@ public class ScriptPluginManager {
 
     public static void onLoad() {
         installers.forEach((plugin, installer) -> {
+            javaPlugins.put(plugin, new JavaPlugin(plugin));
             Value onLoad = installer.getMember("onLoaded");
             if (onLoad != null) {
                 onLoad.execute();
             }
-
-            javaPlugins.put(plugin, new JavaPlugin(plugin));
         });
     }
 
@@ -141,7 +143,7 @@ public class ScriptPluginManager {
         return new ScriptPluginMeta(jName, jVersion, jDescription, installer);
     }
 
-    public static Map<ScriptPlugin, ScriptPluginMeta> getPlugins() {
+    public static List<ScriptPlugin> getPlugins() {
         return plugins;
     }
 
