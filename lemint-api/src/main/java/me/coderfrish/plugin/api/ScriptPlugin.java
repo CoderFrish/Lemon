@@ -1,72 +1,24 @@
 package me.coderfrish.plugin.api;
 
 import me.coderfrish.plugin.ScriptPluginManager;
-import me.coderfrish.plugin.ScriptPluginMeta;
-import org.bukkit.Bukkit;
-import org.bukkit.command.PluginCommand;
-import org.bukkit.event.Event;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.plugin.PluginBase;
-import org.graalvm.polyglot.Value;
-import org.graalvm.polyglot.proxy.ProxyExecutable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class ScriptPlugin {
     private boolean enable = false;
+    private final ScriptPluginMeta meta;
 
-    public void registerEvent(Class<? extends Event> event, ProxyExecutable listener) {
-        Bukkit.getPluginManager().registerEvent(event,
-                new Listener() {},
-                EventPriority.NORMAL,
-                (listener0, event0) -> {
-                    listener.execute(Value.asValue(event0));
-                },
-                getBukkitJavaPlugin()
-        );
-    }
+    public final ScriptConfig config;
+    public final ScriptEvent event;
+    public final ScriptCommand command;
 
-    public void registerCommand(String command, ProxyExecutable executor, Value meta) {
-        PluginCommand pluginCommand = new PluginCommand(command, getBukkitJavaPlugin());
-        pluginCommand.setExecutor((sender, command0, label, args) ->
-                (boolean) executor.execute(Value.asValue(sender), Value.asValue(command0), Value.asValue(label), Value.asValue(args)));
-
-        Value description = meta.getMember("description");
-        if (description != null) {
-            pluginCommand.setUsage(description.asString());
-        }
-
-        Value usage = meta.getMember("usage");
-        if (usage != null) {
-            pluginCommand.setUsage(usage.asString());
-        }
-
-        Value aliases = meta.getMember("aliases");
-        if (aliases != null) {
-            pluginCommand.setAliases(new ArrayList<>(Arrays.asList(aliases.as(String[].class))));
-        }
-
-        Value permission = meta.getMember("permission");
-        if (permission != null) {
-            pluginCommand.setPermission(permission.asString());
-        }
-
-        Value permissionMessage = meta.getMember("permissionMessage");
-        if (permissionMessage != null) {
-            pluginCommand.permissionMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(permissionMessage.toString()));
-        }
-
-        Bukkit.getCommandMap().register(getMeta().getName(), pluginCommand);
-    }
-
-    private PluginBase getBukkitJavaPlugin() {
-        return ScriptPluginManager.getJavaPlugins().get(this);
+    public ScriptPlugin(ScriptPluginMeta meta) {
+        this.meta = meta;
+        this.config = new ScriptConfig(this);
+        this.event = new ScriptEvent(this);
+        this.command = new ScriptCommand(this, getMeta());
     }
 
     public ScriptPluginMeta getMeta() {
-        return ScriptPluginManager.getPlugins().get(this);
+        return this.meta;
     }
 
     public synchronized boolean isEnable() {
