@@ -1,0 +1,18 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Thu, 7 Aug 2025 16:26:31 +0800
+Subject: [PATCH] Supported javascript plugin module.
+
+
+diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
+index 9eb3cf1fbc01003505fa12f8ef3fd25f841657b2..1a6bd2b1b4a686f18d2b08d9c3ea33b681f0a523 100644
+--- a/net/minecraft/server/MinecraftServer.java
++++ b/net/minecraft/server/MinecraftServer.java
+@@ -52,6 +52,7 @@ import javax.annotation.Nullable;
+ import javax.imageio.ImageIO;
+ 
+ import me.coderfrish.plugin.ScriptPluginManager;
++import me.coderfrish.plugin.ScriptUnpackManager;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.FileUtil;

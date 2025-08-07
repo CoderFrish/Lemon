@@ -1,0 +1,51 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Thu, 7 Aug 2025 16:26:31 +0800
+Subject: [PATCH] Supported javascript plugin module.
+
+
+diff --git a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+index e39f2d0d0b88bde93e0929116b782c393b3b6309..e844071b9d649efed7a47f7f449a70d5bba3cd47 100644
+--- a/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
++++ b/src/main/java/io/papermc/paper/command/PaperPluginsCommand.java
+@@ -221,9 +221,9 @@ public class PaperPluginsCommand {
+             int i = -1;
+             for (ScriptPlugin lemonMintPlugin : lemonMintPlugins) {
+                 if (i == 0) {
+-                    buffer.append(", ").append(lemonMintPlugin.isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getMeta().getName());
++                    buffer.append(", ").append(lemonMintPlugin.isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getPluginMeta().getName());
+                 } else {
+-                    buffer.append(lemonMintPlugin.isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getMeta().getName());
++                    buffer.append(lemonMintPlugin.isEnable() ? ChatColor.GREEN : ChatColor.RED).append(lemonMintPlugin.getPluginMeta().getName());
+                 }
+ 
+                 i++;
+diff --git a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+index e32dafd72fb15933a020d5c6e806662222f0d6cd..b180df996a2e313699bc9635ffd6a400756ab7fc 100644
+--- a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
++++ b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+@@ -13,6 +13,7 @@ import java.util.TreeSet;
+ import java.util.function.Function;
+ import joptsimple.OptionSet;
+ import me.coderfrish.plugin.ScriptPluginManager;
++import me.coderfrish.plugin.ScriptUnpackManager;
+ import me.coderfrish.plugin.api.ScriptPlugin;
+ import me.coderfrish.plugin.api.ScriptPluginMeta;
+ import net.minecraft.server.dedicated.DedicatedServer;
+@@ -111,6 +112,7 @@ public class PluginInitializerManager {
+         // We have to load the bukkit configuration inorder to get the update folder location.
+         io.papermc.paper.plugin.PluginInitializerManager pluginSystem = io.papermc.paper.plugin.PluginInitializerManager.init(optionSet);
+         if (pluginSystem.pluginRemapper != null) pluginSystem.pluginRemapper.loadingPlugins();
++        ScriptUnpackManager.init(pluginSystem.pluginDirectory.toFile());
+         ScriptPluginManager.loadPlugins(pluginSystem.pluginDirectory.toFile());
+ 
+         // Register the default plugin directory
+@@ -135,7 +137,7 @@ public class PluginInitializerManager {
+         });
+ 
+         for (ScriptPlugin value : ScriptPluginManager.getPlugins()) {
+-            scriptPluginNames.add(String.format("%s (%s)", value.getMeta().getName(), value.getMeta().getVersion()));
++            scriptPluginNames.add(String.format("%s (%s)", value.getPluginMeta().getName(), value.getPluginMeta().getVersion()));
+         }
+ 
+         final int total = paperPluginNames.size() + legacyPluginNames.size() + scriptPluginNames.size();

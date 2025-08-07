@@ -44,11 +44,6 @@ public class ScriptCommand {
             pluginCommand.setPermission(permission.asString());
         }
 
-        Value permissionMessage = meta.getMember("permissionMessage");
-        if (permissionMessage != null) {
-            pluginCommand.permissionMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(permissionMessage.toString()));
-        }
-
         Bukkit.getCommandMap().register(this.meta.getName(), pluginCommand);
     }
 
