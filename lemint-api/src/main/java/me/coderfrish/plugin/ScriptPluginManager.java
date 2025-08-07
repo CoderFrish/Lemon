@@ -1,18 +1,27 @@
 package me.coderfrish.plugin;
 
+import me.coderfrish.constant.NumberConstant;
 import me.coderfrish.plugin.api.JavaPlugin;
 import me.coderfrish.plugin.api.ScriptPlugin;
 import me.coderfrish.plugin.api.ScriptPluginMeta;
+import me.coderfrish.plugin.exception.InvalidPluginPackException;
 import me.coderfrish.plugin.exception.InvalidScriptException;
+import me.coderfrish.plugin.pack.PluginPack;
+import me.coderfrish.utils.CheckUtils;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.bukkit.plugin.PluginBase;
+import org.bukkit.util.FileUtil;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.io.IOAccess;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +40,37 @@ public class ScriptPluginManager {
             if (file.getName().endsWith(".js") || file.getName().endsWith(".mjs")) {
                 loadSinglePlugin(file);
             }
+
+            if (file.getName().endsWith(".pack")) {
+                ScriptUnpackManager.register(file);
+            }
         }
+
+        loadPackPlugins();
+        ScriptUnpackManager.save();
+    }
+
+    private static void loadPackPlugins() {
+        List<PluginPack> packs = ScriptPackManager.getPacks();
+        packs.forEach(pluginPack -> {
+            File dataFolder = new File(ScriptUnpackManager.dataFolder, pluginPack.getSha());
+            File main = new File(dataFolder, pluginPack.getMain());
+
+            Context context = Context.newBuilder()
+                    .logHandler(PrintStream.nullOutputStream())
+                    .allowHostAccess(HostAccess.ALL)
+                    .allowHostClassLookup(className -> true)
+                    .option("js.esm-eval-returns-exports", "true")
+                    .allowIO(IOAccess.ALL)
+                    .allowNativeAccess(false)
+                    .build();
+
+            try {
+                newPluginInstance(main, context);
+            } catch (IOException e) {
+                throw new InvalidScriptException(e);
+            }
+        });
     }
 
     private static void loadSinglePlugin(File file) {
@@ -44,20 +83,24 @@ public class ScriptPluginManager {
                     .allowNativeAccess(false)
                     .build();
 
-            Source source = Source.newBuilder("js", file)
-                    .mimeType("application/javascript+module").build();
-            Value module = context.eval(source);
-            Value plugin = module.getMember("default");
-            ScriptPluginMeta meta = conversionToMeta(plugin);
-            ScriptPlugin scriptPlugin = new ScriptPlugin(meta);
-            Value installer = plugin.getMember("installer").execute(scriptPlugin);
-
-            plugins.add(scriptPlugin);
-            installers.put(scriptPlugin, installer);
-            contexts.add(context);
+            newPluginInstance(file, context);
         } catch (IOException e) {
             throw new InvalidScriptException(e);
         }
+    }
+
+    private static void newPluginInstance(File file, Context context) throws IOException {
+        Source source = Source.newBuilder("js", file)
+                .mimeType("application/javascript+module").build();
+        Value module = context.eval(source);
+        Value plugin = module.getMember("default");
+        ScriptPluginMeta meta = conversionToMeta(plugin);
+        ScriptPlugin scriptPlugin = new ScriptPlugin(meta);
+        Value installer = plugin.getMember("installer").execute(scriptPlugin);
+
+        plugins.add(scriptPlugin);
+        installers.put(scriptPlugin, installer);
+        contexts.add(context);
     }
 
     public static void onLoad() {

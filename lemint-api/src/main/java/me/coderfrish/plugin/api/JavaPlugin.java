@@ -35,7 +35,7 @@ public class JavaPlugin extends PluginBase {
 
     @Override
     public @NotNull PluginDescriptionFile getDescription() {
-        return new PluginDescriptionFile(scriptPlugin.getMeta().getName(), scriptPlugin.getMeta().getVersion(), "nms");
+        return new PluginDescriptionFile(scriptPlugin.getPluginMeta().getName(), scriptPlugin.getPluginMeta().getVersion(), "nms");
     }
 
     @Override

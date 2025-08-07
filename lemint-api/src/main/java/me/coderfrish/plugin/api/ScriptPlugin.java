@@ -1,6 +1,9 @@
 package me.coderfrish.plugin.api;
 
 import me.coderfrish.plugin.ScriptPluginManager;
+import org.bukkit.plugin.PluginBase;
+
+import java.io.File;
 
 public class ScriptPlugin {
     private boolean enable = false;
@@ -15,12 +18,20 @@ public class ScriptPlugin {
         this.meta = meta;
         this.config = new ScriptConfig(this);
         this.event = new ScriptEvent(this);
-        this.command = new ScriptCommand(this, getMeta());
+        this.command = new ScriptCommand(this, getPluginMeta());
         this.permission = new ScriptPermission();
     }
 
-    public ScriptPluginMeta getMeta() {
+    public ScriptPluginMeta getPluginMeta() {
         return this.meta;
+    }
+
+    public File getDataFolder() {
+        return getBukkitJavaPlugin().getDataFolder();
+    }
+
+    private PluginBase getBukkitJavaPlugin() {
+        return ScriptPluginManager.getJavaPlugins().get(this);
     }
 
     public synchronized boolean isEnable() {

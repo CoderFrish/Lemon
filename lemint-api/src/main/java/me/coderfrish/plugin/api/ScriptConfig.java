@@ -21,6 +21,10 @@ public class ScriptConfig {
         this.plugin = plugin;
     }
 
+    public void loadDefaults(String defaultConfig) {
+        load("config", defaultConfig);
+    }
+
     public void load(String configName, String defaultConfig) {
         YamlConfiguration config = new YamlConfiguration();
         if (!getBukkitJavaPlugin().getDataFolder().exists()) {
