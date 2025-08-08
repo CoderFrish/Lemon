@@ -59,6 +59,7 @@ public class LemonMintScheduler implements BukkitScheduler {
     @Override
     public void cancelTasks(@NotNull Plugin plugin) {
         Bukkit.getGlobalRegionScheduler().cancelTasks(plugin);
+        Bukkit.getAsyncScheduler().cancelTasks(plugin);
     }
 
     @Override
