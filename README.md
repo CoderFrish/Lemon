@@ -2,9 +2,6 @@
 
 # LemonMint
 
-> [!IMPORTANT]\
-> 该服务端虽然努力让更多的Bukkit插件能够运行，但是并不稳定，不推荐在实际生产环境中应用。如果需要更稳定的优化性能，推荐使用[Mint](https://github.com/MenthaMC/Mint)
-
 <h4>LemonMint是在Mint的基础上努力让更多的Bukkit插件能够运行，并且在原基础上修复被破坏的特性和改进性能、并添加独特的特性。</h4>
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/MenthaMC/LemonMint?style=for-the-badge&logo=github&label=Stars&logoColor=white&color=ffda65)
@@ -24,7 +21,13 @@
  - Purpur的6格末影箱
  - JavaScript脚本插件支持（进行中）
 
-## 3 | API
+## 3 | 注意
+> [!IMPORTANT]\
+> 该服务端虽然努力让更多的Bukkit插件能够运行，但是并不稳定，不推荐在实际生产环境中应用。如果需要更稳定的优化性能，推荐使用[Mint](https://github.com/MenthaMC/Mint)
+
+关于使用实体NMS方法`getHandle`的插件：该插件是目前不支持的（Frish2021：主要想不出怎么修。。。）
+
+## 4 | API
 ```xml
 <repositories>
     <repository>
@@ -43,10 +46,10 @@
 </dependencies>
 ```
 
-## 4 | 联系
+## 5 | 联系
 QQ群: [1020403749](https://qm.qq.com/q/RKzZJH4JKW) | Discord群组: [点击加入](https://discord.com/invite/39K7Jz4F) | 邮箱: [3167717663@qq.com](mailto:3167717663@qq.com)
 
-## 5 | 最后
+## 6 | 最后
 > [!TIP]
 > 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
 
