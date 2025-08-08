@@ -69,3 +69,11 @@
              "Build-Number" to (build ?: ""),
              "Build-Time" to buildTime.toString(),
              "Git-Branch" to gitBranch,
+@@ -383,7 +_,6 @@
+     }
+ 
+     args("--nogui")
+-    systemProperty("net.kyori.adventure.text.warnWhenLegacyFormattingDetected", true)
+     if (providers.gradleProperty("paper.runDisableWatchdog").getOrElse("false") == "true") {
+         systemProperty("disable.watchdog", true)
+     }

@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sat, 9 Aug 2025 00:02:03 +0800
+Subject: [PATCH] Fixed Global entity error.
+
+
+diff --git a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
+index e417c9a140778954572fb8bc190fad64feacffe0..04ae16a617a5d2707d415ac090392f20f4f92bf2 100644
+--- a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
++++ b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
+@@ -262,6 +262,11 @@ public class TickThread extends Thread {
+                     }
+                     return true;
+                 } else {
++                    if (me.coderfrish.config.experiment.BukkitSchedulerConfig.fixEntityGlobalError) {
++                        LOGGER.warn("Global tick thread is don`t used for entity(out of player.)");
++                        return true;
++                    }
++
+                     return false;
+                 }
+             }
