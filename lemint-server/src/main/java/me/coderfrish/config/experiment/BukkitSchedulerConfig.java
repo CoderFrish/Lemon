@@ -8,7 +8,4 @@ import dev.bacteriawa.mint.config.Configuration;
 public class BukkitSchedulerConfig {
     @ConfigField
     public static boolean enabled = false;
-
-    @ConfigField
-    public static boolean fixEntityGlobalError = false;
 }
