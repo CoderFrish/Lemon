@@ -50,7 +50,7 @@
      implementation("io.github.classgraph:classgraph:4.8.179") // Mint
      implementation("com.electronwill.night-config:toml:3.6.6") // Mint
      // Abomination start
-@@ -268,14 +_,14 @@
+@@ -267,14 +_,14 @@
          val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
          attributes(
              "Main-Class" to "org.bukkit.craftbukkit.Main",
@@ -69,7 +69,7 @@
              "Build-Number" to (build ?: ""),
              "Build-Time" to buildTime.toString(),
              "Git-Branch" to gitBranch,
-@@ -383,7 +_,6 @@
+@@ -382,7 +_,6 @@
      }
  
      args("--nogui")
