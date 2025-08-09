@@ -5,7 +5,7 @@ Subject: [PATCH] Easily fixed bukkit scheduler api
 
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index b99b73ae7473e44f365957ec70115fefb9cd3bca..a22076e9743913bf516ce1ef43ddcfa6bb7125c9 100644
+index dea28ea0e5812d5365ea50ff9f83721b3745cfda..06995624b3291af0f469b55714258db3dd5ea6d5 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -42,6 +42,8 @@ import java.util.logging.Level;
@@ -17,7 +17,7 @@ index b99b73ae7473e44f365957ec70115fefb9cd3bca..a22076e9743913bf516ce1ef43ddcfa6
  import net.kyori.adventure.text.Component;
  import net.kyori.adventure.text.format.NamedTextColor;
  import net.minecraft.Optionull;
-@@ -257,6 +259,7 @@ import org.bukkit.plugin.SimpleServicesManager;
+@@ -258,6 +260,7 @@ import org.bukkit.plugin.SimpleServicesManager;
  import org.bukkit.plugin.messaging.Messenger;
  import org.bukkit.plugin.messaging.StandardMessenger;
  import org.bukkit.profile.PlayerProfile;
@@ -25,7 +25,7 @@ index b99b73ae7473e44f365957ec70115fefb9cd3bca..a22076e9743913bf516ce1ef43ddcfa6
  import org.bukkit.scheduler.BukkitWorker;
  import org.bukkit.scoreboard.Criteria;
  import org.bukkit.structure.StructureManager;
-@@ -949,8 +952,9 @@ public final class CraftServer implements Server {
+@@ -950,8 +953,9 @@ public final class CraftServer implements Server {
      }
  
      @Override
