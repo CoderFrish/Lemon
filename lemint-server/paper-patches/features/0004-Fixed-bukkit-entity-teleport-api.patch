@@ -44,7 +44,7 @@ index 852e1ffef6a022caad7c8eff34091e50112a2290..c169f34cf3b3e2c78497dc43e5bd4557
          // entities just stop teleporting, players will still teleport to the "from" location of the event
          if (!event.callEvent() || event.getTo() == null) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index c1052533b0debf931d5857ba8322255b3543089d..c567f915d72ddc746d9f9b4e5a90a45c3ad7d091 100644
+index ee2ab44ac56f627c0f0297b5ed070b61034339bc..0d8eff0b8ead5ca75a970a57feec8e4c5fb72b44 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -42,6 +42,7 @@ import java.util.Set;
@@ -55,7 +55,7 @@ index c1052533b0debf931d5857ba8322255b3543089d..c567f915d72ddc746d9f9b4e5a90a45c
  import java.util.logging.Level;
  import java.util.logging.Logger;
  import java.util.stream.Collectors;
-@@ -1465,7 +1466,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
+@@ -1362,7 +1363,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
      public boolean teleport(Location location, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause cause, io.papermc.paper.entity.TeleportFlag... flags) {
          // Folia start - region threading
          if (true) {

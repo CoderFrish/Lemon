@@ -18,10 +18,10 @@ index c169f34cf3b3e2c78497dc43e5bd4557cc529499..ce3bb5049488b1e4e23feebbddb69f4d
              } else {
                  try {
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 2f7dad299b0076457a5ecf8fbb036d760fbfb4e1..4bb6a3ac57817d1719499468093e3ff909281f21 100644
+index 0d8eff0b8ead5ca75a970a57feec8e4c5fb72b44..80167e481939009b3148aa228f8daaaff5af484a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -1466,7 +1466,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
+@@ -1363,7 +1363,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
      public boolean teleport(Location location, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause cause, io.papermc.paper.entity.TeleportFlag... flags) {
          // Folia start - region threading
          if (true) {
