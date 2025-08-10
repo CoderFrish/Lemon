@@ -1,9 +1,6 @@
-package me.coderfrish.test;
+package me.coderfrish;
 
-import me.coderfrish.plugin.ScriptPluginManager;
 import org.junit.jupiter.api.Test;
-
-import java.io.File;
 
 public class ScriptPluginTest {
     @Test

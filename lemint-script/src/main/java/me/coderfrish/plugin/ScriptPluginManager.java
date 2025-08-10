@@ -1,17 +1,11 @@
 package me.coderfrish.plugin;
 
-import me.coderfrish.constant.NumberConstant;
 import me.coderfrish.plugin.api.JavaPlugin;
 import me.coderfrish.plugin.api.ScriptPlugin;
 import me.coderfrish.plugin.api.ScriptPluginMeta;
-import me.coderfrish.plugin.exception.InvalidPluginPackException;
 import me.coderfrish.plugin.exception.InvalidScriptException;
 import me.coderfrish.plugin.pack.PluginPack;
-import me.coderfrish.utils.CheckUtils;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
 import org.bukkit.plugin.PluginBase;
-import org.bukkit.util.FileUtil;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
@@ -19,9 +13,6 @@ import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.io.IOAccess;
 
 import java.io.*;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
