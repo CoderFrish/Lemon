@@ -1,15 +1,15 @@
 package me.coderfrish.scheduler.task;
 
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+import me.coderfrish.scheduler.LemonMintScheduledTask;
 import me.coderfrish.scheduler.LemonMintScheduler;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 public class LemonMintTask implements BukkitTask {
-    private final ScheduledTask task;
+    private final LemonMintScheduledTask task;
 
-    public LemonMintTask(ScheduledTask task) {
+    public LemonMintTask(LemonMintScheduledTask task) {
         this.task = task;
         LemonMintScheduler.tasks.add(this);
     }
@@ -38,10 +38,5 @@ public class LemonMintTask implements BukkitTask {
     public void cancel() {
         LemonMintScheduler.tasks.remove(this);
         task.cancel();
-    }
-
-    @Override
-    public ScheduledTask.ExecutionState getState() {
-        return task.getExecutionState();
     }
 }

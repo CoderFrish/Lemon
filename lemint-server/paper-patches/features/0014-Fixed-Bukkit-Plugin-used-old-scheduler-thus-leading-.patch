@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sun, 10 Aug 2025 10:01:03 +0800
+Subject: [PATCH] Fixed Bukkit Plugin used old scheduler thus leading to tick
+ thread check error.
+
+
+diff --git a/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java b/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java
+index 48ca6582a7b1bc30bbff3337ff6360ac8e73cfe7..07332940c0f3cbf9d7ca2953eec3c79264a26c67 100644
+--- a/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java
++++ b/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java
+@@ -202,6 +202,8 @@ public final class EntityScheduler {
+      * @throws IllegalStateException If the scheduler is retired.
+      */
+     public void executeTick() {
++        me.coderfrish.scheduler.LemonMintScheduler.globalSyncScheduler.tick();
++        me.coderfrish.scheduler.LemonMintScheduler.globalAsyncScheduler.tick();
+         final Entity thisEntity = this.entity.getHandleRaw();
+ 
+         TickThread.ensureTickThread(thisEntity, "May not tick entity scheduler asynchronously");
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftTask.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftTask.java
+index bba78b5a360285a1ac88a2468673371e546e5a72..e6bc0d17fbda5198ebef0e4e541607f41922d387 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftTask.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftTask.java
+@@ -124,11 +124,6 @@ public class CraftTask implements BukkitTask, Runnable { // Spigot
+         Bukkit.getScheduler().cancelTask(this.id);
+     }
+ 
+-    @Override
+-    public ScheduledTask.ExecutionState getState() {
+-        throw new UnsupportedOperationException("This method is not supported by the native Bukkit Scheduler.");
+-    }
+-
+     /**
+      * This method properly sets the status to cancelled, synchronizing when required.
+      *
