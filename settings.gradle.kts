@@ -14,3 +14,4 @@ plugins {
 rootProject.name = "lemint"
 include("lemint-api")
 include("lemint-server")
+include("lemint-script")

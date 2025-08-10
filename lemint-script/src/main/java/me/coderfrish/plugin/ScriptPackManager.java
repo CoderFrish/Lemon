@@ -4,7 +4,6 @@ import me.coderfrish.constant.NumberConstant;
 import me.coderfrish.plugin.exception.InvalidPluginPackException;
 import me.coderfrish.plugin.pack.PackEntry;
 import me.coderfrish.plugin.pack.PluginPack;
-import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -24,6 +23,15 @@ public class ScriptPackManager {
             }
 
             int version = dis.readInt();
+
+            if (version < NumberConstant.PLUGIN_PACK_VERSION) {
+                throw new InvalidPluginPackException("Plugin pack version is too low.");
+            }
+
+            if (version > NumberConstant.PLUGIN_PACK_VERSION) {
+                throw new InvalidPluginPackException("Plugin pack version is too big.");
+            }
+
             String main = dis.readUTF();
 
             List<PackEntry> entries = new ArrayList<>();

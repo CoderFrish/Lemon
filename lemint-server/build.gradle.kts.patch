@@ -41,12 +41,13 @@
      }
  }
  val log4jPlugins = sourceSets.create("log4jPlugins") {
-@@ -173,7 +_,7 @@
+@@ -173,7 +_,8 @@
  }
  
  dependencies {
 -    implementation(project(":mint-api"))
 +    implementation(project(":lemint-api"))
++    implementation(project(":lemint-script"))
      implementation("io.github.classgraph:classgraph:4.8.179") // Mint
      implementation("com.electronwill.night-config:toml:3.6.6") // Mint
      // Abomination start

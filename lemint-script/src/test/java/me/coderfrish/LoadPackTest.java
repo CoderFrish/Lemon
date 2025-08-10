@@ -1,12 +1,6 @@
-package me.coderfrish.test;
+package me.coderfrish;
 
-import me.coderfrish.plugin.ScriptPackManager;
-import me.coderfrish.plugin.pack.PackEntry;
-import me.coderfrish.plugin.pack.PluginPack;
 import org.junit.jupiter.api.Test;
-
-import java.io.*;
-import java.nio.file.Files;
 
 public class LoadPackTest {
     @Test
