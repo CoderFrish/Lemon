@@ -5,6 +5,7 @@ on:
     paths:
       - "lemint-server/**/*"
       - "lemint-api/**/*"
+      - "lemint-script/**/*"
       - ".github/workflows/deploy_1.21.8.yml"
       - "scripts/*.sh"
       - "build.gradle.kts"
