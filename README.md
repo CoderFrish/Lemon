@@ -1,4 +1,4 @@
-<img src="./public/Mint.png" alt="Logo" align="right" width="220">
+<img src="./public/LemonMint.png" alt="Logo" align="right" width="220">
 
 # LemonMint
 
