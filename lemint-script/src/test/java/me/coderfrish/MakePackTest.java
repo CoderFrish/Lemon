@@ -11,14 +11,18 @@ import java.util.Collection;
 import java.util.List;
 
 public class MakePackTest {
-    @Test
-    public void test() {
-        try(DataOutputStream stream = new DataOutputStream(new FileOutputStream("D:\\LemonMint\\lemint-api\\src\\test\\resources\\dist\\test.pack"))) {
+    public static void main(String[] args) {
+        test();
+    }
+
+//    @Test
+    public static void test() {
+        try(DataOutputStream stream = new DataOutputStream(new FileOutputStream("D:\\LemonMint\\lemint-script\\src\\test\\resources\\dist\\test.pack"))) {
             stream.writeInt(0x1F7C07FB); // Magic Number
             stream.writeInt(0); // Version
             stream.writeUTF("test.js"); // Main
 
-            File file = new File("D:\\LemonMint\\lemint-api\\src\\test\\resources\\src");
+            File file = new File("D:\\LemonMint\\lemint-script\\src\\test\\resources\\src");
             for (String listFile : listFilesSmartlyOptimized(file)) {
                 if (listFile.endsWith(".js") || listFile.endsWith(".mjs")) {
                     stream.writeUTF("source");

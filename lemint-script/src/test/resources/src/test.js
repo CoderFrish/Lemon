@@ -1,19 +1,30 @@
-import {sendMessage} from "./message.js";
+const installer = {
+    onLoaded() {
+        plugin.config.loadDefault()
+    },
 
-const installer = (plugin) => {
-    return {
-        onLoaded() {},
+    onEnabled() {
+    },
 
-        onEnabled() {
-            sendMessage("Hello World!!")
-        },
-
-        onDisabled() {}
+    onDisabled() {
     }
 }
 
 export default {
-    name: "TestPlugin",
+    name: "Test",
     version: "1.0.0",
-    installer
+    installer,
+    load: "WORLD_POST",
+    authors: [
+        {
+            name: "MenthaMC",
+            email: "menthamc@menthamc.com",
+            website: "https://github.com/MenthaMC"
+        }
+    ],
+    website: {
+        issues: "https://github.com/MenthaMC/Script-Example/issues",
+        home: "https://github.com/MenthaMC",
+        source: "https://github.com/MenthaMC/Script-Example"
+    }
 }

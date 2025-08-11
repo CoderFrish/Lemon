@@ -2,6 +2,7 @@ package me.coderfrish.plugin;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import me.coderfrish.plugin.api.ScriptPlugin;
 import me.coderfrish.plugin.exception.InvalidPluginPackException;
 import me.coderfrish.plugin.pack.PackEntry;
 import me.coderfrish.plugin.pack.PluginPack;
@@ -37,7 +38,7 @@ public class ScriptUnpackManager {
         }
     }
 
-    public static void register(File file) {
+    public static PluginPack register(File file) {
         File copyFile = new File(dataFolder, file.getName());
         if (!copyFile.exists()) {
             try {
@@ -92,6 +93,8 @@ public class ScriptUnpackManager {
                 }
             }
         }
+
+        return pluginPack;
     }
 
     public static void save() {

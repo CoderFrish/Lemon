@@ -14,9 +14,9 @@ public class ScriptPlugin {
     public final ScriptCommand command;
     public final ScriptPermission permission;
 
-    public ScriptPlugin(ScriptPluginMeta meta) {
+    public ScriptPlugin(ScriptPluginMeta meta, boolean isBundler) {
         this.meta = meta;
-        this.config = new ScriptConfig(this);
+        this.config = new ScriptConfig(this, isBundler);
         this.event = new ScriptEvent(this);
         this.command = new ScriptCommand(this, getPluginMeta());
         this.permission = new ScriptPermission();
