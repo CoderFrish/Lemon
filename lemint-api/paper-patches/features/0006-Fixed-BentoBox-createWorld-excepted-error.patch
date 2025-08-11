@@ -1,0 +1,71 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Mon, 11 Aug 2025 16:54:18 +0800
+Subject: [PATCH] Fixed BentoBox createWorld excepted error.
+
+
+diff --git a/src/main/java/io/papermc/paper/plugin/configuration/PluginMeta.java b/src/main/java/io/papermc/paper/plugin/configuration/PluginMeta.java
+index 0100108fd87268d225a60e51eaf87071b359ef6f..a399f87e925a72aac91b3066317c3efb61c0421a 100644
+--- a/src/main/java/io/papermc/paper/plugin/configuration/PluginMeta.java
++++ b/src/main/java/io/papermc/paper/plugin/configuration/PluginMeta.java
+@@ -189,12 +189,4 @@ public interface PluginMeta extends Namespaced {
+     default String namespace() {
+         return this.getName().toLowerCase(Locale.ROOT);
+     }
+-    
+-    // Folia start - block plugins not marked as supported
+-    /**
+-     * Returns whether the plugin has been marked to be compatible with regionised threading as provided
+-     * by Folia
+-     */
+-    public boolean isFoliaSupported();
+-    // Folia end - block plugins not marked as supported
+ }
+diff --git a/src/main/java/org/bukkit/plugin/PluginDescriptionFile.java b/src/main/java/org/bukkit/plugin/PluginDescriptionFile.java
+index de5d5399e7f9cf56439ada32f3cc7df3a2e95ef4..20c25cf126eece4f3d02d18098f17edd87520dc1 100644
+--- a/src/main/java/org/bukkit/plugin/PluginDescriptionFile.java
++++ b/src/main/java/org/bukkit/plugin/PluginDescriptionFile.java
+@@ -267,19 +267,7 @@ public final class PluginDescriptionFile implements io.papermc.paper.plugin.conf
+         return this.paperPluginLoader;
+     }
+     // Paper end - plugin loader api
+-    // Folia start - block plugins not marked as supported
+-    private String foliaSupported;
+-    private static final String FOLIA_SUPPORTED_KEY = "folia-supported";
+ 
+-    /**
+-     * Returns whether the plugin has been marked to be compatible with regionised threading as provided
+-     * by Folia
+-     */
+-    @Override
+-    public boolean isFoliaSupported() {
+-        return this.foliaSupported != null && this.foliaSupported.equalsIgnoreCase("true");
+-    }
+-    // Folia end - block plugins not marked as supported
+     // Paper start - oh my goddddd
+     /**
+      * Don't use this.
+@@ -1280,11 +1268,6 @@ public final class PluginDescriptionFile implements io.papermc.paper.plugin.conf
+         if (map.get("prefix") != null) {
+             prefix = map.get("prefix").toString();
+         }
+-        // Folia start - block plugins not marked as supported
+-        if (map.get(FOLIA_SUPPORTED_KEY) != null) {
+-            foliaSupported = map.get(FOLIA_SUPPORTED_KEY).toString();
+-        }
+-        // Folia end - block plugins not marked as supported
+     }
+ 
+     @NotNull
+@@ -1361,11 +1344,6 @@ public final class PluginDescriptionFile implements io.papermc.paper.plugin.conf
+         if (prefix != null) {
+             map.put("prefix", prefix);
+         }
+-        // Folia start - block plugins not marked as supported
+-        if (foliaSupported != null) {
+-            map.put(FOLIA_SUPPORTED_KEY, foliaSupported);
+-        }
+-        // Folia end - block plugins not marked as supported
+ 
+         return map;
+     }

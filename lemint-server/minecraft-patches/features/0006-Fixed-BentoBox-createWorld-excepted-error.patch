@@ -1,0 +1,2886 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Mon, 11 Aug 2025 16:54:18 +0800
+Subject: [PATCH] Fixed BentoBox createWorld excepted error.
+
+
+diff --git a/io/papermc/paper/threadedregions/RegionizedWorldData.java b/io/papermc/paper/threadedregions/RegionizedWorldData.java
+index 01ea2e7133a41f1a75169c7e3edbd528b268412b..6f4d0fc853cbc343b0c4ebad74cecdbcfbd729b8 100644
+--- a/io/papermc/paper/threadedregions/RegionizedWorldData.java
++++ b/io/papermc/paper/threadedregions/RegionizedWorldData.java
+@@ -6,12 +6,12 @@ import ca.spottedleaf.moonrise.common.misc.NearbyPlayers;
+ import ca.spottedleaf.moonrise.common.util.CoordinateUtils;
+ import ca.spottedleaf.moonrise.common.util.TickThread;
+ import ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager;
++import com.google.common.collect.Lists;
++import com.google.common.collect.Maps;
+ import com.mojang.logging.LogUtils;
+ import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
+ import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
+-import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
+-import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
+-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
++import it.unimi.dsi.fastutil.objects.*;
+ import net.minecraft.CrashReport;
+ import net.minecraft.ReportedException;
+ import net.minecraft.core.BlockPos;
+@@ -136,6 +136,7 @@ public final class RegionizedWorldData {
+             for (final Iterator<LevelChunk> iterator = from.chunks.iterator(); iterator.hasNext();) {
+                 into.chunks.add(iterator.next());
+             }
++            from.world.worldDataSwitcher.resetRandomIdx();
+             // redstone torches
+             if (from.redstoneUpdateInfos != null && !from.redstoneUpdateInfos.isEmpty()) {
+                 if (into.redstoneUpdateInfos == null) {
+@@ -171,7 +172,7 @@ public final class RegionizedWorldData {
+                 final ChunkPos pos = player.chunkPosition();
+                 // Note: It is impossible for an entity in the world to _not_ be in an entity chunk, which means
+                 // the chunk holder must _exist_, and so the region section exists.
+-                regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift))
++                from.world.worldDataSwitcher.randomIfNull(regionToData, regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift)))
+                     .connections.add(conn);
+             }
+             // entities
+@@ -179,15 +180,16 @@ public final class RegionizedWorldData {
+                 final ChunkPos pos = player.chunkPosition();
+                 // Note: It is impossible for an entity in the world to _not_ be in an entity chunk, which means
+                 // the chunk holder must _exist_, and so the region section exists.
+-                final RegionizedWorldData into = regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift));
++                final RegionizedWorldData into = from.world.worldDataSwitcher.randomIfNull(regionToData, regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift)));
+                 into.localPlayers.add(player);
+                 into.nearbyPlayers.addPlayer(player);
+             }
++            from.world.worldDataSwitcher.resetRandomIdx();
+             for (final Entity entity : from.allEntities) {
+                 final ChunkPos pos = entity.chunkPosition();
+                 // Note: It is impossible for an entity in the world to _not_ be in an entity chunk, which means
+                 // the chunk holder must _exist_, and so the region section exists.
+-                final RegionizedWorldData into = regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift));
++                final RegionizedWorldData into = from.world.worldDataSwitcher.randomIfNull(regionToData, regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift)));
+                 into.allEntities.add(entity);
+                 // Note: entityTickList is a subset of allEntities
+                 if (from.entityTickList.contains(entity)) {
+@@ -209,13 +211,14 @@ public final class RegionizedWorldData {
+                 }
+                 entity.getBukkitEntity().taskScheduler.registerTo(into.entitySchedulerTickList);
+             }
++            from.world.worldDataSwitcher.resetRandomIdx();
+             // block ticking
+             for (final BlockEventData blockEventData : from.blockEvents) {
+                 final BlockPos pos = blockEventData.pos();
+                 final int chunkX = pos.getX() >> 4;
+                 final int chunkZ = pos.getZ() >> 4;
+ 
+-                final RegionizedWorldData into = regionToData.get(CoordinateUtils.getChunkKey(chunkX >> chunkToRegionShift, chunkZ >> chunkToRegionShift));
++                final RegionizedWorldData into = from.world.worldDataSwitcher.randomIfNull(regionToData, regionToData.get(CoordinateUtils.getChunkKey(chunkX >> chunkToRegionShift, chunkZ >> chunkToRegionShift)));
+                 // Unlike entities, the chunk holder is not guaranteed to exist for block events, because the block events
+                 // is just some list. So if it unloads, I guess it's just lost.
+                 if (into != null) {
+@@ -223,6 +226,7 @@ public final class RegionizedWorldData {
+                 }
+             }
+ 
++            from.world.worldDataSwitcher.resetRandomIdx();
+             final Long2ReferenceOpenHashMap<LevelTicks<Block>> levelTicksBlockRegionData = new Long2ReferenceOpenHashMap<>(regionToData.size(), 0.75f);
+             final Long2ReferenceOpenHashMap<LevelTicks<Fluid>> levelTicksFluidRegionData = new Long2ReferenceOpenHashMap<>(regionToData.size(), 0.75f);
+ 
+@@ -245,23 +249,25 @@ public final class RegionizedWorldData {
+                 final int chunkX = pos.getX() >> 4;
+                 final int chunkZ = pos.getZ() >> 4;
+ 
+-                final RegionizedWorldData into = regionToData.get(CoordinateUtils.getChunkKey(chunkX >> chunkToRegionShift, chunkZ >> chunkToRegionShift));
++                final RegionizedWorldData into = from.world.worldDataSwitcher.randomIfNull(regionToData, regionToData.get(CoordinateUtils.getChunkKey(chunkX >> chunkToRegionShift, chunkZ >> chunkToRegionShift)));
+                 if (into != null) {
+                     into.pendingBlockEntityTickers.add(tileEntity);
+                 } // else: when a chunk unloads, it does not actually _remove_ the tile entity from the list, it just gets
+                   //       marked as removed. So if there is no section, it's probably removed!
+             }
++            from.world.worldDataSwitcher.resetRandomIdx();
+             for (final TickingBlockEntity tileEntity : from.blockEntityTickers) {
+                 final BlockPos pos = tileEntity.getPos();
+                 final int chunkX = pos.getX() >> 4;
+                 final int chunkZ = pos.getZ() >> 4;
+ 
+-                final RegionizedWorldData into = regionToData.get(CoordinateUtils.getChunkKey(chunkX >> chunkToRegionShift, chunkZ >> chunkToRegionShift));
++                final RegionizedWorldData into = from.world.worldDataSwitcher.randomIfNull(regionToData, regionToData.get(CoordinateUtils.getChunkKey(chunkX >> chunkToRegionShift, chunkZ >> chunkToRegionShift)));
+                 if (into != null) {
+                     into.blockEntityTickers.add(tileEntity);
+                 } // else: when a chunk unloads, it does not actually _remove_ the tile entity from the list, it just gets
+                   //       marked as removed. So if there is no section, it's probably removed!
+             }
++            from.world.worldDataSwitcher.resetRandomIdx();
+             // time
+             for (final RegionizedWorldData regionizedWorldData : dataSet) {
+                 regionizedWorldData.redstoneTime = from.redstoneTime;
+@@ -272,15 +278,16 @@ public final class RegionizedWorldData {
+                 final ChunkPos pos = chunk.getPos();
+ 
+                 // Impossible for get() to return null, as the chunk is entity ticking - thus the chunk holder is loaded
+-                regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift))
++                from.world.worldDataSwitcher.randomIfNull(regionToData, regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift)))
+                     .entityTickingChunks.add(chunk);
+             }
++            from.world.worldDataSwitcher.resetRandomIdx();
+             for (final Iterator<LevelChunk> iterator = from.tickingChunks.iterator(); iterator.hasNext();) {
+                 final LevelChunk chunk = iterator.next();
+                 final ChunkPos pos = chunk.getPos();
+ 
+                 // Impossible for get() to return null, as the chunk is entity ticking - thus the chunk holder is loaded
+-                regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift))
++                from.world.worldDataSwitcher.randomIfNull(regionToData, regionToData.get(CoordinateUtils.getChunkKey(pos.x >> chunkToRegionShift, pos.z >> chunkToRegionShift)))
+                     .tickingChunks.add(chunk);
+             }
+             for (final Iterator<LevelChunk> iterator = from.chunks.iterator(); iterator.hasNext();) {
+@@ -297,7 +304,7 @@ public final class RegionizedWorldData {
+                 for (final net.minecraft.world.level.block.RedstoneTorchBlock.Toggle info : from.redstoneUpdateInfos) {
+                     final BlockPos pos = info.pos;
+ 
+-                    final RegionizedWorldData worldData = regionToData.get(CoordinateUtils.getChunkKey((pos.getX() >> 4) >> chunkToRegionShift, (pos.getZ() >> 4) >> chunkToRegionShift));
++                    final RegionizedWorldData worldData = from.world.worldDataSwitcher.randomIfNull(regionToData, regionToData.get(CoordinateUtils.getChunkKey((pos.getX() >> 4) >> chunkToRegionShift, (pos.getZ() >> 4) >> chunkToRegionShift)));
+                     if (worldData != null) {
+                         if (worldData.redstoneUpdateInfos == null) {
+                             worldData.redstoneUpdateInfos = new ArrayDeque<>();
+@@ -306,6 +313,7 @@ public final class RegionizedWorldData {
+                     } // else: chunk unloaded
+                 }
+             }
++            from.world.worldDataSwitcher.resetRandomIdx();
+             // mob spawning
+             for (final RegionizedWorldData regionizedWorldData : dataSet) {
+                 regionizedWorldData.catSpawnerNextTick = from.catSpawnerNextTick;
+@@ -334,7 +342,7 @@ public final class RegionizedWorldData {
+     private RegionizedServer.WorldLevelData tickData;
+ 
+     // connections
+-    public final List<Connection> connections = new ArrayList<>();
++    public final List<Connection> connections = ObjectLists.synchronize(new ObjectArrayList<>());
+ 
+     // misc. fields
+     private boolean isHandlingTick;
+@@ -348,7 +356,7 @@ public final class RegionizedWorldData {
+     }
+ 
+     // entities
+-    private final List<ServerPlayer> localPlayers = new ArrayList<>();
++    private final List<ServerPlayer> localPlayers = Lists.newCopyOnWriteArrayList();;
+     private final NearbyPlayers nearbyPlayers;
+     public final io.papermc.paper.threadedregions.EntityScheduler.EntitySchedulerTickList entitySchedulerTickList = new io.papermc.paper.threadedregions.EntityScheduler.EntitySchedulerTickList();
+     private final ReferenceList<Entity> allEntities = new ReferenceList<>(EMPTY_ENTITY_ARRAY);
+@@ -364,8 +372,8 @@ public final class RegionizedWorldData {
+     private final LevelTicks<Fluid> fluidLevelTicks;
+ 
+     // tile entity ticking
+-    private final List<TickingBlockEntity> pendingBlockEntityTickers = new ArrayList<>();
+-    private final List<TickingBlockEntity> blockEntityTickers = new ArrayList<>();
++    private final List<TickingBlockEntity> pendingBlockEntityTickers = Collections.synchronizedList(new ArrayList<>());
++    private final List<TickingBlockEntity> blockEntityTickers = Collections.synchronizedList(new ArrayList<>());
+     private boolean tickingBlockEntities;
+ 
+     // time
+@@ -402,8 +410,8 @@ public final class RegionizedWorldData {
+     public final NeighborUpdater neighborUpdater;
+     public boolean captureBlockStates = false;
+     public boolean captureTreeGeneration = false;
+-    public final Map<BlockPos, CraftBlockState> capturedBlockStates = new java.util.LinkedHashMap<>(); // Paper
+-    public final Map<BlockPos, BlockEntity> capturedTileEntities = new java.util.LinkedHashMap<>(); // Paper
++    public final Map<BlockPos, CraftBlockState> capturedBlockStates =  Maps.newConcurrentMap(); // Paper
++    public final Map<BlockPos, BlockEntity> capturedTileEntities =  Maps.newConcurrentMap(); // Paper
+     public List<ItemEntity> captureDrops;
+     // Paper start
+     public int wakeupInactiveRemainingAnimals;
+@@ -575,11 +583,8 @@ public final class RegionizedWorldData {
+     }
+ 
+     public void addEntityTickingEntity(final Entity entity) {
+-        if (!TickThread.isTickThreadFor(entity)) {
+-            throw new IllegalArgumentException("Entity " + entity + " is not under this region's control");
+-        }
+         this.entityTickList.add(entity);
+-        TickRegions.RegionStats.updateCurrentRegion();
++        TickRegions.RegionStats.updateCurrentRegion(entity);
+     }
+ 
+     public boolean hasEntityTickingEntity(final Entity entity) {
+@@ -587,11 +592,8 @@ public final class RegionizedWorldData {
+     }
+ 
+     public void removeEntityTickingEntity(final Entity entity) {
+-        if (!TickThread.isTickThreadFor(entity)) {
+-            throw new IllegalArgumentException("Entity " + entity + " is not under this region's control");
+-        }
+         this.entityTickList.remove(entity);
+-        TickRegions.RegionStats.updateCurrentRegion();
++        TickRegions.RegionStats.updateCurrentRegion(entity);
+     }
+ 
+     public void forEachTickingEntity(final Consumer<Entity> action) {
+@@ -606,14 +608,11 @@ public final class RegionizedWorldData {
+     }
+ 
+     public void addEntity(final Entity entity) {
+-        if (!TickThread.isTickThreadFor(this.world, entity.chunkPosition())) {
+-            throw new IllegalArgumentException("Entity " + entity + " is not under this region's control");
+-        }
+         if (this.allEntities.add(entity)) {
+             if (entity instanceof ServerPlayer player) {
+                 this.localPlayers.add(player);
+             }
+-            TickRegions.RegionStats.updateCurrentRegion();
++            TickRegions.RegionStats.updateCurrentRegion(entity);
+         }
+     }
+ 
+@@ -622,14 +621,11 @@ public final class RegionizedWorldData {
+     }
+ 
+     public void removeEntity(final Entity entity) {
+-        if (!TickThread.isTickThreadFor(entity)) {
+-            throw new IllegalArgumentException("Entity " + entity + " is not under this region's control");
+-        }
+         if (this.allEntities.remove(entity)) {
+             if (entity instanceof ServerPlayer player) {
+                 this.localPlayers.remove(player);
+             }
+-            TickRegions.RegionStats.updateCurrentRegion();
++            TickRegions.RegionStats.updateCurrentRegion(entity);
+         }
+     }
+ 
+@@ -721,12 +717,12 @@ public final class RegionizedWorldData {
+     // ticking chunks
+     public void addEntityTickingChunk(final LevelChunk chunk) {
+         this.entityTickingChunks.add(chunk);
+-        TickRegions.RegionStats.updateCurrentRegion();
++        TickRegions.RegionStats.updateCurrentRegion(chunk);
+     }
+ 
+     public void removeEntityTickingChunk(final LevelChunk chunk) {
+         this.entityTickingChunks.remove(chunk);
+-        TickRegions.RegionStats.updateCurrentRegion();
++        TickRegions.RegionStats.updateCurrentRegion(chunk);
+     }
+ 
+     public ReferenceList<LevelChunk> getEntityTickingChunks() {
+@@ -735,12 +731,12 @@ public final class RegionizedWorldData {
+ 
+     public void addTickingChunk(final LevelChunk chunk) {
+         this.tickingChunks.add(chunk);
+-        TickRegions.RegionStats.updateCurrentRegion();
++        TickRegions.RegionStats.updateCurrentRegion(chunk);
+     }
+ 
+     public void removeTickingChunk(final LevelChunk chunk) {
+         this.tickingChunks.remove(chunk);
+-        TickRegions.RegionStats.updateCurrentRegion();
++        TickRegions.RegionStats.updateCurrentRegion(chunk);
+     }
+ 
+     public ReferenceList<LevelChunk> getTickingChunks() {
+@@ -749,12 +745,12 @@ public final class RegionizedWorldData {
+ 
+     public void addChunk(final LevelChunk chunk) {
+         this.chunks.add(chunk);
+-        TickRegions.RegionStats.updateCurrentRegion();
++        TickRegions.RegionStats.updateCurrentRegion(chunk);
+     }
+ 
+     public void removeChunk(final LevelChunk chunk) {
+         this.chunks.remove(chunk);
+-        TickRegions.RegionStats.updateCurrentRegion();
++        TickRegions.RegionStats.updateCurrentRegion(chunk);
+     }
+ 
+     public ReferenceList<LevelChunk> getChunks() {
+diff --git a/io/papermc/paper/threadedregions/TickRegionScheduler.java b/io/papermc/paper/threadedregions/TickRegionScheduler.java
+index fa6b8d756195c1b430cc11214a901bd42eebc98d..43b884f57d37d65e6f16f97fb0b41e42b6c6573a 100644
+--- a/io/papermc/paper/threadedregions/TickRegionScheduler.java
++++ b/io/papermc/paper/threadedregions/TickRegionScheduler.java
+@@ -224,7 +224,7 @@ public final class TickRegionScheduler {
+     // This is much faster than a thread local, since the thread local has to use a map lookup.
+     private static final class TickThreadRunner extends TickThread {
+ 
+-        private ThreadedRegionizer.ThreadedRegion<TickRegions.TickRegionData, TickRegions.TickRegionSectionData> currentTickingRegion;
++        public ThreadedRegionizer.ThreadedRegion<TickRegions.TickRegionData, TickRegions.TickRegionSectionData> currentTickingRegion;
+         private RegionizedWorldData currentTickingWorldRegionizedData;
+         private SchedulerThreadPool.SchedulableTick currentTickingTask;
+         // Folia start - profiler
+@@ -345,6 +345,7 @@ public final class TickRegionScheduler {
+                 // don't release region for another tick
+                 return null;
+             } finally {
++                if (this.region != null) { this.region.region.regioniser.world.worldDataSwitcher.onTickFinished(); }
+                 WATCHDOG_THREAD.removeTick(runningTick); // Folia - watchdog
+                 final long tickEnd = System.nanoTime();
+                 final long cpuEnd = MEASURE_CPU_TIME ? THREAD_MX_BEAN.getCurrentThreadCpuTime() : 0L;
+diff --git a/io/papermc/paper/threadedregions/TickRegions.java b/io/papermc/paper/threadedregions/TickRegions.java
+index 988fe74578065c9464f5639e5cc6af79619edef5..4040c4fef8e769887c27995dcdda60a9b58e9831 100644
+--- a/io/papermc/paper/threadedregions/TickRegions.java
++++ b/io/papermc/paper/threadedregions/TickRegions.java
+@@ -12,6 +12,8 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.entity.Entity;
++import net.minecraft.world.level.chunk.LevelChunk;
+ import org.slf4j.Logger;
+ import java.util.Iterator;
+ import java.util.concurrent.TimeUnit;
+@@ -153,8 +155,36 @@ public final class TickRegions implements ThreadedRegionizer.RegionCallbacks<Tic
+             this.chunkCount.setRelease(data == null ? 0 : data.getChunkCount());
+         }
+ 
+-        static void updateCurrentRegion() {
+-            TickRegionScheduler.getCurrentRegion().getData().getRegionStats().updateFrom(TickRegionScheduler.getCurrentRegionizedWorldData());
++        static void updateCurrentRegion(Entity entity) {
++            ThreadedRegionizer.ThreadedRegion<TickRegions.TickRegionData, TickRegions.TickRegionSectionData> region =
++                    TickRegionScheduler.getCurrentRegion();
++
++            if (region == null){
++                region = ((ServerLevel) entity.level()).regioniser.getRegionAtUnsynchronised(entity.getBlockX() >> 4,entity.getBlockZ() >> 4);
++            }
++
++            if (region != null && region.getData() != null && region.getData().getRegionStats() != null) {
++                region.getData().getRegionStats().updateFrom(TickRegionScheduler.getCurrentRegionizedWorldData());
++            } else {
++                System.err.println("Failed to update region stats: region data is null.");
++            }
++
++            region.getData().getRegionStats().updateFrom(TickRegionScheduler.getCurrentRegionizedWorldData());
++        }
++
++        static void updateCurrentRegion(LevelChunk chunk) {
++            ThreadedRegionizer.ThreadedRegion<TickRegions.TickRegionData, TickRegions.TickRegionSectionData> region =
++                    TickRegionScheduler.getCurrentRegion();
++
++            if (region == null){
++                region = chunk.level.regioniser.getRegionAtUnsynchronised(chunk.locX,chunk.locZ);
++            }
++
++            if (region != null && region.getData() != null && region.getData().getRegionStats() != null) {
++                region.getData().getRegionStats().updateFrom(TickRegionScheduler.getCurrentRegionizedWorldData());
++            } else {
++                System.err.println("Failed to update region stats: region data is null.");
++            }
+         }
+     }
+ 
+@@ -213,11 +243,11 @@ public final class TickRegions implements ThreadedRegionizer.RegionCallbacks<Tic
+             return this.holderManagerRegionData;
+         }
+ 
+-        <T> T getRegionizedData(final RegionizedData<T> regionizedData) {
++        public <T> T getRegionizedData(final RegionizedData<T> regionizedData) {
+             return (T)this.regionizedData.get(regionizedData);
+         }
+ 
+-        <T> T getOrCreateRegionizedData(final RegionizedData<T> regionizedData) {
++        public <T> T getOrCreateRegionizedData(final RegionizedData<T> regionizedData) {
+             T ret = (T)this.regionizedData.get(regionizedData);
+ 
+             if (ret != null) {
+@@ -226,6 +256,9 @@ public final class TickRegions implements ThreadedRegionizer.RegionCallbacks<Tic
+ 
+             ret = regionizedData.createNewValue();
+             this.regionizedData.put(regionizedData, ret);
++            if (ret instanceof RegionizedWorldData worldData){
++                worldData.world.worldDataSwitcher.updateCurrent(worldData);
++            }
+ 
+             return ret;
+         }
+diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
+index 432091e6ae5b57a6f6ef68269e2d37e402a4896f..4053898e68c42e30b8fc29e7789119fd52161bc4 100644
+--- a/net/minecraft/world/entity/Entity.java
++++ b/net/minecraft/world/entity/Entity.java
+@@ -8,6 +8,7 @@ import com.mojang.logging.LogUtils;
+ import com.mojang.serialization.Codec;
+ import com.mojang.logging.LogUtils;
+ import dev.bacteriawa.mint.config.modules.fixes.VanillaRandomSourceConfig;
++import io.papermc.paper.util.MCUtil;
+ import it.unimi.dsi.fastutil.floats.FloatArraySet;
+ import it.unimi.dsi.fastutil.floats.FloatArrays;
+ import it.unimi.dsi.fastutil.floats.FloatSet;
+@@ -16,6 +17,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
+ import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap;
+ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
++
+ import java.util.ArrayDeque;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+@@ -31,6 +33,7 @@ import java.util.function.BiConsumer;
+ import java.util.function.Predicate;
+ import java.util.stream.Stream;
+ import javax.annotation.Nullable;
++
+ import net.minecraft.BlockUtil;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+@@ -146,6 +149,7 @@ import net.minecraft.world.scores.PlayerTeam;
+ import net.minecraft.world.scores.ScoreHolder;
+ import net.minecraft.world.scores.Team;
+ import net.minecraft.world.waypoints.WaypointTransmitter;
++import org.bukkit.event.player.PlayerTeleportEvent;
+ import org.jetbrains.annotations.Contract;
+ import org.slf4j.Logger;
+ 
+@@ -153,6 +157,9 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     // CraftBukkit start
+     private static final int CURRENT_LEVEL = 2;
+     public boolean preserveMotion = true; // Paper - Fix Entity Teleportation and cancel velocity if teleported; keep initial motion on first snapTo
++
++    private volatile boolean preventMoving = false;
++
+     static boolean isLevelAtLeast(ValueInput input, int level) {
+         return input.getIntOr("Bukkit.updateLevel", CURRENT_LEVEL) >= level;
+     }
+@@ -161,6 +168,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     public static RandomSource SHARED_RANDOM = dev.bacteriawa.mint.config.modules.optimizations.FastRNG.enabled
+             ? dev.bacteriawa.mint.utils.math.random.FasterRandomSource.SHARED_INSTANCE
+             : io.papermc.paper.threadedregions.util.ThreadLocalRandomSource.INSTANCE; // Folia - region threading // Leaf - Faster random generator
++
+     // Paper start - replace random
+     private static final class RandomRandomSource extends ca.spottedleaf.moonrise.common.util.ThreadUnsafeRandom {
+         public RandomRandomSource() {
+@@ -186,6 +194,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+         // Paper - replace random
+     }
++
+     // Paper end - Share random for entities to make them more random
+     public @Nullable org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason spawnReason; // Paper - Entity#getEntitySpawnReason
+ 
+@@ -204,10 +213,12 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         }
+         return this.bukkitEntity;
+     }
++
+     // Paper start
+     public @Nullable org.bukkit.craftbukkit.entity.CraftEntity getBukkitEntityRaw() {
+         return this.bukkitEntity;
+     }
++
+     // Paper end
+     private static final Logger LOGGER = LogUtils.getLogger();
+     public static final String TAG_ID = "id";
+@@ -305,7 +316,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     protected static final int FLAG_FALL_FLYING = 7;
+     private static final EntityDataAccessor<Integer> DATA_AIR_SUPPLY_ID = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.INT);
+     private static final EntityDataAccessor<Optional<Component>> DATA_CUSTOM_NAME = SynchedEntityData.defineId(
+-        Entity.class, EntityDataSerializers.OPTIONAL_COMPONENT
++            Entity.class, EntityDataSerializers.OPTIONAL_COMPONENT
+     );
+     private static final EntityDataAccessor<Boolean> DATA_CUSTOM_NAME_VISIBLE = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.BOOLEAN);
+     private static final EntityDataAccessor<Boolean> DATA_SILENT = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.BOOLEAN);
+@@ -385,6 +396,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     public final AABB getBoundingBoxAt(double x, double y, double z) {
+         return this.dimensions.makeBoundingBox(x, y, z);
+     }
++
+     // Paper end
+     // Paper start - rewrite chunk system
+     private final boolean isHardColliding = this.moonrise$isHardCollidingUncached();
+@@ -467,6 +479,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         }
+         return this.getIndirectPassengersStream().anyMatch((entity) -> entity instanceof Player);
+     }
++
+     // Paper end - rewrite chunk system
+     // Paper start - optimise collisions
+     private static float[] calculateStepHeights(final AABB box, final List<VoxelShape> voxels, final List<AABB> aabbs, final float stepHeight,
+@@ -476,13 +489,13 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         for (int i = 0, len = voxels.size(); i < len; ++i) {
+             final VoxelShape shape = voxels.get(i);
+ 
+-            final double[] yCoords = ((ca.spottedleaf.moonrise.patches.collisions.shape.CollisionVoxelShape)shape).moonrise$rootCoordinatesY();
+-            final double yOffset = ((ca.spottedleaf.moonrise.patches.collisions.shape.CollisionVoxelShape)shape).moonrise$offsetY();
++            final double[] yCoords = ((ca.spottedleaf.moonrise.patches.collisions.shape.CollisionVoxelShape) shape).moonrise$rootCoordinatesY();
++            final double yOffset = ((ca.spottedleaf.moonrise.patches.collisions.shape.CollisionVoxelShape) shape).moonrise$offsetY();
+ 
+             for (final double yUnoffset : yCoords) {
+                 final double y = yUnoffset + yOffset;
+ 
+-                final float step = (float)(y - box.minY);
++                final float step = (float) (y - box.minY);
+ 
+                 if (step > stepHeight) {
+                     break;
+@@ -499,8 +512,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         for (int i = 0, len = aabbs.size(); i < len; ++i) {
+             final AABB shape = aabbs.get(i);
+ 
+-            final float step1 = (float)(shape.minY - box.minY);
+-            final float step2 = (float)(shape.maxY - box.minY);
++            final float step1 = (float) (shape.minY - box.minY);
++            final float step2 = (float) (shape.maxY - box.minY);
+ 
+             if (!(step1 < 0.0f) && step1 != collidedY && !(step1 > stepHeight)) {
+                 ret.add(step1);
+@@ -515,6 +528,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         FloatArrays.unstableSort(steps);
+         return steps;
+     }
++
+     // Paper end - optimise collisions
+     // Paper start - optimise entity tracker
+     private net.minecraft.server.level.ChunkMap.TrackedEntity trackedEntity;
+@@ -532,9 +546,10 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     private static void collectIndirectPassengers(final List<Entity> into, final List<Entity> from) {
+         for (final Entity passenger : from) {
+             into.add(passenger);
+-            collectIndirectPassengers(into, ((Entity)(Object)passenger).passengers);
++            collectIndirectPassengers(into, ((Entity) (Object) passenger).passengers);
+         }
+     }
++
+     // Paper end - optimise entity tracker
+     // Folia start - region ticking
+     public void updateTicks(long fromTickOffset, long fromRedstoneTimeOffset) {
+@@ -569,7 +584,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         }
+         // Paper end - EAR 2
+         SynchedEntityData.Builder builder = new SynchedEntityData.Builder(this);
+-        builder.define(DATA_SHARED_FLAGS_ID, (byte)0);
++        builder.define(DATA_SHARED_FLAGS_ID, (byte) 0);
+         builder.define(DATA_AIR_SUPPLY_ID, this.getMaxAirSupply());
+         builder.define(DATA_CUSTOM_NAME_VISIBLE, false);
+         builder.define(DATA_CUSTOM_NAME, Optional.empty());
+@@ -684,6 +699,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             to.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket(this.getId(), list));
+         }
+     }
++
+     // CraftBukkit end
+     // Paper start
+     // This method should only be used if the data of an entity could have become desynced
+@@ -719,7 +735,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     @Override
+     public boolean equals(Object object) {
+-        return object instanceof Entity && ((Entity)object).id == this.id;
++        return object instanceof Entity && ((Entity) object).id == this.id;
+     }
+ 
+     @Override
+@@ -828,8 +844,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     public void turn(double yRot, double xRot) {
+-        float f = (float)xRot * 0.15F;
+-        float f1 = (float)yRot * 0.15F;
++        float f = (float) xRot * 0.15F;
++        float f1 = (float) yRot * 0.15F;
+         this.setXRot(this.getXRot() + f);
+         this.setYRot(this.getYRot() + f1);
+         this.setXRot(Mth.clamp(this.getXRot(), -90.0F, 90.0F));
+@@ -863,7 +879,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     public void baseTick() {
+         ProfilerFiller profilerFiller = Profiler.get();
+         profilerFiller.push("entityBaseTick");
+-        if (firstTick && this instanceof net.minecraft.world.entity.NeutralMob neutralMob) neutralMob.tickInitialPersistentAnger(level); // Paper - Prevent entity loading causing async lookups
++        if (firstTick && this instanceof net.minecraft.world.entity.NeutralMob neutralMob)
++            neutralMob.tickInitialPersistentAnger(level); // Paper - Prevent entity loading causing async lookups
+         this.inBlockState = null;
+         if (this.isPassenger() && this.getVehicle().isRemoved()) {
+             this.stopRiding();
+@@ -914,7 +931,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+         this.firstTick = false;
+         if (this.level() instanceof ServerLevel serverLevelx && this instanceof Leashable) {
+-            Leashable.tickLeash(serverLevelx, (Entity & Leashable)this);
++            Leashable.tickLeash(serverLevelx, (Entity & Leashable) this);
+         }
+ 
+         profilerFiller.pop();
+@@ -925,11 +942,12 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     public void checkBelowWorld() {
+-        if (!this.level.getWorld().isVoidDamageEnabled()) return; // Paper - check if void damage is enabled on the world
++        if (!this.level.getWorld().isVoidDamageEnabled())
++            return; // Paper - check if void damage is enabled on the world
+         // Paper start - Configurable nether ceiling damage
+         if (this.getY() < (this.level.getMinY() + this.level.getWorld().getVoidDamageMinBuildHeightOffset()) || (this.level.getWorld().getEnvironment() == org.bukkit.World.Environment.NETHER // Paper - use configured min build height offset
+-            && this.level.paperConfig().environment.netherCeilingVoidDamageHeight.test(v -> this.getY() >= v)
+-            && (!(this instanceof Player player) || !player.getAbilities().invulnerable))) {
++                && this.level.paperConfig().environment.netherCeilingVoidDamageHeight.test(v -> this.getY() >= v)
++                && (!(this instanceof Player player) || !player.getAbilities().invulnerable))) {
+             // Paper end - Configurable nether ceiling damage
+             this.onBelowWorld();
+         }
+@@ -992,11 +1010,11 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         // Paper end - track lava contact
+         if (!this.fireImmune()) {
+             if (this.level() instanceof ServerLevel serverLevel
+-                && this.hurtServer(serverLevel, this.damageSources().lava().eventBlockDamager(this.level, pos), 4.0F) // CraftBukkit - we also don't throw an event unless the object in lava is living, to save on some event calls
+-                && this.shouldPlayLavaHurtSound()
+-                && !this.isSilent()) {
++                    && this.hurtServer(serverLevel, this.damageSources().lava().eventBlockDamager(this.level, pos), 4.0F) // CraftBukkit - we also don't throw an event unless the object in lava is living, to save on some event calls
++                    && this.shouldPlayLavaHurtSound()
++                    && !this.isSilent()) {
+                 serverLevel.playSound(
+-                    null, this.getX(), this.getY(), this.getZ(), SoundEvents.GENERIC_BURN, this.getSoundSource(), 0.4F, 2.0F + this.random.nextFloat() * 0.4F
++                        null, this.getX(), this.getY(), this.getZ(), SoundEvents.GENERIC_BURN, this.getSoundSource(), 0.4F, 2.0F + this.random.nextFloat() * 0.4F
+                 );
+             }
+         }
+@@ -1128,129 +1146,155 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             this.moveStartZ = this.getZ();
+             this.moveVector = movement;
+         }
+-        try {
+-        // Paper end - detailed watchdog information
+-        if (this.noPhysics) {
+-            this.setPos(this.getX() + movement.x, this.getY() + movement.y, this.getZ() + movement.z);
+-        } else {
+-            if (type == MoverType.PISTON) {
+-                // Paper start - EAR 2
+-                this.activatedTick = Math.max(this.activatedTick, io.papermc.paper.threadedregions.RegionizedServer.getCurrentTick() + 20); // Folia - region threading
+-                this.activatedImmunityTick = Math.max(this.activatedImmunityTick, io.papermc.paper.threadedregions.RegionizedServer.getCurrentTick() + 20); // Folia - region threading
+-                // Paper end - EAR 2
+-                movement = this.limitPistonMovement(movement);
+-                if (movement.equals(Vec3.ZERO)) {
+-                    return;
+-                }
+-            }
+ 
+-            ProfilerFiller profilerFiller = Profiler.get();
+-            profilerFiller.push("move");
+-            if (this.stuckSpeedMultiplier.lengthSqr() > 1.0E-7) {
+-                movement = movement.multiply(this.stuckSpeedMultiplier);
+-                this.stuckSpeedMultiplier = Vec3.ZERO;
+-                this.setDeltaMovement(Vec3.ZERO);
++        if (me.coderfrish.config.fixes.FoliaEntityMovingFixConfig.enable && ca.spottedleaf.moonrise.common.util.TickThread.isTickThread()){ //Except the threads because it may be called by the chunk system worker thread
++            var finalPosition = movement.add(this.position);
++            if (this.preventMoving || Double.isNaN(finalPosition.x) || Double.isNaN(finalPosition.y) || Double.isNaN(finalPosition.z)){
++                return;
+             }
+-            // Paper start - ignore movement changes while inactive.
+-            if (isTemporarilyActive && !(this instanceof ItemEntity) && movement == getDeltaMovement() && type == MoverType.SELF) {
+-                setDeltaMovement(Vec3.ZERO);
+-                profilerFiller.pop();
++
++            if (!ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(((ServerLevel) this.level),finalPosition)){
++                this.preventMoving = true;
++                this.teleportAsync(
++                        (ServerLevel) this.level(),
++                        finalPosition,
++                        this.getYRot(), this.getXRot(),
++                        null, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.UNKNOWN,
++                        Entity.TELEPORT_FLAG_LOAD_CHUNK | Entity.TELEPORT_FLAG_TELEPORT_PASSENGERS,
++                        result -> {
++                            this.preventMoving = false;
++                        }
++                );
++                if (me.coderfrish.config.fixes.FoliaEntityMovingFixConfig.warnOnDetected){
++                    MinecraftServer.LOGGER.warn("Entity {} with entityId {} has tried moving to another region!",this.type.getCategory().getName(),this.getId());
++                }
+                 return;
+             }
+-            // Paper end
++        }
+ 
+-            movement = this.maybeBackOffFromEdge(movement, type);
+-            Vec3 vec3 = this.collide(movement);
+-            double d = vec3.lengthSqr();
+-            if (d > 1.0E-7 || movement.lengthSqr() - d < 1.0E-7) {
+-                if (this.fallDistance != 0.0 && d >= 1.0) {
+-                    BlockHitResult blockHitResult = this.level()
+-                        .clip(
+-                            new ClipContext(this.position(), this.position().add(vec3), ClipContext.Block.FALLDAMAGE_RESETTING, ClipContext.Fluid.WATER, this)
+-                        );
+-                    if (blockHitResult.getType() != HitResult.Type.MISS) {
+-                        this.resetFallDistance();
++        try {
++            // Paper end - detailed watchdog information
++            if (this.noPhysics) {
++                this.setPos(this.getX() + movement.x, this.getY() + movement.y, this.getZ() + movement.z);
++            } else {
++                if (type == MoverType.PISTON) {
++                    // Paper start - EAR 2
++                    this.activatedTick = Math.max(this.activatedTick, io.papermc.paper.threadedregions.RegionizedServer.getCurrentTick() + 20); // Folia - region threading
++                    this.activatedImmunityTick = Math.max(this.activatedImmunityTick, io.papermc.paper.threadedregions.RegionizedServer.getCurrentTick() + 20); // Folia - region threading
++                    // Paper end - EAR 2
++                    movement = this.limitPistonMovement(movement);
++                    if (movement.equals(Vec3.ZERO)) {
++                        return;
+                     }
+                 }
+ 
+-                Vec3 vec31 = this.position();
+-                Vec3 vec32 = vec31.add(vec3);
+-                this.addMovementThisTick(new Entity.Movement(vec31, vec32, true));
+-                this.setPos(vec32);
+-            }
++                ProfilerFiller profilerFiller = Profiler.get();
++                profilerFiller.push("move");
++                if (this.stuckSpeedMultiplier.lengthSqr() > 1.0E-7) {
++                    movement = movement.multiply(this.stuckSpeedMultiplier);
++                    this.stuckSpeedMultiplier = Vec3.ZERO;
++                    this.setDeltaMovement(Vec3.ZERO);
++                }
++                // Paper start - ignore movement changes while inactive.
++                if (isTemporarilyActive && !(this instanceof ItemEntity) && movement == getDeltaMovement() && type == MoverType.SELF) {
++                    setDeltaMovement(Vec3.ZERO);
++                    profilerFiller.pop();
++                    return;
++                }
++                // Paper end
+ 
+-            profilerFiller.pop();
+-            profilerFiller.push("rest");
+-            boolean flag = !Mth.equal(movement.x, vec3.x);
+-            boolean flag1 = !Mth.equal(movement.z, vec3.z);
+-            this.horizontalCollision = flag || flag1;
+-            if (Math.abs(movement.y) > 0.0 || this.isLocalInstanceAuthoritative()) {
+-                this.verticalCollision = movement.y != vec3.y;
+-                this.verticalCollisionBelow = this.verticalCollision && movement.y < 0.0;
+-                this.setOnGroundWithMovement(this.verticalCollisionBelow, this.horizontalCollision, vec3);
+-            }
+-
+-            if (this.horizontalCollision) {
+-                this.minorHorizontalCollision = this.isHorizontalCollisionMinor(vec3);
+-            } else {
+-                this.minorHorizontalCollision = false;
+-            }
++                movement = this.maybeBackOffFromEdge(movement, type);
++                Vec3 vec3 = this.collide(movement);
++                double d = vec3.lengthSqr();
++                if (d > 1.0E-7 || movement.lengthSqr() - d < 1.0E-7) {
++                    if (this.fallDistance != 0.0 && d >= 1.0) {
++                        BlockHitResult blockHitResult = this.level()
++                                .clip(
++                                        new ClipContext(this.position(), this.position().add(vec3), ClipContext.Block.FALLDAMAGE_RESETTING, ClipContext.Fluid.WATER, this)
++                                );
++                        if (blockHitResult.getType() != HitResult.Type.MISS) {
++                            this.resetFallDistance();
++                        }
++                    }
+ 
+-            BlockPos onPosLegacy = this.getOnPosLegacy();
+-            BlockState blockState = this.level().getBlockState(onPosLegacy);
+-            if (this.isLocalInstanceAuthoritative()) {
+-                this.checkFallDamage(vec3.y, this.onGround(), blockState, onPosLegacy);
+-            }
++                    Vec3 vec31 = this.position();
++                    Vec3 vec32 = vec31.add(vec3);
++                    this.addMovementThisTick(new Entity.Movement(vec31, vec32, true));
++                    this.setPos(vec32);
++                }
+ 
+-            if (this.isRemoved()) {
+                 profilerFiller.pop();
+-            } else {
++                profilerFiller.push("rest");
++                boolean flag = !Mth.equal(movement.x, vec3.x);
++                boolean flag1 = !Mth.equal(movement.z, vec3.z);
++                this.horizontalCollision = flag || flag1;
++                if (Math.abs(movement.y) > 0.0 || this.isLocalInstanceAuthoritative()) {
++                    this.verticalCollision = movement.y != vec3.y;
++                    this.verticalCollisionBelow = this.verticalCollision && movement.y < 0.0;
++                    this.setOnGroundWithMovement(this.verticalCollisionBelow, this.horizontalCollision, vec3);
++                }
++
+                 if (this.horizontalCollision) {
+-                    Vec3 deltaMovement = this.getDeltaMovement();
+-                    this.setDeltaMovement(flag ? 0.0 : deltaMovement.x, deltaMovement.y, flag1 ? 0.0 : deltaMovement.z);
++                    this.minorHorizontalCollision = this.isHorizontalCollisionMinor(vec3);
++                } else {
++                    this.minorHorizontalCollision = false;
+                 }
+ 
+-                if (this.canSimulateMovement()) {
+-                    Block block = blockState.getBlock();
+-                    if (movement.y != vec3.y) {
+-                        block.updateEntityMovementAfterFallOn(this.level(), this);
+-                    }
++                BlockPos onPosLegacy = this.getOnPosLegacy();
++                BlockState blockState = this.level().getBlockState(onPosLegacy);
++                if (this.isLocalInstanceAuthoritative()) {
++                    this.checkFallDamage(vec3.y, this.onGround(), blockState, onPosLegacy);
+                 }
+-                // CraftBukkit start
+-                if (this.horizontalCollision && this.getBukkitEntity() instanceof org.bukkit.entity.Vehicle) {
+-                    org.bukkit.entity.Vehicle vehicle = (org.bukkit.entity.Vehicle) this.getBukkitEntity();
+-                    org.bukkit.block.Block block = this.level.getWorld().getBlockAt(Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ()));
+-
+-                    if (movement.x > vec3.x) {
+-                        block = block.getRelative(org.bukkit.block.BlockFace.EAST);
+-                    } else if (movement.x < vec3.x) {
+-                        block = block.getRelative(org.bukkit.block.BlockFace.WEST);
+-                    } else if (movement.z > vec3.z) {
+-                        block = block.getRelative(org.bukkit.block.BlockFace.SOUTH);
+-                    } else if (movement.z < vec3.z) {
+-                        block = block.getRelative(org.bukkit.block.BlockFace.NORTH);
++
++                if (this.isRemoved()) {
++                    profilerFiller.pop();
++                } else {
++                    if (this.horizontalCollision) {
++                        Vec3 deltaMovement = this.getDeltaMovement();
++                        this.setDeltaMovement(flag ? 0.0 : deltaMovement.x, deltaMovement.y, flag1 ? 0.0 : deltaMovement.z);
+                     }
+ 
+-                    if (!block.getType().isAir()) {
+-                        org.bukkit.event.vehicle.VehicleBlockCollisionEvent event = new org.bukkit.event.vehicle.VehicleBlockCollisionEvent(vehicle, block, org.bukkit.craftbukkit.util.CraftVector.toBukkit(originalMovement)); // Paper - Expose pre-collision velocity
+-                        event.callEvent();
++                    if (this.canSimulateMovement()) {
++                        Block block = blockState.getBlock();
++                        if (movement.y != vec3.y) {
++                            block.updateEntityMovementAfterFallOn(this.level(), this);
++                        }
+                     }
+-                }
+-                // CraftBukkit end
++                    // CraftBukkit start
++                    if (this.horizontalCollision && this.getBukkitEntity() instanceof org.bukkit.entity.Vehicle) {
++                        org.bukkit.entity.Vehicle vehicle = (org.bukkit.entity.Vehicle) this.getBukkitEntity();
++                        org.bukkit.block.Block block = this.level.getWorld().getBlockAt(Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ()));
++
++                        if (movement.x > vec3.x) {
++                            block = block.getRelative(org.bukkit.block.BlockFace.EAST);
++                        } else if (movement.x < vec3.x) {
++                            block = block.getRelative(org.bukkit.block.BlockFace.WEST);
++                        } else if (movement.z > vec3.z) {
++                            block = block.getRelative(org.bukkit.block.BlockFace.SOUTH);
++                        } else if (movement.z < vec3.z) {
++                            block = block.getRelative(org.bukkit.block.BlockFace.NORTH);
++                        }
+ 
+-                if (!this.level().isClientSide() || this.isLocalInstanceAuthoritative()) {
+-                    Entity.MovementEmission movementEmission = this.getMovementEmission();
+-                    if (movementEmission.emitsAnything() && !this.isPassenger()) {
+-                        this.applyMovementEmissionAndPlaySound(movementEmission, vec3, onPosLegacy, blockState);
++                        if (!block.getType().isAir()) {
++                            org.bukkit.event.vehicle.VehicleBlockCollisionEvent event = new org.bukkit.event.vehicle.VehicleBlockCollisionEvent(vehicle, block, org.bukkit.craftbukkit.util.CraftVector.toBukkit(originalMovement)); // Paper - Expose pre-collision velocity
++                            event.callEvent();
++                        }
+                     }
+-                }
++                    // CraftBukkit end
+ 
+-                float blockSpeedFactor = this.getBlockSpeedFactor();
+-                this.setDeltaMovement(this.getDeltaMovement().multiply(blockSpeedFactor, 1.0, blockSpeedFactor));
+-                profilerFiller.pop();
++                    if (!this.level().isClientSide() || this.isLocalInstanceAuthoritative()) {
++                        Entity.MovementEmission movementEmission = this.getMovementEmission();
++                        if (movementEmission.emitsAnything() && !this.isPassenger()) {
++                            this.applyMovementEmissionAndPlaySound(movementEmission, vec3, onPosLegacy, blockState);
++                        }
++                    }
++
++                    float blockSpeedFactor = this.getBlockSpeedFactor();
++                    this.setDeltaMovement(this.getDeltaMovement().multiply(blockSpeedFactor, 1.0, blockSpeedFactor));
++                    profilerFiller.pop();
++                }
+             }
+-        }
+-        // Paper start - detailed watchdog information
++            // Paper start - detailed watchdog information
+         } finally {
+             synchronized (this.posLock) { // Paper
+                 this.moveVector = null;
+@@ -1261,8 +1305,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     private void applyMovementEmissionAndPlaySound(Entity.MovementEmission movementEmission, Vec3 movement, BlockPos pos, BlockState state) {
+         float f = 0.6F;
+-        float f1 = (float)(movement.length() * 0.6F);
+-        float f2 = (float)(movement.horizontalDistance() * 0.6F);
++        float f1 = (float) (movement.length() * 0.6F);
++        float f2 = (float) (movement.horizontalDistance() * 0.6F);
+         BlockPos onPos = this.getOnPos();
+         BlockState blockState = this.level().getBlockState(onPos);
+         boolean isStateClimbable = this.isStateClimbable(blockState);
+@@ -1394,16 +1438,16 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     protected void playEntityOnFireExtinguishedSound() {
+         if (!this.level.isClientSide()) {
+             this.level()
+-                .playSound(
+-                    null,
+-                    this.getX(),
+-                    this.getY(),
+-                    this.getZ(),
+-                    SoundEvents.GENERIC_EXTINGUISH_FIRE,
+-                    this.getSoundSource(),
+-                    0.7F,
+-                    1.6F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F
+-                );
++                    .playSound(
++                            null,
++                            this.getX(),
++                            this.getY(),
++                            this.getZ(),
++                            SoundEvents.GENERIC_EXTINGUISH_FIRE,
++                            this.getSoundSource(),
++                            0.7F,
++                            1.6F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F
++                    );
+         }
+     }
+ 
+@@ -1447,8 +1491,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 return (!(yOffset <= 0.5) || !blockState.is(BlockTags.FENCES))
+                         && !blockState.is(BlockTags.WALLS)
+                         && !(blockState.getBlock() instanceof FenceGateBlock)
+-                    ? blockPos.atY(Mth.floor(this.position.y - yOffset))
+-                    : blockPos;
++                        ? blockPos.atY(Mth.floor(this.position.y - yOffset))
++                        : blockPos;
+             }
+         } else {
+             int floor = Mth.floor(this.position.x);
+@@ -1530,19 +1574,19 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             // note: xZero & zZero -> collision on x/z == 0 -> no step height calculation
+             // this specifically optimises entities standing still
+             initialCollisionBox = movement.y < 0.0 ?
+-                ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.cutDownwards(currentBox, movement.y) : ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.cutUpwards(currentBox, movement.y);
++                    ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.cutDownwards(currentBox, movement.y) : ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.cutUpwards(currentBox, movement.y);
+         } else {
+             initialCollisionBox = currentBox.expandTowards(movement);
+         }
+ 
+         final List<AABB> entityAABBs = new ArrayList<>();
+         ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.getEntityHardCollisions(
+-            this.level, (Entity)(Object)this, initialCollisionBox, entityAABBs, 0, null
++                this.level, (Entity) (Object) this, initialCollisionBox, entityAABBs, 0, null
+         );
+ 
+         ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.getCollisionsForBlocksOrWorldBorder(
+-            this.level, (Entity)(Object)this, initialCollisionBox, potentialCollisionsVoxel, potentialCollisionsBB,
+-            ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.COLLISION_FLAG_CHECK_BORDER, null
++                this.level, (Entity) (Object) this, initialCollisionBox, potentialCollisionsVoxel, potentialCollisionsBB,
++                ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.COLLISION_FLAG_CHECK_BORDER, null
+         );
+         potentialCollisionsBB.addAll(entityAABBs);
+         final Vec3 collided = ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.performCollisions(movement, currentBox, potentialCollisionsVoxel, potentialCollisionsBB);
+@@ -1555,26 +1599,26 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+         final double stepHeight;
+ 
+-        if ((!collidedDownwards && !this.onGround) || (!collidedX && !collidedZ) || (stepHeight = (double)this.maxUpStep()) <= 0.0) {
++        if ((!collidedDownwards && !this.onGround) || (!collidedX && !collidedZ) || (stepHeight = (double) this.maxUpStep()) <= 0.0) {
+             return collided;
+         }
+ 
+         final AABB collidedYBox = collidedDownwards ? currentBox.move(0.0, collided.y, 0.0) : currentBox;
+         AABB stepRetrievalBox = collidedYBox.expandTowards(movement.x, stepHeight, movement.z);
+         if (!collidedDownwards) {
+-            stepRetrievalBox = stepRetrievalBox.expandTowards(0.0, (double)-1.0E-5F, 0.0);
++            stepRetrievalBox = stepRetrievalBox.expandTowards(0.0, (double) -1.0E-5F, 0.0);
+         }
+ 
+         final List<VoxelShape> stepVoxels = new ArrayList<>();
+         final List<AABB> stepAABBs = entityAABBs;
+ 
+         ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.getCollisionsForBlocksOrWorldBorder(
+-            this.level, (Entity)(Object)this, stepRetrievalBox, stepVoxels, stepAABBs,
+-            ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.COLLISION_FLAG_CHECK_BORDER, null
++                this.level, (Entity) (Object) this, stepRetrievalBox, stepVoxels, stepAABBs,
++                ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.COLLISION_FLAG_CHECK_BORDER, null
+         );
+ 
+-        for (final float step : calculateStepHeights(collidedYBox, stepVoxels, stepAABBs, (float)stepHeight, (float)collided.y)) {
+-            final Vec3 stepResult = ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.performCollisions(new Vec3(movement.x, (double)step, movement.z), collidedYBox, stepVoxels, stepAABBs);
++        for (final float step : calculateStepHeights(collidedYBox, stepVoxels, stepAABBs, (float) stepHeight, (float) collided.y)) {
++            final Vec3 stepResult = ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.performCollisions(new Vec3(movement.x, (double) step, movement.z), collidedYBox, stepVoxels, stepAABBs);
+             if (stepResult.horizontalDistanceSqr() > collided.horizontalDistanceSqr()) {
+                 return stepResult.add(0.0, collidedYBox.minY - currentBox.minY, 0.0);
+             }
+@@ -1589,7 +1633,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+         for (VoxelShape voxelShape : colliders) {
+             for (double d : voxelShape.getCoords(Direction.Axis.Y)) {
+-                float f = (float)(d - box.minY);
++                float f = (float) (d - box.minY);
+                 if (!(f < 0.0F) && f != maxUpStep) {
+                     if (f > deltaY) {
+                         break;
+@@ -1649,7 +1693,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     protected float nextStep() {
+-        return (int)this.moveDist + 1;
++        return (int) this.moveDist + 1;
+     }
+ 
+     public SoundEvent getSwimSound() {
+@@ -1692,49 +1736,49 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     private void checkInsideBlocks(Vec3 vec3, Vec3 vec31, InsideBlockEffectApplier.StepBasedCollector stepBasedCollector, LongSet set) {
+         AABB aabb = this.makeBoundingBox(vec31).deflate(1.0E-5F);
+         BlockGetter.forEachBlockIntersectedBetween(
+-            vec3,
+-            vec31,
+-            aabb,
+-            (pos, index) -> {
+-                if (!this.isAlive()) {
+-                    return false;
+-                } else {
+-                    BlockState blockState = this.level().getBlockState(pos);
+-                    if (blockState.isAir()) {
+-                        this.debugBlockIntersection(pos, false, false);
+-                        return true;
+-                    } else if (!set.add(pos.asLong())) {
+-                        return true;
++                vec3,
++                vec31,
++                aabb,
++                (pos, index) -> {
++                    if (!this.isAlive()) {
++                        return false;
+                     } else {
+-                        VoxelShape entityInsideCollisionShape = blockState.getEntityInsideCollisionShape(this.level(), pos, this);
+-                        boolean flag = entityInsideCollisionShape == Shapes.block()
+-                            || this.collidedWithShapeMovingFrom(vec3, vec31, entityInsideCollisionShape.move(new Vec3(pos)).toAabbs());
+-                        if (flag) {
+-                            try {
++                        BlockState blockState = this.level().getBlockState(pos);
++                        if (blockState.isAir()) {
++                            this.debugBlockIntersection(pos, false, false);
++                            return true;
++                        } else if (!set.add(pos.asLong())) {
++                            return true;
++                        } else {
++                            VoxelShape entityInsideCollisionShape = blockState.getEntityInsideCollisionShape(this.level(), pos, this);
++                            boolean flag = entityInsideCollisionShape == Shapes.block()
++                                    || this.collidedWithShapeMovingFrom(vec3, vec31, entityInsideCollisionShape.move(new Vec3(pos)).toAabbs());
++                            if (flag) {
++                                try {
++                                    stepBasedCollector.advanceStep(index, pos); // Paper - track position inside effect was triggered on
++                                    blockState.entityInside(this.level(), pos, this, stepBasedCollector);
++                                    this.onInsideBlock(blockState);
++                                } catch (Throwable var14) {
++                                    CrashReport crashReport = CrashReport.forThrowable(var14, "Colliding entity with block");
++                                    CrashReportCategory crashReportCategory = crashReport.addCategory("Block being collided with");
++                                    CrashReportCategory.populateBlockDetails(crashReportCategory, this.level(), pos, blockState);
++                                    CrashReportCategory crashReportCategory1 = crashReport.addCategory("Entity being checked for collision");
++                                    this.fillCrashReportCategory(crashReportCategory1);
++                                    throw new ReportedException(crashReport);
++                                }
++                            }
++
++                            boolean flag1 = this.collidedWithFluid(blockState.getFluidState(), pos, vec3, vec31);
++                            if (flag1) {
+                                 stepBasedCollector.advanceStep(index, pos); // Paper - track position inside effect was triggered on
+-                                blockState.entityInside(this.level(), pos, this, stepBasedCollector);
+-                                this.onInsideBlock(blockState);
+-                            } catch (Throwable var14) {
+-                                CrashReport crashReport = CrashReport.forThrowable(var14, "Colliding entity with block");
+-                                CrashReportCategory crashReportCategory = crashReport.addCategory("Block being collided with");
+-                                CrashReportCategory.populateBlockDetails(crashReportCategory, this.level(), pos, blockState);
+-                                CrashReportCategory crashReportCategory1 = crashReport.addCategory("Entity being checked for collision");
+-                                this.fillCrashReportCategory(crashReportCategory1);
+-                                throw new ReportedException(crashReport);
++                                blockState.getFluidState().entityInside(this.level(), pos, this, stepBasedCollector);
+                             }
+-                        }
+ 
+-                        boolean flag1 = this.collidedWithFluid(blockState.getFluidState(), pos, vec3, vec31);
+-                        if (flag1) {
+-                            stepBasedCollector.advanceStep(index, pos); // Paper - track position inside effect was triggered on
+-                            blockState.getFluidState().entityInside(this.level(), pos, this, stepBasedCollector);
++                            this.debugBlockIntersection(pos, flag, flag1);
++                            return true;
+                         }
+-
+-                        this.debugBlockIntersection(pos, flag, flag1);
+-                        return true;
+                     }
+                 }
+-            }
+         );
+     }
+ 
+@@ -1782,7 +1826,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         float f = entity == this ? 0.35F : 0.4F;
+         Vec3 deltaMovement = entity.getDeltaMovement();
+         float min = Math.min(
+-            1.0F, (float)Math.sqrt(deltaMovement.x * deltaMovement.x * 0.2F + deltaMovement.y * deltaMovement.y + deltaMovement.z * deltaMovement.z * 0.2F) * f
++                1.0F, (float) Math.sqrt(deltaMovement.x * deltaMovement.x * 0.2F + deltaMovement.y * deltaMovement.y + deltaMovement.z * deltaMovement.z * 0.2F) * f
+         );
+         this.playSwimSound(min);
+     }
+@@ -1814,7 +1858,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     private void playAmethystStepSound() {
+-        this.crystalSoundIntensity = this.crystalSoundIntensity * (float)Math.pow(0.997, this.tickCount - this.lastCrystalSoundPlayTick);
++        this.crystalSoundIntensity = this.crystalSoundIntensity * (float) Math.pow(0.997, this.tickCount - this.lastCrystalSoundPlayTick);
+         this.crystalSoundIntensity = Math.min(1.0F, this.crystalSoundIntensity + 0.07F);
+         float f = 0.5F + this.crystalSoundIntensity * this.random.nextFloat() * 1.2F;
+         float f1 = 0.1F + this.crystalSoundIntensity * 1.2F;
+@@ -1895,20 +1939,20 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
+         if (!this.isInWater() && y < 0.0) {
+-            this.fallDistance -= (float)y;
++            this.fallDistance -= (float) y;
+         }
+ 
+         if (onGround) {
+             if (this.fallDistance > 0.0) {
+                 state.getBlock().fallOn(this.level(), state, pos, this, this.fallDistance);
+                 this.level()
+-                    .gameEvent(
+-                        GameEvent.HIT_GROUND,
+-                        this.position,
+-                        GameEvent.Context.of(
+-                            this, this.mainSupportingBlockPos.<BlockState>map(supportingPos -> this.level().getBlockState(supportingPos)).orElse(state)
+-                        )
+-                    );
++                        .gameEvent(
++                                GameEvent.HIT_GROUND,
++                                this.position,
++                                GameEvent.Context.of(
++                                        this, this.mainSupportingBlockPos.<BlockState>map(supportingPos -> this.level().getBlockState(supportingPos)).orElse(state)
++                                )
++                        );
+             }
+ 
+             this.resetFallDistance();
+@@ -1943,7 +1987,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     public boolean isInRain() {
+         BlockPos blockPos = this.blockPosition();
+         return this.level().isRainingAt(blockPos)
+-            || this.level().isRainingAt(BlockPos.containing(blockPos.getX(), this.getBoundingBox().maxY, blockPos.getZ()));
++                || this.level().isRainingAt(BlockPos.containing(blockPos.getX(), this.getBoundingBox().maxY, blockPos.getZ()));
+     }
+ 
+     public boolean isInWaterOrRain() {
+@@ -1978,7 +2022,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             this.setSwimming(this.isSprinting() && this.isInWater() && !this.isPassenger());
+         } else {
+             this.setSwimming(
+-                this.isSprinting() && this.isUnderWater() && !this.isPassenger() && this.level().getFluidState(this.blockPosition).is(FluidTags.WATER)
++                    this.isSprinting() && this.isUnderWater() && !this.isPassenger() && this.level().getFluidState(this.blockPosition).is(FluidTags.WATER)
+             );
+         }
+     }
+@@ -2011,10 +2055,10 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         this.fluidOnEyes.clear();
+         double eyeY = this.getEyeY();
+         if (!(
+-            this.getVehicle() instanceof AbstractBoat abstractBoat
+-                && !abstractBoat.isUnderWater()
+-                && abstractBoat.getBoundingBox().maxY >= eyeY
+-                && abstractBoat.getBoundingBox().minY <= eyeY
++                this.getVehicle() instanceof AbstractBoat abstractBoat
++                        && !abstractBoat.isUnderWater()
++                        && abstractBoat.getBoundingBox().maxY >= eyeY
++                        && abstractBoat.getBoundingBox().minY <= eyeY
+         )) {
+             BlockPos blockPos = BlockPos.containing(this.getX(), eyeY, this.getZ());
+             FluidState fluidState = this.level().getFluidState(blockPos);
+@@ -2030,7 +2074,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         float f = entity == this ? 0.2F : 0.9F;
+         Vec3 deltaMovement = entity.getDeltaMovement();
+         float min = Math.min(
+-            1.0F, (float)Math.sqrt(deltaMovement.x * deltaMovement.x * 0.2F + deltaMovement.y * deltaMovement.y + deltaMovement.z * deltaMovement.z * 0.2F) * f
++                1.0F, (float) Math.sqrt(deltaMovement.x * deltaMovement.x * 0.2F + deltaMovement.y * deltaMovement.y + deltaMovement.z * deltaMovement.z * 0.2F) * f
+         );
+         if (min < 0.25F) {
+             this.playSound(this.getSwimSplashSound(), min, 1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F);
+@@ -2044,15 +2088,15 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             double d = (this.random.nextDouble() * 2.0 - 1.0) * this.dimensions.width();
+             double d1 = (this.random.nextDouble() * 2.0 - 1.0) * this.dimensions.width();
+             this.level()
+-                .addParticle(
+-                    ParticleTypes.BUBBLE,
+-                    this.getX() + d,
+-                    f1 + 1.0F,
+-                    this.getZ() + d1,
+-                    deltaMovement.x,
+-                    deltaMovement.y - this.random.nextDouble() * 0.2F,
+-                    deltaMovement.z
+-                );
++                    .addParticle(
++                            ParticleTypes.BUBBLE,
++                            this.getX() + d,
++                            f1 + 1.0F,
++                            this.getZ() + d1,
++                            deltaMovement.x,
++                            deltaMovement.y - this.random.nextDouble() * 0.2F,
++                            deltaMovement.z
++                    );
+         }
+ 
+         for (int i = 0; i < 1.0F + this.dimensions.width() * 20.0F; i++) {
+@@ -2086,17 +2130,17 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             double d = this.getX() + (this.random.nextDouble() - 0.5) * this.dimensions.width();
+             double d1 = this.getZ() + (this.random.nextDouble() - 0.5) * this.dimensions.width();
+             if (blockPos.getX() != onPosLegacy.getX()) {
+-                d = Mth.clamp(d, (double)onPosLegacy.getX(), onPosLegacy.getX() + 1.0);
++                d = Mth.clamp(d, (double) onPosLegacy.getX(), onPosLegacy.getX() + 1.0);
+             }
+ 
+             if (blockPos.getZ() != onPosLegacy.getZ()) {
+-                d1 = Mth.clamp(d1, (double)onPosLegacy.getZ(), onPosLegacy.getZ() + 1.0);
++                d1 = Mth.clamp(d1, (double) onPosLegacy.getZ(), onPosLegacy.getZ() + 1.0);
+             }
+ 
+             this.level()
+-                .addParticle(
+-                    new BlockParticleOption(ParticleTypes.BLOCK, blockState), d, this.getY() + 0.1, d1, deltaMovement.x * -4.0, 1.5, deltaMovement.z * -4.0
+-                );
++                    .addParticle(
++                            new BlockParticleOption(ParticleTypes.BLOCK, blockState), d, this.getY() + 0.1, d1, deltaMovement.x * -4.0, 1.5, deltaMovement.z * -4.0
++                    );
+         }
+     }
+ 
+@@ -2128,8 +2172,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     @Deprecated
+     public float getLightLevelDependentMagicValue() {
+         return this.level().hasChunkAt(this.getBlockX(), this.getBlockZ())
+-            ? this.level().getLightLevelDependentMagicValue(BlockPos.containing(this.getX(), this.getEyeY(), this.getZ()))
+-            : 0.0F;
++                ? this.level().getLightLevelDependentMagicValue(BlockPos.containing(this.getX(), this.getEyeY(), this.getZ()))
++                : 0.0F;
+     }
+ 
+     public void absSnapTo(double x, double y, double z, float yRot, float xRot) {
+@@ -2152,7 +2196,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         this.yo = y;
+         this.zo = d1;
+         this.setPos(d, y, d1);
+-        if (this.valid) this.level.getChunk((int) Math.floor(this.getX()) >> 4, (int) Math.floor(this.getZ()) >> 4); // CraftBukkit
++        if (this.valid)
++            this.level.getChunk((int) Math.floor(this.getX()) >> 4, (int) Math.floor(this.getZ()) >> 4); // CraftBukkit
+     }
+ 
+     public void snapTo(Vec3 pos) {
+@@ -2221,9 +2266,9 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     public float distanceTo(Entity entity) {
+-        float f = (float)(this.getX() - entity.getX());
+-        float f1 = (float)(this.getY() - entity.getY());
+-        float f2 = (float)(this.getZ() - entity.getZ());
++        float f = (float) (this.getX() - entity.getX());
++        float f1 = (float) (this.getY() - entity.getY());
++        float f2 = (float) (this.getZ() - entity.getZ());
+         return Mth.sqrt(f * f + f1 * f1 + f2 * f2);
+     }
+ 
+@@ -2251,7 +2296,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     public void push(Entity entity) {
+         if (!this.isPassengerOfSameVehicle(entity)) {
+             if (!entity.noPhysics && !this.noPhysics) {
+-                if (this.level.paperConfig().collisions.onlyPlayersCollide && !(entity instanceof ServerPlayer || this instanceof ServerPlayer)) return; // Paper - Collision option for requiring a player participant
++                if (this.level.paperConfig().collisions.onlyPlayersCollide && !(entity instanceof ServerPlayer || this instanceof ServerPlayer))
++                    return; // Paper - Collision option for requiring a player participant
+                 double d = entity.getX() - this.getX();
+                 double d1 = entity.getZ() - this.getZ();
+                 double max = Mth.absMax(d, d1);
+@@ -2372,9 +2418,9 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     public final Vec3 getEyePosition(float partialTick) {
+-        double d = Mth.lerp((double)partialTick, this.xo, this.getX());
+-        double d1 = Mth.lerp((double)partialTick, this.yo, this.getY()) + this.getEyeHeight();
+-        double d2 = Mth.lerp((double)partialTick, this.zo, this.getZ());
++        double d = Mth.lerp((double) partialTick, this.xo, this.getX());
++        double d1 = Mth.lerp((double) partialTick, this.yo, this.getY()) + this.getEyeHeight();
++        double d2 = Mth.lerp((double) partialTick, this.zo, this.getZ());
+         return new Vec3(d, d1, d2);
+     }
+ 
+@@ -2383,9 +2429,9 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     public final Vec3 getPosition(float partialTicks) {
+-        double d = Mth.lerp((double)partialTicks, this.xo, this.getX());
+-        double d1 = Mth.lerp((double)partialTicks, this.yo, this.getY());
+-        double d2 = Mth.lerp((double)partialTicks, this.zo, this.getZ());
++        double d = Mth.lerp((double) partialTicks, this.xo, this.getX());
++        double d1 = Mth.lerp((double) partialTicks, this.yo, this.getY());
++        double d2 = Mth.lerp((double) partialTicks, this.zo, this.getZ());
+         return new Vec3(d, d1, d2);
+     }
+ 
+@@ -2394,7 +2440,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         Vec3 viewVector = this.getViewVector(partialTicks);
+         Vec3 vec3 = eyePosition.add(viewVector.x * hitDistance, viewVector.y * hitDistance, viewVector.z * hitDistance);
+         return this.level()
+-            .clip(new ClipContext(eyePosition, vec3, ClipContext.Block.OUTLINE, hitFluids ? ClipContext.Fluid.ANY : ClipContext.Fluid.NONE, this));
++                .clip(new ClipContext(eyePosition, vec3, ClipContext.Block.OUTLINE, hitFluids ? ClipContext.Fluid.ANY : ClipContext.Fluid.NONE, this));
+     }
+ 
+     public boolean canBeHitByProjectile() {
+@@ -2423,7 +2469,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     public void awardKillScore(Entity entity, DamageSource damageSource) {
+         if (entity instanceof ServerPlayer) {
+-            CriteriaTriggers.ENTITY_KILLED_PLAYER.trigger((ServerPlayer)entity, this, damageSource);
++            CriteriaTriggers.ENTITY_KILLED_PLAYER.trigger((ServerPlayer) entity, this, damageSource);
+         }
+     }
+ 
+@@ -2462,7 +2508,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 return false;
+             } else {
+                 output.putString("id", encodeId);
+-                this.saveWithoutId(output , includeAll, includeNonSaveable, forceSerialization); // CraftBukkit - pass on includeAll // Paper - Raw entity serialization API
++                this.saveWithoutId(output, includeAll, includeNonSaveable, forceSerialization); // CraftBukkit - pass on includeAll // Paper - Raw entity serialization API
+                 return true;
+             }
+         }
+@@ -2483,11 +2529,11 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         // CraftBukkit end
+         try {
+             if (includeAll) { // CraftBukkit - selectively save position
+-            if (this.vehicle != null) {
+-                output.store("Pos", Vec3.CODEC, new Vec3(this.vehicle.getX(), this.getY(), this.vehicle.getZ()));
+-            } else {
+-                output.store("Pos", Vec3.CODEC, this.position());
+-            }
++                if (this.vehicle != null) {
++                    output.store("Pos", Vec3.CODEC, new Vec3(this.vehicle.getX(), this.getY(), this.vehicle.getZ()));
++                } else {
++                    output.store("Pos", Vec3.CODEC, this.position());
++                }
+             } // CraftBukkit
+ 
+             this.setDeltaMovement(io.papermc.paper.util.MCUtil.sanitizeNanInf(this.deltaMovement, 0D)); // Paper - remove NaN values before usage in saving
+@@ -2504,17 +2550,17 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             // CraftBukkit end
+             output.store("Rotation", Vec2.CODEC, new Vec2(this.getYRot(), this.getXRot()));
+             output.putDouble("fall_distance", this.fallDistance);
+-            output.putShort("Fire", (short)this.remainingFireTicks);
+-            output.putShort("Air", (short)this.getAirSupply());
++            output.putShort("Fire", (short) this.remainingFireTicks);
++            output.putShort("Air", (short) this.getAirSupply());
+             output.putBoolean("OnGround", this.onGround());
+             output.putBoolean("Invulnerable", this.invulnerable);
+             output.putInt("PortalCooldown", this.portalCooldown);
+             // CraftBukkit start - selectively save uuid and world
+             if (includeAll) {
+-            output.store("UUID", UUIDUtil.CODEC, this.getUUID());
+-            // PAIL: Check above UUID reads 1.8 properly, ie: UUIDMost / UUIDLeast
+-            output.putLong("WorldUUIDLeast", this.level.getWorld().getUID().getLeastSignificantBits());
+-            output.putLong("WorldUUIDMost", this.level.getWorld().getUID().getMostSignificantBits());
++                output.store("UUID", UUIDUtil.CODEC, this.getUUID());
++                // PAIL: Check above UUID reads 1.8 properly, ie: UUIDMost / UUIDLeast
++                output.putLong("WorldUUIDLeast", this.level.getWorld().getUID().getLeastSignificantBits());
++                output.putLong("WorldUUIDMost", this.level.getWorld().getUID().getMostSignificantBits());
+             }
+             output.putInt("Bukkit.updateLevel", Entity.CURRENT_LEVEL);
+             if (!this.persist) {
+@@ -2623,7 +2669,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     public void load(ValueInput input) {
+         try {
+             Vec3 vec3 = input.read("Pos", Vec3.CODEC).orElse(Vec3.ZERO);
+-            Vec3 vec31 = input.read("Motion", Vec3.CODEC).orElse(Vec3.ZERO); vec31 = io.papermc.paper.util.MCUtil.sanitizeNanInf(vec31, 0D); // Paper - avoid setting NaN values
++            Vec3 vec31 = input.read("Motion", Vec3.CODEC).orElse(Vec3.ZERO);
++            vec31 = io.papermc.paper.util.MCUtil.sanitizeNanInf(vec31, 0D); // Paper - avoid setting NaN values
+             Vec2 vec2 = input.read("Rotation", Vec2.CODEC).orElse(Vec2.ZERO);
+             this.setDeltaMovement(Math.abs(vec31.x) > 10.0 ? 0.0 : vec31.x, Math.abs(vec31.y) > 10.0 ? 0.0 : vec31.y, Math.abs(vec31.z) > 10.0 ? 0.0 : vec31.z);
+             this.hasImpulse = true;
+@@ -2635,7 +2682,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             this.setYHeadRot(this.getYRot());
+             this.setYBodyRot(this.getYRot());
+             this.fallDistance = input.getDoubleOr("fall_distance", 0.0);
+-            this.remainingFireTicks = input.getShortOr("Fire", (short)0);
++            this.remainingFireTicks = input.getShortOr("Fire", (short) 0);
+             this.setAirSupply(input.getIntOr("Air", this.getMaxAirSupply()));
+             this.onGround = input.getBooleanOr("OnGround", false);
+             this.invulnerable = input.getBooleanOr("Invulnerable", false);
+@@ -2657,16 +2704,16 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 this.setTicksFrozen(input.getIntOr("TicksFrozen", 0));
+                 // Paper start - improve visual fire API
+                 input.getString("Paper.FireOverride").ifPresentOrElse(
+-                    override -> {
+-                        try {
+-                            this.visualFire = net.kyori.adventure.util.TriState.valueOf(override);
+-                        } catch (final Exception ignored) {
+-                            LOGGER.error("Unknown fire override {} for {}", override, this);
+-                        }
+-                    },
+-                    () -> this.visualFire = input.read("HasVisualFire", Codec.BOOL)
+-                        .map(net.kyori.adventure.util.TriState::byBoolean)
+-                        .orElse(net.kyori.adventure.util.TriState.NOT_SET)
++                        override -> {
++                            try {
++                                this.visualFire = net.kyori.adventure.util.TriState.valueOf(override);
++                            } catch (final Exception ignored) {
++                                LOGGER.error("Unknown fire override {} for {}", override, this);
++                            }
++                        },
++                        () -> this.visualFire = input.read("HasVisualFire", Codec.BOOL)
++                                .map(net.kyori.adventure.util.TriState::byBoolean)
++                                .orElse(net.kyori.adventure.util.TriState.NOT_SET)
+                 );
+                 // Paper end
+                 this.customData = input.read("data", CustomData.CODEC).orElse(CustomData.EMPTY);
+@@ -2689,7 +2736,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             this.persist = input.getBooleanOr("Bukkit.persist", true);
+             this.visibleByDefault = input.getBooleanOr("Bukkit.visibleByDefault", true);
+             // SPIGOT-6907: re-implement LivingEntity#setMaximumAir()
+-            this.maxAirTicks = input.getIntOr("Bukkit.MaxAirSupply",this.maxAirTicks);
++            this.maxAirTicks = input.getIntOr("Bukkit.MaxAirSupply", this.maxAirTicks);
+             // CraftBukkit end
+ 
+             // CraftBukkit start
+@@ -2705,7 +2752,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             Optional<Vec3> originVec = input.read("Paper.Origin", Vec3.CODEC);
+             if (originVec.isPresent()) {
+                 this.originWorld = input.read("Paper.OriginWorld", UUIDUtil.CODEC)
+-                    .orElse(this.level != null ? this.level.getWorld().getUID() : null);
++                        .orElse(this.level != null ? this.level.getWorld().getUID() : null);
+                 this.origin = originVec.get();
+             }
+ 
+@@ -2749,6 +2796,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         // Paper start - Raw entity serialization API
+         return getEncodeId(false);
+     }
++
+     public final @Nullable String getEncodeId(boolean includeNonSaveable) {
+         // Paper end - Raw entity serialization API
+         EntityType<?> type = this.getType();
+@@ -2773,7 +2821,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     @Nullable
+     public ItemEntity spawnAtLocation(ServerLevel level, ItemLike item, int yOffset) {
+-        return this.spawnAtLocation(level, new ItemStack(item), (float)yOffset);
++        return this.spawnAtLocation(level, new ItemStack(item), (float) yOffset);
+     }
+ 
+     @Nullable
+@@ -2787,7 +2835,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         return this.spawnAtLocation(level, stack, offset, null);
+     }
+ 
+-    public record DefaultDrop(Item item, org.bukkit.inventory.ItemStack stack, @Nullable java.util.function.Consumer<ItemStack> dropConsumer) {
++    public record DefaultDrop(Item item, org.bukkit.inventory.ItemStack stack,
++                              @Nullable java.util.function.Consumer<ItemStack> dropConsumer) {
+         public DefaultDrop(final ItemStack stack, final java.util.function.Consumer<ItemStack> dropConsumer) {
+             this(stack.getItem(), org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(stack), dropConsumer);
+         }
+@@ -2829,6 +2878,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             return this.spawnAtLocation(level, itemEntity);
+         }
+     }
++
+     @Nullable
+     public ItemEntity spawnAtLocation(ServerLevel level, ItemEntity itemEntity) {
+         {
+@@ -2860,7 +2910,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             return false;
+         }
+ 
+-        final double reducedWith = (double)(this.dimensions.width() * 0.8F);
++        final double reducedWith = (double) (this.dimensions.width() * 0.8F);
+         final AABB boundingBox = AABB.ofSize(this.getEyePosition(), reducedWith, 1.0E-6D, reducedWith);
+         final Level world = this.level;
+ 
+@@ -2924,8 +2974,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+                                 final BlockState blockState = blocks.get((currX) | (currZ << 4) | ((currY) << 8));
+ 
+-                                if (((ca.spottedleaf.moonrise.patches.collisions.block.CollisionBlockState)blockState).moonrise$emptyCollisionShape()
+-                                    || !blockState.isSuffocating(world, mutablePos)) {
++                                if (((ca.spottedleaf.moonrise.patches.collisions.block.CollisionBlockState) blockState).moonrise$emptyCollisionShape()
++                                        || !blockState.isSuffocating(world, mutablePos)) {
+                                     continue;
+                                 }
+ 
+@@ -2936,9 +2986,9 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                                     continue;
+                                 }
+ 
+-                                final AABB toCollide = boundingBox.move(-(double)blockX, -(double)blockY, -(double)blockZ);
++                                final AABB toCollide = boundingBox.move(-(double) blockX, -(double) blockY, -(double) blockZ);
+ 
+-                                final AABB singleAABB = ((ca.spottedleaf.moonrise.patches.collisions.shape.CollisionVoxelShape)collisionShape).moonrise$getSingleAABBRepresentation();
++                                final AABB singleAABB = ((ca.spottedleaf.moonrise.patches.collisions.shape.CollisionVoxelShape) collisionShape).moonrise$getSingleAABBRepresentation();
+                                 if (singleAABB != null) {
+                                     if (ca.spottedleaf.moonrise.patches.collisions.CollisionUtil.voxelShapeIntersect(singleAABB, toCollide)) {
+                                         return true;
+@@ -2963,11 +3013,11 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     public InteractionResult interact(Player player, InteractionHand hand) {
+         if (!this.level().isClientSide
+-            && player.isSecondaryUseActive()
+-            && this instanceof Leashable leashable
+-            && leashable.canBeLeashed()
+-            && this.isAlive()
+-            && !(this instanceof LivingEntity livingEntity && livingEntity.isBaby())) {
++                && player.isSecondaryUseActive()
++                && this instanceof Leashable leashable
++                && leashable.canBeLeashed()
++                && this.isAlive()
++                && !(this instanceof LivingEntity livingEntity && livingEntity.isBaby())) {
+             List<Leashable> list = Leashable.leashableInArea(this, leashable3 -> leashable3.getLeashHolder() == player);
+             if (!list.isEmpty()) {
+                 boolean flag = false;
+@@ -2976,12 +3026,13 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                     if (leashable1.canHaveALeashAttachedTo(this)) {
+                         // Paper start - PlayerLeashEvent
+                         final org.bukkit.event.entity.PlayerLeashEntityEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerLeashEntityEvent(
+-                            leashable1,
+-                            this,
+-                            player,
+-                            hand
++                                leashable1,
++                                this,
++                                player,
++                                hand
+                         );
+-                        if (event != null && event.isCancelled()) continue; // If the event was called and cancelled, skip this.
++                        if (event != null && event.isCancelled())
++                            continue; // If the event was called and cancelled, skip this.
+                         // Paper end - PlayerLeashEvent
+                         leashable1.setLeashedTo(this, true);
+                         flag = true;
+@@ -3001,10 +3052,10 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             itemInHand.hurtAndBreak(1, player, hand);
+             return InteractionResult.SUCCESS;
+         } else if (this instanceof Mob mob
+-            && itemInHand.is(Items.SHEARS)
+-            && mob.canShearEquipment(player)
+-            && !player.isSecondaryUseActive()
+-            && this.attemptToShearEquipment(player, hand, itemInHand, mob)) {
++                && itemInHand.is(Items.SHEARS)
++                && mob.canShearEquipment(player)
++                && !player.isSecondaryUseActive()
++                && this.attemptToShearEquipment(player, hand, itemInHand, mob)) {
+             return InteractionResult.SUCCESS;
+         } else {
+             if (this.isAlive() && this instanceof Leashable leashable2) {
+@@ -3012,7 +3063,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                     if (!this.level().isClientSide()) {
+                         // Paper start - EntityUnleashEvent
+                         if (!org.bukkit.craftbukkit.event.CraftEventFactory.handlePlayerUnleashEntityEvent(
+-                            leashable2, player, hand, !player.hasInfiniteMaterials(), true
++                                leashable2, player, hand, !player.hasInfiniteMaterials(), true
+                         )) {
+                             return InteractionResult.PASS;
+                         }
+@@ -3031,7 +3082,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                         if (leashable2.isLeashed()) {
+                             // Paper start - EntityUnleashEvent
+                             if (!org.bukkit.craftbukkit.event.CraftEventFactory.handlePlayerUnleashEntityEvent(
+-                                leashable2, player, hand, true, true
++                                    leashable2, player, hand, true, true
+                             )) {
+                                 return InteractionResult.PASS;
+                             }
+@@ -3059,11 +3110,12 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     public boolean shearOffAllLeashConnections(@Nullable Player player) {
+-    // Paper start - EntityUnleashEvent - overload
++        // Paper start - EntityUnleashEvent - overload
+         return this.shearOffAllLeashConnections(player, null);
+     }
++
+     public boolean shearOffAllLeashConnections(@Nullable Player player, @Nullable InteractionHand interactionHand) {
+-    // Paper end - EntityUnleashEvent - overload
++        // Paper end - EntityUnleashEvent - overload
+         boolean flag = this.dropAllLeashConnections(player, interactionHand); // Paper - EntityUnleashEvent - overload
+         if (flag && this.level() instanceof ServerLevel serverLevel) {
+             serverLevel.playSound(null, this.blockPosition(), SoundEvents.SHEARS_SNIP, player != null ? player.getSoundSource() : this.getSoundSource());
+@@ -3073,21 +3125,22 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     public boolean dropAllLeashConnections(@Nullable Player player) {
+-    // Paper start - EntityUnleashEvent - overload
++        // Paper start - EntityUnleashEvent - overload
+         return dropAllLeashConnections(player, null);
+     }
++
+     public boolean dropAllLeashConnections(@Nullable Player player, @Nullable InteractionHand interactionHand) {
+-    // Paper start - EntityUnleashEvent - overload
++        // Paper start - EntityUnleashEvent - overload
+         List<Leashable> list = Leashable.leashableLeashedTo(this);
+         boolean flag = false; // Paper - EntityUnleashEvent - compute flag later, events might prevent unleashing all connected leashables.
+         if (this instanceof Leashable leashable && leashable.isLeashed()) {
+             // Paper start - EntityUnleashEvent
+             flag |= org.bukkit.craftbukkit.event.CraftEventFactory.handlePlayerUnleashEntityEvent(
+-                this,
+-                player,
+-                interactionHand,
+-                true,
+-                true
++                    this,
++                    player,
++                    interactionHand,
++                    true,
++                    true
+             );
+             // Paper end - EntityUnleashEvent
+             // leashable.dropLeash(); // Paper - EntityUnleashEvent - moved into handlePlayerUnleashEntityEvent
+@@ -3097,11 +3150,11 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         for (Leashable leashable1 : list) {
+             // Paper start - EntityUnleashEvent
+             flag |= org.bukkit.craftbukkit.event.CraftEventFactory.handlePlayerUnleashEntityEvent( // Update flag here, if any entity was unleashed, set to true.
+-                leashable1,
+-                player,
+-                interactionHand,
+-                true,
+-                true
++                    leashable1,
++                    player,
++                    interactionHand,
++                    true,
++                    true
+             );
+             // leashable1.dropLeash(); // Paper - EntityUnleashEvent - moved into handlePlayerUnleashEntityEvent
+             // Paper end - EntityUnleashEvent
+@@ -3120,8 +3173,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             ItemStack itemBySlot = mob.getItemBySlot(equipmentSlot);
+             Equippable equippable = itemBySlot.get(DataComponents.EQUIPPABLE);
+             if (equippable != null
+-                && equippable.canBeSheared()
+-                && (!EnchantmentHelper.has(itemBySlot, EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE) || player.isCreative())) {
++                    && equippable.canBeSheared()
++                    && (!EnchantmentHelper.has(itemBySlot, EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE) || player.isCreative())) {
+                 stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(hand));
+                 Vec3 average = this.dimensions.attachments().getAverage(EntityAttachment.PASSENGER);
+                 mob.setItemSlotAndDropWhenKilled(equipmentSlot, ItemStack.EMPTY);
+@@ -3131,7 +3184,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                     this.forceDrops = true; // Paper
+                     this.spawnAtLocation(serverLevel, itemBySlot, average);
+                     this.forceDrops = false; // Paper
+-                    CriteriaTriggers.PLAYER_SHEARED_EQUIPMENT.trigger((ServerPlayer)player, itemBySlot, mob);
++                    CriteriaTriggers.PLAYER_SHEARED_EQUIPMENT.trigger((ServerPlayer) player, itemBySlot, mob);
+                 }
+ 
+                 return true;
+@@ -3167,10 +3220,10 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         Vec3 passengerRidingPosition = this.getPassengerRidingPosition(passenger);
+         Vec3 vehicleAttachmentPoint = passenger.getVehicleAttachmentPoint(this);
+         callback.accept(
+-            passenger,
+-            passengerRidingPosition.x - vehicleAttachmentPoint.x,
+-            passengerRidingPosition.y - vehicleAttachmentPoint.y,
+-            passengerRidingPosition.z - vehicleAttachmentPoint.z
++                passenger,
++                passengerRidingPosition.x - vehicleAttachmentPoint.x,
++                passengerRidingPosition.y - vehicleAttachmentPoint.y,
++                passengerRidingPosition.z - vehicleAttachmentPoint.z
+         );
+     }
+ 
+@@ -3218,9 +3271,19 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+             if (force || this.canRide(vehicle) && vehicle.canAddPassenger(this)) {
+                 if (this.valid) { // Folia - region threading - suppress entire event logic during worldgen
+-                // CraftBukkit start
+-                if (vehicle.getBukkitEntity() instanceof org.bukkit.entity.Vehicle && this.getBukkitEntity() instanceof org.bukkit.entity.LivingEntity) {
+-                    org.bukkit.event.vehicle.VehicleEnterEvent event = new org.bukkit.event.vehicle.VehicleEnterEvent((org.bukkit.entity.Vehicle) vehicle.getBukkitEntity(), this.getBukkitEntity());
++                    // CraftBukkit start
++                    if (vehicle.getBukkitEntity() instanceof org.bukkit.entity.Vehicle && this.getBukkitEntity() instanceof org.bukkit.entity.LivingEntity) {
++                        org.bukkit.event.vehicle.VehicleEnterEvent event = new org.bukkit.event.vehicle.VehicleEnterEvent((org.bukkit.entity.Vehicle) vehicle.getBukkitEntity(), this.getBukkitEntity());
++                        // Suppress during worldgen
++                        if (this.valid) {
++                            org.bukkit.Bukkit.getPluginManager().callEvent(event);
++                        }
++                        if (event.isCancelled()) {
++                            return false;
++                        }
++                    }
++
++                    org.bukkit.event.entity.EntityMountEvent event = new org.bukkit.event.entity.EntityMountEvent(this.getBukkitEntity(), vehicle.getBukkitEntity());
+                     // Suppress during worldgen
+                     if (this.valid) {
+                         org.bukkit.Bukkit.getPluginManager().callEvent(event);
+@@ -3228,17 +3291,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                     if (event.isCancelled()) {
+                         return false;
+                     }
+-                }
+-
+-                org.bukkit.event.entity.EntityMountEvent event = new org.bukkit.event.entity.EntityMountEvent(this.getBukkitEntity(), vehicle.getBukkitEntity());
+-                // Suppress during worldgen
+-                if (this.valid) {
+-                    org.bukkit.Bukkit.getPluginManager().callEvent(event);
+-                }
+-                if (event.isCancelled()) {
+-                    return false;
+-                }
+-                // CraftBukkit end
++                    // CraftBukkit end
+                 } // Folia - region threading - suppress entire event logic during worldgen
+                 if (this.isPassenger()) {
+                     this.stopRiding();
+@@ -3248,8 +3301,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 this.vehicle = vehicle;
+                 this.vehicle.addPassenger(this);
+                 vehicle.getIndirectPassengersStream()
+-                    .filter(entity1 -> entity1 instanceof ServerPlayer)
+-                    .forEach(entity1 -> CriteriaTriggers.START_RIDING_TRIGGER.trigger((ServerPlayer)entity1));
++                        .filter(entity1 -> entity1 instanceof ServerPlayer)
++                        .forEach(entity1 -> CriteriaTriggers.START_RIDING_TRIGGER.trigger((ServerPlayer) entity1));
+                 return true;
+             } else {
+                 return false;
+@@ -3271,12 +3324,14 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         // Paper start - Force entity dismount during teleportation
+         this.removeVehicle(false);
+     }
++
+     public void removeVehicle(boolean suppressCancellation) {
+         // Paper end - Force entity dismount during teleportation
+         if (this.vehicle != null) {
+             Entity entity = this.vehicle;
+             this.vehicle = null;
+-            if (!entity.removePassenger(this, suppressCancellation)) this.vehicle = entity; // CraftBukkit // Paper - Force entity dismount during teleportation
++            if (!entity.removePassenger(this, suppressCancellation))
++                this.vehicle = entity; // CraftBukkit // Paper - Force entity dismount during teleportation
+         }
+     }
+ 
+@@ -3307,7 +3362,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 this.passengers = ImmutableList.copyOf(list);
+             }
+ 
+-            if (!passenger.hasNullCallback()) this.gameEvent(GameEvent.ENTITY_MOUNT, passenger); // Folia - region threading - do not fire game events for entities not added
++            if (!passenger.hasNullCallback())
++                this.gameEvent(GameEvent.ENTITY_MOUNT, passenger); // Folia - region threading - do not fire game events for entities not added
+         }
+     }
+ 
+@@ -3315,6 +3371,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     protected boolean removePassenger(Entity passenger) {
+         return removePassenger(passenger, false);
+     }
++
+     protected boolean removePassenger(Entity passenger, boolean suppressCancellation) { // CraftBukkit
+         // Paper end - Force entity dismount during teleportation
+         if (passenger.getVehicle() == this) {
+@@ -3322,33 +3379,33 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         } else {
+             // CraftBukkit start
+             if (this.valid) { // Folia - region threading - suppress entire event logic during worldgen
+-            org.bukkit.craftbukkit.entity.CraftEntity craft = (org.bukkit.craftbukkit.entity.CraftEntity) passenger.getBukkitEntity().getVehicle();
+-            Entity orig = craft == null ? null : craft.getHandle();
+-            if (this.getBukkitEntity() instanceof org.bukkit.entity.Vehicle && passenger.getBukkitEntity() instanceof org.bukkit.entity.LivingEntity) {
+-                org.bukkit.event.vehicle.VehicleExitEvent event = new org.bukkit.event.vehicle.VehicleExitEvent(
+-                        (org.bukkit.entity.Vehicle) this.getBukkitEntity(),
+-                        (org.bukkit.entity.LivingEntity) passenger.getBukkitEntity(), !suppressCancellation // Paper - Force entity dismount during teleportation
+-                );
++                org.bukkit.craftbukkit.entity.CraftEntity craft = (org.bukkit.craftbukkit.entity.CraftEntity) passenger.getBukkitEntity().getVehicle();
++                Entity orig = craft == null ? null : craft.getHandle();
++                if (this.getBukkitEntity() instanceof org.bukkit.entity.Vehicle && passenger.getBukkitEntity() instanceof org.bukkit.entity.LivingEntity) {
++                    org.bukkit.event.vehicle.VehicleExitEvent event = new org.bukkit.event.vehicle.VehicleExitEvent(
++                            (org.bukkit.entity.Vehicle) this.getBukkitEntity(),
++                            (org.bukkit.entity.LivingEntity) passenger.getBukkitEntity(), !suppressCancellation // Paper - Force entity dismount during teleportation
++                    );
++                    // Suppress during worldgen
++                    if (this.valid) {
++                        org.bukkit.Bukkit.getPluginManager().callEvent(event);
++                    }
++                    org.bukkit.craftbukkit.entity.CraftEntity craftn = (org.bukkit.craftbukkit.entity.CraftEntity) passenger.getBukkitEntity().getVehicle();
++                    Entity n = craftn == null ? null : craftn.getHandle();
++                    if (event.isCancelled() || n != orig) {
++                        return false;
++                    }
++                }
++
++                org.bukkit.event.entity.EntityDismountEvent event = new org.bukkit.event.entity.EntityDismountEvent(passenger.getBukkitEntity(), this.getBukkitEntity(), !suppressCancellation); // Paper - Force entity dismount during teleportation
+                 // Suppress during worldgen
+                 if (this.valid) {
+                     org.bukkit.Bukkit.getPluginManager().callEvent(event);
+                 }
+-                org.bukkit.craftbukkit.entity.CraftEntity craftn = (org.bukkit.craftbukkit.entity.CraftEntity) passenger.getBukkitEntity().getVehicle();
+-                Entity n = craftn == null ? null : craftn.getHandle();
+-                if (event.isCancelled() || n != orig) {
++                if (event.isCancelled()) {
+                     return false;
+                 }
+-            }
+-
+-            org.bukkit.event.entity.EntityDismountEvent event = new org.bukkit.event.entity.EntityDismountEvent(passenger.getBukkitEntity(), this.getBukkitEntity(), !suppressCancellation); // Paper - Force entity dismount during teleportation
+-            // Suppress during worldgen
+-            if (this.valid) {
+-                org.bukkit.Bukkit.getPluginManager().callEvent(event);
+-            }
+-            if (event.isCancelled()) {
+-                return false;
+-            }
+-            // CraftBukkit end
++                // CraftBukkit end
+             } // Folia - region threading - suppress entire event logic during worldgen
+             if (this.passengers.size() == 1 && this.passengers.get(0) == passenger) {
+                 this.passengers = ImmutableList.of();
+@@ -3357,7 +3414,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             }
+ 
+             passenger.boardingCooldown = 60;
+-            if (!passenger.hasNullCallback()) this.gameEvent(GameEvent.ENTITY_DISMOUNT, passenger); // Folia - region threading - do not fire game events for entities not added
++            if (!passenger.hasNullCallback())
++                this.gameEvent(GameEvent.ENTITY_DISMOUNT, passenger); // Folia - region threading - do not fire game events for entities not added
+         }
+         return true; // CraftBukkit
+     }
+@@ -3598,7 +3656,9 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             return null;
+         }
+         // Folia end - region threading
+-        if (!this.level().paperConfig().scoreboards.allowNonPlayerEntitiesOnScoreboards && !(this instanceof Player)) { return null; } // Paper - Perf: Disable Scoreboards for non players by default
++        if (!this.level().paperConfig().scoreboards.allowNonPlayerEntitiesOnScoreboards && !(this instanceof Player)) {
++            return null;
++        } // Paper - Perf: Disable Scoreboards for non players by default
+         return this.level().getScoreboard().getPlayersTeam(this.getScoreboardName());
+     }
+ 
+@@ -3629,9 +3689,9 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     public void setSharedFlag(int flag, boolean set) {
+         byte b = this.entityData.get(DATA_SHARED_FLAGS_ID);
+         if (set) {
+-            this.entityData.set(DATA_SHARED_FLAGS_ID, (byte)(b | 1 << flag));
++            this.entityData.set(DATA_SHARED_FLAGS_ID, (byte) (b | 1 << flag));
+         } else {
+-            this.entityData.set(DATA_SHARED_FLAGS_ID, (byte)(b & ~(1 << flag)));
++            this.entityData.set(DATA_SHARED_FLAGS_ID, (byte) (b & ~(1 << flag)));
+         }
+     }
+ 
+@@ -3673,7 +3733,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     public float getPercentFrozen() {
+         int ticksRequiredToFreeze = this.getTicksRequiredToFreeze();
+-        return (float)Math.min(this.getTicksFrozen(), ticksRequiredToFreeze) / ticksRequiredToFreeze;
++        return (float) Math.min(this.getTicksFrozen(), ticksRequiredToFreeze) / ticksRequiredToFreeze;
+     }
+ 
+     public boolean isFullyFrozen() {
+@@ -3697,10 +3757,10 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             pluginManager.callEvent(entityCombustEvent);
+             if (!entityCombustEvent.isCancelled()) {
+                 this.igniteForSeconds(entityCombustEvent.getDuration(), false);
+-            // Paper start - fix EntityCombustEvent cancellation
++                // Paper start - fix EntityCombustEvent cancellation
+             } else {
+                 this.setRemainingFireTicks(this.remainingFireTicks - 1);
+-            // Paper end - fix EntityCombustEvent cancellation
++                // Paper end - fix EntityCombustEvent cancellation
+             }
+             // CraftBukkit end
+         }
+@@ -3746,18 +3806,18 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         if (level instanceof ServerLevel serverLevel) {
+             for (int i = 0; i < 2; i++) {
+                 serverLevel.sendParticles(
+-                    ParticleTypes.SPLASH, pos.getX() + level.random.nextDouble(), pos.getY() + 1, pos.getZ() + level.random.nextDouble(), 1, 0.0, 0.0, 0.0, 1.0
++                        ParticleTypes.SPLASH, pos.getX() + level.random.nextDouble(), pos.getY() + 1, pos.getZ() + level.random.nextDouble(), 1, 0.0, 0.0, 0.0, 1.0
+                 );
+                 serverLevel.sendParticles(
+-                    ParticleTypes.BUBBLE,
+-                    pos.getX() + level.random.nextDouble(),
+-                    pos.getY() + 1,
+-                    pos.getZ() + level.random.nextDouble(),
+-                    1,
+-                    0.0,
+-                    0.01,
+-                    0.0,
+-                    0.2
++                        ParticleTypes.BUBBLE,
++                        pos.getX() + level.random.nextDouble(),
++                        pos.getY() + 1,
++                        pos.getZ() + level.random.nextDouble(),
++                        1,
++                        0.0,
++                        0.01,
++                        0.0,
++                        0.2
+                 );
+             }
+         }
+@@ -3876,7 +3936,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     public String toString() {
+         String string = this.level() == null ? "~NULL~" : this.level().toString();
+         return this.removalReason != null
+-            ? String.format(
++                ? String.format(
+                 Locale.ROOT,
+                 "%s['%s'/%d, uuid='%s', l='%s', x=%.2f, y=%.2f, z=%.2f, cpos=%s, tl=%d, v=%b, removed=%s]", // Paper - add more info
+                 this.getClass().getSimpleName(),
+@@ -3889,8 +3949,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 this.getZ(),
+                 this.chunkPosition(), this.tickCount, this.valid, // Paper - add more info
+                 this.removalReason
+-            )
+-            : String.format(
++        )
++                : String.format(
+                 Locale.ROOT,
+                 "%s['%s'/%d, uuid='%s', l='%s', x=%.2f, y=%.2f, z=%.2f, cpos=%s, tl=%d, v=%b]", // Paper - add more info
+                 this.getClass().getSimpleName(),
+@@ -3902,14 +3962,14 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 this.getY(),
+                 this.getZ(),
+                 this.chunkPosition(), this.tickCount, this.valid // Paper - add more info
+-            );
++        );
+     }
+ 
+     public final boolean isInvulnerableToBase(DamageSource damageSource) {
+         return this.isRemoved()
+-            || this.invulnerable && !damageSource.is(DamageTypeTags.BYPASSES_INVULNERABILITY) && !damageSource.isCreativePlayer()
+-            || damageSource.is(DamageTypeTags.IS_FIRE) && this.fireImmune()
+-            || damageSource.is(DamageTypeTags.IS_FALL) && this.getType().is(EntityTypeTags.FALL_DAMAGE_IMMUNE);
++                || this.invulnerable && !damageSource.is(DamageTypeTags.BYPASSES_INVULNERABILITY) && !damageSource.isCreativePlayer()
++                || damageSource.is(DamageTypeTags.IS_FIRE) && this.fireImmune()
++                || damageSource.is(DamageTypeTags.IS_FALL) && this.getType().is(EntityTypeTags.FALL_DAMAGE_IMMUNE);
+     }
+ 
+     public boolean isInvulnerable() {
+@@ -4128,70 +4188,70 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                                       EntityTreeNode passengerTree, java.util.function.Consumer<Entity> teleportComplete) {
+         Vec3 pos = this.position();
+         ChunkPos posChunk = new ChunkPos(
+-            ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(pos),
+-            ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(pos)
++                ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(pos),
++                ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(pos)
+         );
+ 
+         // ensure the region is always ticking in case of a shutdown
+         // otherwise, the shutdown will not be able to complete the shutdown as it requires a ticking region
+         Long teleportHoldId = Long.valueOf(TELEPORT_HOLD_TICKET_GEN.getAndIncrement());
+         originWorld.moonrise$getChunkTaskScheduler().chunkHolderManager.addTicketAtLevel(
+-            TicketType.TELEPORT_HOLD_TICKET, posChunk,
+-            ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
+-            teleportHoldId
++                TicketType.TELEPORT_HOLD_TICKET, posChunk,
++                ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
++                teleportHoldId
+         );
+         final ServerLevel.PendingTeleport pendingTeleport = new ServerLevel.PendingTeleport(passengerTree, pos);
+         destination.pushPendingTeleport(pendingTeleport);
+ 
+         Runnable scheduleEntityJoin = () -> {
+             io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(
+-                destination,
+-                ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(pos), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(pos),
+-                () -> {
+-                    if (!destination.removePendingTeleport(pendingTeleport)) {
+-                        // shutdown logic placed the entity already, and we are shutting down - do nothing to ensure
+-                        // we do not produce any errors here
+-                        return;
+-                    }
+-                    originWorld.moonrise$getChunkTaskScheduler().chunkHolderManager.removeTicketAtLevel(
+-                        TicketType.TELEPORT_HOLD_TICKET, posChunk,
+-                        ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
+-                        teleportHoldId
+-                    );
+-                    List<EntityTreeNode> fullTree = passengerTree.getFullTree();
+-                    for (EntityTreeNode node : fullTree) {
+-                        node.root.placeSingleSync(originWorld, destination, node, teleportFlags);
+-                    }
++                    destination,
++                    ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(pos), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(pos),
++                    () -> {
++                        if (!destination.removePendingTeleport(pendingTeleport)) {
++                            // shutdown logic placed the entity already, and we are shutting down - do nothing to ensure
++                            // we do not produce any errors here
++                            return;
++                        }
++                        originWorld.moonrise$getChunkTaskScheduler().chunkHolderManager.removeTicketAtLevel(
++                                TicketType.TELEPORT_HOLD_TICKET, posChunk,
++                                ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
++                                teleportHoldId
++                        );
++                        List<EntityTreeNode> fullTree = passengerTree.getFullTree();
++                        for (EntityTreeNode node : fullTree) {
++                            node.root.placeSingleSync(originWorld, destination, node, teleportFlags);
++                        }
+ 
+-                    // restore passenger tree
+-                    passengerTree.restore();
+-                    passengerTree.adjustRiders(true);
++                        // restore passenger tree
++                        passengerTree.restore();
++                        passengerTree.adjustRiders(true);
+ 
+-                    // invoke post dimension change now
+-                    for (EntityTreeNode node : fullTree) {
+-                        node.root.postChangeDimension();
+-                    }
++                        // invoke post dimension change now
++                        for (EntityTreeNode node : fullTree) {
++                            node.root.postChangeDimension();
++                        }
+ 
+-                    if (teleportComplete != null) {
+-                        teleportComplete.accept(Entity.this);
++                        if (teleportComplete != null) {
++                            teleportComplete.accept(Entity.this);
++                        }
+                     }
+-                }
+             );
+         };
+ 
+         if ((teleportFlags & TELEPORT_FLAG_LOAD_CHUNK) != 0L) {
+             destination.loadChunksForMoveAsync(
+-                this.getBoundingBox(), ca.spottedleaf.concurrentutil.util.Priority.HIGHER,
+-                (chunkList) -> {
+-                    for (net.minecraft.world.level.chunk.ChunkAccess chunk : chunkList) {
+-                        destination.moonrise$getChunkTaskScheduler().chunkHolderManager.addTicketAtLevel(
+-                            TicketType.POST_TELEPORT, chunk.getPos(),
+-                            ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.FULL_LOADED_TICKET_LEVEL,
+-                            null
+-                        );
++                    this.getBoundingBox(), ca.spottedleaf.concurrentutil.util.Priority.HIGHER,
++                    (chunkList) -> {
++                        for (net.minecraft.world.level.chunk.ChunkAccess chunk : chunkList) {
++                            destination.moonrise$getChunkTaskScheduler().chunkHolderManager.addTicketAtLevel(
++                                    TicketType.POST_TELEPORT, chunk.getPos(),
++                                    ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.FULL_LOADED_TICKET_LEVEL,
++                                    null
++                            );
++                        }
++                        scheduleEntityJoin.run();
+                     }
+-                    scheduleEntityJoin.run();
+-                }
+             );
+         } else {
+             scheduleEntityJoin.run();
+@@ -4244,10 +4304,10 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     protected final void transform(TeleportTransition telpeort) {
+         PositionMoveRotation move = PositionMoveRotation.calculateAbsolute(
+-            PositionMoveRotation.of(this), PositionMoveRotation.of(telpeort), telpeort.relatives()
++                PositionMoveRotation.of(this), PositionMoveRotation.of(telpeort), telpeort.relatives()
+         );
+         this.transform(
+-            move.position(), Float.valueOf(move.yRot()), Float.valueOf(move.xRot()), move.deltaMovement()
++                move.position(), Float.valueOf(move.yRot()), Float.valueOf(move.xRot()), move.deltaMovement()
+         );
+     }
+ 
+@@ -4270,10 +4330,10 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     protected final Entity transformForAsyncTeleport(TeleportTransition telpeort) {
+         PositionMoveRotation move = PositionMoveRotation.calculateAbsolute(
+-            PositionMoveRotation.of(this), PositionMoveRotation.of(telpeort), telpeort.relatives()
++                PositionMoveRotation.of(this), PositionMoveRotation.of(telpeort), telpeort.relatives()
+         );
+         return this.transformForAsyncTeleport(
+-            telpeort.newLevel(), telpeort.position(), Float.valueOf(move.yRot()), Float.valueOf(move.xRot()), move.deltaMovement()
++                telpeort.newLevel(), telpeort.position(), Float.valueOf(move.yRot()), Float.valueOf(move.xRot()), move.deltaMovement()
+         );
+     }
+ 
+@@ -4295,8 +4355,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         PositionMoveRotation move = PositionMoveRotation.calculateAbsolute(PositionMoveRotation.of(this), PositionMoveRotation.of(teleportTarget), teleportTarget.relatives());
+ 
+         return this.teleportAsync(
+-            teleportTarget.newLevel(), move.position(), Float.valueOf(move.yRot()), Float.valueOf(move.xRot()), move.deltaMovement(),
+-            teleportTarget.cause(), teleportFlags, teleportComplete
++                teleportTarget.newLevel(), move.position(), Float.valueOf(move.yRot()), Float.valueOf(move.xRot()), move.deltaMovement(),
++                teleportTarget.cause(), teleportFlags, teleportComplete
+         );
+     }
+ 
+@@ -4313,6 +4373,16 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             return false;
+         }
+         this.getBukkitEntity(); // force bukkit entity to be created before TPing
++        // LightingLuminol Start
++        final org.bukkit.entity.Entity bukkitEntity = this.getBukkitEntity(); // force bukkit entity to be created before TPing
++
++        if (!this.preventMoving && this instanceof ServerPlayer) {
++            if (!new PlayerTeleportEvent((org.bukkit.entity.Player) bukkitEntity,bukkitEntity.getLocation(), MCUtil.toLocation(destination, pos)).callEvent()) {
++                return false;
++            }
++        }
++        // LightingLuminol End
++
+         if ((teleportFlags & TELEPORT_FLAG_UNMOUNT) == 0L) {
+             for (Entity entity : this.getIndirectPassengers()) {
+                 if (!entity.canTeleportAsync()) {
+@@ -4341,11 +4411,11 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             Vec3 currPos = this.position();
+             // Luminol - Prevent entity sync teleported to the edge of tickregion
+             if (this.checkNearbyTickRegions((int) pos.x, (int) pos.z) && // Luminol - Fix sync teleport issue
+-                destination.regioniser.getRegionAtUnsynchronised(
+-                    ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(currPos), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(currPos)
+-                ) == destination.regioniser.getRegionAtUnsynchronised(
+-                    ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(pos), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(pos)
+-                )
++                    destination.regioniser.getRegionAtUnsynchronised(
++                            ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(currPos), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(currPos)
++                    ) == destination.regioniser.getRegionAtUnsynchronised(
++                            ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(pos), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(pos)
++                    )
+             ) {
+                 boolean hasPassengers = !this.passengers.isEmpty();
+                 EntityTreeNode passengerTree = this.detachPassengers();
+@@ -4383,7 +4453,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+         EntityTreeNode passengerTree = this.detachPassengers();
+         List<EntityTreeNode> fullPassengerTree = passengerTree.getFullTree();
+-        ServerLevel originWorld = (ServerLevel)this.level;
++        ServerLevel originWorld = (ServerLevel) this.level;
+ 
+         for (EntityTreeNode node : fullPassengerTree) {
+             node.root.preChangeDimension();
+@@ -4455,50 +4525,50 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                     BlockPos targetPos = ServerLevel.END_SPAWN_POINT;
+                     // need to load chunks so we can create the platform
+                     destination.moonrise$loadChunksAsync(
+-                        targetPos, 16, // load 16 blocks to be safe from block physics
+-                        ca.spottedleaf.concurrentutil.util.Priority.HIGH,
+-                        (chunks) -> {
+-                            //net.minecraft.world.level.levelgen.feature.EndPlatformFeature.createEndPlatform(destination, targetPos.below(), true, null); // Kaiiju - Vanilla end teleportation - moved down
+-                            // Kaiiju start - Vanilla end teleportation
+-                            Vec3 finalPos;
+-                            if (this instanceof Player) finalPos = Vec3.atBottomCenterOf(targetPos.below());
+-                            else finalPos = Vec3.atBottomCenterOf(targetPos);
+-                            // Kaiiju end
+-                            // the portal obsidian is placed at targetPos.y - 2, so if we want to place the entity
+-                            // on the obsidian, we need to spawn at targetPos.y - 1
+-                            portalInfoCompletable.complete(
+-                                new net.minecraft.world.level.portal.TeleportTransition(
+-                                    destination, finalPos, this.getDeltaMovement(), Direction.WEST.toYRot(), 0.0f, // Kaiiju - Vanilla end teleportation
+-                                    //Relative.union(Relative.DELTA, Set.of(Relative.X_ROT)),
+-                                    TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET),
+-                                    org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.END_PORTAL
+-                                )
+-                            );
+-                        }
++                            targetPos, 16, // load 16 blocks to be safe from block physics
++                            ca.spottedleaf.concurrentutil.util.Priority.HIGH,
++                            (chunks) -> {
++                                //net.minecraft.world.level.levelgen.feature.EndPlatformFeature.createEndPlatform(destination, targetPos.below(), true, null); // Kaiiju - Vanilla end teleportation - moved down
++                                // Kaiiju start - Vanilla end teleportation
++                                Vec3 finalPos;
++                                if (this instanceof Player) finalPos = Vec3.atBottomCenterOf(targetPos.below());
++                                else finalPos = Vec3.atBottomCenterOf(targetPos);
++                                // Kaiiju end
++                                // the portal obsidian is placed at targetPos.y - 2, so if we want to place the entity
++                                // on the obsidian, we need to spawn at targetPos.y - 1
++                                portalInfoCompletable.complete(
++                                        new net.minecraft.world.level.portal.TeleportTransition(
++                                                destination, finalPos, this.getDeltaMovement(), Direction.WEST.toYRot(), 0.0f, // Kaiiju - Vanilla end teleportation
++                                                //Relative.union(Relative.DELTA, Set.of(Relative.X_ROT)),
++                                                TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET),
++                                                org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.END_PORTAL
++                                        )
++                                );
++                            }
+                     );
+                 } else {
+                     BlockPos spawnPos = destination.getSharedSpawnPos();
+                     // need to load chunk for heightmap
+                     destination.moonrise$loadChunksAsync(
+-                        spawnPos, 0,
+-                        ca.spottedleaf.concurrentutil.util.Priority.HIGH,
+-                        (chunks) -> {
+-                            BlockPos adjustedSpawn = destination.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spawnPos);
+-                            // Kaiiju start - Vanilla end teleportation
+-                            Vec3 finalPos;
+-                            if (this instanceof Player) finalPos = Vec3.atBottomCenterOf(adjustedSpawn.below());
+-                            else finalPos = Vec3.atBottomCenterOf(adjustedSpawn);
+-                            // Kaiiju end
+-                            // done
+-                            portalInfoCompletable.complete(
+-                                new net.minecraft.world.level.portal.TeleportTransition(
+-                                        destination, finalPos, this.getDeltaMovement(), 0.0f, 0.0f, // Kaiiju - Vanilla end teleportation
+-                                    Relative.union(Relative.DELTA, Relative.ROTATION),
+-                                    TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET),
+-                                    org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.END_PORTAL
+-                                )
+-                            );
+-                        }
++                            spawnPos, 0,
++                            ca.spottedleaf.concurrentutil.util.Priority.HIGH,
++                            (chunks) -> {
++                                BlockPos adjustedSpawn = destination.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spawnPos);
++                                // Kaiiju start - Vanilla end teleportation
++                                Vec3 finalPos;
++                                if (this instanceof Player) finalPos = Vec3.atBottomCenterOf(adjustedSpawn.below());
++                                else finalPos = Vec3.atBottomCenterOf(adjustedSpawn);
++                                // Kaiiju end
++                                // done
++                                portalInfoCompletable.complete(
++                                        new net.minecraft.world.level.portal.TeleportTransition(
++                                                destination, finalPos, this.getDeltaMovement(), 0.0f, 0.0f, // Kaiiju - Vanilla end teleportation
++                                                Relative.union(Relative.DELTA, Relative.ROTATION),
++                                                TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET),
++                                                org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.END_PORTAL
++                                        )
++                                );
++                            }
+                     );
+                 }
+ 
+@@ -4512,22 +4582,22 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 // hoisted from the create fallback, so that we can avoid the sync load later if we need it
+                 BlockState originalPortalBlock = origin.getBlockStateIfLoaded(originPortal);
+                 Direction.Axis originalPortalDirection = originalPortalBlock == null ? Direction.Axis.X :
+-                    originalPortalBlock.getOptionalValue(net.minecraft.world.level.block.NetherPortalBlock.AXIS).orElse(Direction.Axis.X);
++                        originalPortalBlock.getOptionalValue(net.minecraft.world.level.block.NetherPortalBlock.AXIS).orElse(Direction.Axis.X);
+                 BlockUtil.FoundRectangle originalPortalRectangle =
+-                    originalPortalBlock == null || !originalPortalBlock.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_AXIS)
+-                        ? null
+-                        : BlockUtil.getLargestRectangleAround(
+-                            originPortal, originalPortalDirection, 21, Direction.Axis.Y, 21,
+-                            (blockpos) -> {
+-                                return origin.getBlockStateFromEmptyChunkIfLoaded(blockpos) == originalPortalBlock;
+-                            }
++                        originalPortalBlock == null || !originalPortalBlock.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_AXIS)
++                                ? null
++                                : BlockUtil.getLargestRectangleAround(
++                                originPortal, originalPortalDirection, 21, Direction.Axis.Y, 21,
++                                (blockpos) -> {
++                                    return origin.getBlockStateFromEmptyChunkIfLoaded(blockpos) == originalPortalBlock;
++                                }
+                         );
+ 
+                 boolean destinationIsNether = destination.getTypeKey() == net.minecraft.world.level.dimension.LevelStem.NETHER;
+ 
+                 int portalSearchRadius = origin.paperConfig().environment.portalSearchVanillaDimensionScaling && destinationIsNether ?
+-                    (int)(destination.paperConfig().environment.portalSearchRadius / destination.dimensionType().coordinateScale()) :
+-                    destination.paperConfig().environment.portalSearchRadius;
++                        (int) (destination.paperConfig().environment.portalSearchRadius / destination.dimensionType().coordinateScale()) :
++                        destination.paperConfig().environment.portalSearchRadius;
+                 int portalCreateRadius = destination.paperConfig().environment.portalCreateRadius;
+ 
+                 WorldBorder destinationBorder = destination.getWorldBorder();
+@@ -4535,93 +4605,93 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 BlockPos targetPos = destination.getWorldBorder().clampToBounds(this.getX() * dimensionScale, this.getY(), this.getZ() * dimensionScale);
+ 
+                 ca.spottedleaf.concurrentutil.completable.CallbackCompletable<BlockUtil.FoundRectangle> portalFound
+-                    = new ca.spottedleaf.concurrentutil.completable.CallbackCompletable<>();
++                        = new ca.spottedleaf.concurrentutil.completable.CallbackCompletable<>();
+ 
+                 // post portal find/create logic
+                 portalFound.addWaiter(
+-                    (BlockUtil.FoundRectangle portal, Throwable thr) -> {
+-                        // no portal could be created
+-                        if (portal == null) {
++                        (BlockUtil.FoundRectangle portal, Throwable thr) -> {
++                            // no portal could be created
++                            if (portal == null) {
++                                portalInfoCompletable.complete(
++                                        new TeleportTransition(destination, Vec3.atCenterOf(targetPos), Vec3.ZERO,
++                                                90.0f, 0.0f,
++                                                TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET))
++                                );
++                                return;
++                            }
++
++                            Vec3 relativePos = originalPortalRectangle == null ?
++                                    new Vec3(0.5, 0.0, 0.0) :
++                                    Entity.this.getRelativePortalPosition(originalPortalDirection, originalPortalRectangle);
++
+                             portalInfoCompletable.complete(
+-                                new TeleportTransition(destination, Vec3.atCenterOf(targetPos), Vec3.ZERO,
+-                                    90.0f, 0.0f,
+-                                    TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET))
++                                    net.minecraft.world.level.block.NetherPortalBlock.createDimensionTransition(
++                                            destination, portal, originalPortalDirection, relativePos,
++                                            Entity.this, TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET)
++                                    )
+                             );
+-                            return;
+                         }
+-
+-                        Vec3 relativePos = originalPortalRectangle == null ?
+-                            new Vec3(0.5, 0.0, 0.0) :
+-                            Entity.this.getRelativePortalPosition(originalPortalDirection, originalPortalRectangle);
+-
+-                        portalInfoCompletable.complete(
+-                            net.minecraft.world.level.block.NetherPortalBlock.createDimensionTransition(
+-                                destination, portal, originalPortalDirection, relativePos,
+-                                Entity.this, TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET)
+-                            )
+-                        );
+-                    }
+                 );
+ 
+                 // kick off search for existing portal or creation
+                 destination.moonrise$loadChunksAsync(
+-                    // add 32 so that the final search for a portal frame doesn't load any chunks
+-                    targetPos, portalSearchRadius + 32,
+-                    net.minecraft.world.level.chunk.status.ChunkStatus.EMPTY,
+-                    ca.spottedleaf.concurrentutil.util.Priority.HIGH,
+-                    (chunks) -> {
+-                        BlockUtil.FoundRectangle portal =
+-                            net.minecraft.world.level.block.NetherPortalBlock.findPortalAround(destination, targetPos, destinationBorder, portalSearchRadius);
+-                        if (portal != null) {
+-                            portalFound.complete(portal);
+-                            return;
+-                        }
+-
+-                        // add tickets so that we can re-search for a portal once the chunks are loaded
+-                        Long ticketId = Long.valueOf(CREATE_PORTAL_DOUBLE_CHECK.getAndIncrement());
+-                        for (net.minecraft.world.level.chunk.ChunkAccess chunk : chunks) {
+-                            destination.moonrise$getChunkTaskScheduler().chunkHolderManager.addTicketAtLevel(
+-                                TicketType.NETHER_PORTAL_DOUBLE_CHECK, chunk.getPos(),
+-                                ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
+-                                ticketId
+-                            );
+-                        }
++                        // add 32 so that the final search for a portal frame doesn't load any chunks
++                        targetPos, portalSearchRadius + 32,
++                        net.minecraft.world.level.chunk.status.ChunkStatus.EMPTY,
++                        ca.spottedleaf.concurrentutil.util.Priority.HIGH,
++                        (chunks) -> {
++                            BlockUtil.FoundRectangle portal =
++                                    net.minecraft.world.level.block.NetherPortalBlock.findPortalAround(destination, targetPos, destinationBorder, portalSearchRadius);
++                            if (portal != null) {
++                                portalFound.complete(portal);
++                                return;
++                            }
+ 
+-                        // no portal found - create one
+-                        destination.moonrise$loadChunksAsync(
+-                            targetPos, portalCreateRadius + 32,
+-                            ca.spottedleaf.concurrentutil.util.Priority.HIGH,
+-                            (chunks2) -> {
+-                                // don't need the tickets anymore
+-                                // note: we expect removeTicketsAtLevel to add an unknown ticket for us automatically
+-                                // if the ticket level were to decrease
+-                                for (net.minecraft.world.level.chunk.ChunkAccess chunk : chunks) {
+-                                    destination.moonrise$getChunkTaskScheduler().chunkHolderManager.removeTicketAtLevel(
++                            // add tickets so that we can re-search for a portal once the chunks are loaded
++                            Long ticketId = Long.valueOf(CREATE_PORTAL_DOUBLE_CHECK.getAndIncrement());
++                            for (net.minecraft.world.level.chunk.ChunkAccess chunk : chunks) {
++                                destination.moonrise$getChunkTaskScheduler().chunkHolderManager.addTicketAtLevel(
+                                         TicketType.NETHER_PORTAL_DOUBLE_CHECK, chunk.getPos(),
+                                         ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
+                                         ticketId
+-                                    );
+-                                }
+-
+-                                // when two entities portal at the same time, it is possible that both entities reach this
+-                                // part of the code - and create a double portal
+-                                // to fix this, we just issue another search to try and see if another entity created
+-                                // a portal nearby
+-                                BlockUtil.FoundRectangle existingTryAgain =
+-                                    net.minecraft.world.level.block.NetherPortalBlock.findPortalAround(destination, targetPos, destinationBorder, portalSearchRadius);
+-                                if (existingTryAgain != null) {
+-                                    portalFound.complete(existingTryAgain);
+-                                    return;
+-                                }
+-
+-                                // we do not have the correct entity reference here
+-                                BlockUtil.FoundRectangle createdPortal =
+-                                    destination.getPortalForcer().createPortal(targetPos, originalPortalDirection, null, portalCreateRadius).orElse(null);
+-                                // if it wasn't created, passing null is expected here
+-                                portalFound.complete(createdPortal);
++                                );
+                             }
+-                        );
+-                    }
++
++                            // no portal found - create one
++                            destination.moonrise$loadChunksAsync(
++                                    targetPos, portalCreateRadius + 32,
++                                    ca.spottedleaf.concurrentutil.util.Priority.HIGH,
++                                    (chunks2) -> {
++                                        // don't need the tickets anymore
++                                        // note: we expect removeTicketsAtLevel to add an unknown ticket for us automatically
++                                        // if the ticket level were to decrease
++                                        for (net.minecraft.world.level.chunk.ChunkAccess chunk : chunks) {
++                                            destination.moonrise$getChunkTaskScheduler().chunkHolderManager.removeTicketAtLevel(
++                                                    TicketType.NETHER_PORTAL_DOUBLE_CHECK, chunk.getPos(),
++                                                    ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
++                                                    ticketId
++                                            );
++                                        }
++
++                                        // when two entities portal at the same time, it is possible that both entities reach this
++                                        // part of the code - and create a double portal
++                                        // to fix this, we just issue another search to try and see if another entity created
++                                        // a portal nearby
++                                        BlockUtil.FoundRectangle existingTryAgain =
++                                                net.minecraft.world.level.block.NetherPortalBlock.findPortalAround(destination, targetPos, destinationBorder, portalSearchRadius);
++                                        if (existingTryAgain != null) {
++                                            portalFound.complete(existingTryAgain);
++                                            return;
++                                        }
++
++                                        // we do not have the correct entity reference here
++                                        BlockUtil.FoundRectangle createdPortal =
++                                                destination.getPortalForcer().createPortal(targetPos, originalPortalDirection, null, portalCreateRadius).orElse(null);
++                                        // if it wasn't created, passing null is expected here
++                                        portalFound.complete(createdPortal);
++                                    }
++                            );
++                        }
+                 );
+                 break;
+             }
+@@ -4676,14 +4746,14 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         // Kaiiju end
+         Vec3 initialPosition = this.position();
+         ChunkPos initialPositionChunk = new ChunkPos(
+-            ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(initialPosition),
+-            ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(initialPosition)
++                ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(initialPosition),
++                ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(initialPosition)
+         );
+ 
+         // first, remove entity/passengers from world
+         EntityTreeNode passengerTree = this.detachPassengers();
+         List<EntityTreeNode> fullPassengerTree = passengerTree.getFullTree();
+-        ServerLevel originWorld = (ServerLevel)this.level;
++        ServerLevel originWorld = (ServerLevel) this.level;
+ 
+         for (EntityTreeNode node : fullPassengerTree) {
+             node.root.preChangeDimension();
+@@ -4701,27 +4771,55 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         // otherwise, the shutdown will not be able to complete the shutdown as it requires a ticking region
+         Long teleportHoldId = Long.valueOf(TELEPORT_HOLD_TICKET_GEN.getAndIncrement());
+         originWorld.moonrise$getChunkTaskScheduler().chunkHolderManager.addTicketAtLevel(
+-            TicketType.TELEPORT_HOLD_TICKET, initialPositionChunk,
+-            ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
+-            teleportHoldId
++                TicketType.TELEPORT_HOLD_TICKET, initialPositionChunk,
++                ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
++                teleportHoldId
+         );
+ 
+         ServerLevel.PendingTeleport beforeFindDestination = new ServerLevel.PendingTeleport(passengerTree, initialPosition);
+         originWorld.pushPendingTeleport(beforeFindDestination);
+ 
+         ca.spottedleaf.concurrentutil.completable.CallbackCompletable<TeleportTransition> portalInfoCompletable
+-            = new ca.spottedleaf.concurrentutil.completable.CallbackCompletable<>();
++                = new ca.spottedleaf.concurrentutil.completable.CallbackCompletable<>();
+ 
+-        portalInfoCompletable.addWaiter((TeleportTransition info, Throwable throwable) -> {
++        portalInfoCompletable.addWaiter((TeleportTransition infoTemp, Throwable throwable) -> {
+             if (!originWorld.removePendingTeleport(beforeFindDestination)) {
+                 // the shutdown thread has placed us back into the origin world at the original position
+                 // we just have to abandon this teleport to prevent duplication
+                 return;
+             }
++
++            // LightingLuminol Start
++            TeleportTransition info;
++            if (this instanceof ServerPlayer) {
++                final org.bukkit.entity.Player bukkitPlayer = ((ServerPlayer) this).getBukkitEntity();
++                PlayerTeleportEvent.TeleportCause cause = PlayerTeleportEvent.TeleportCause.UNKNOWN;
++
++                switch (type) {
++                    case END -> cause = PlayerTeleportEvent.TeleportCause.END_PORTAL;
++                    case NETHER -> cause = PlayerTeleportEvent.TeleportCause.NETHER_PORTAL;
++                }
++                final org.bukkit.event.player.PlayerPortalEvent eventWrapped = new org.bukkit.event.player.PlayerPortalEvent(bukkitPlayer, MCUtil.toLocation(originWorld, initialPosition), MCUtil.toLocation(destination, infoTemp.position()), cause, 0, true, 0);
++                if (!eventWrapped.callEvent()) {
++                    return;
++                }
++                info = new TeleportTransition(
++                        infoTemp.newLevel(),
++                        MCUtil.toVec3(eventWrapped.getTo()),
++                        infoTemp.deltaMovement(),
++                        infoTemp.yRot(),
++                        infoTemp.xRot(),
++                        infoTemp.postTeleportTransition()
++                );
++            } else {
++                info = infoTemp;
++            }
++            // LightingLuminol End
++
+             originWorld.moonrise$getChunkTaskScheduler().chunkHolderManager.removeTicketAtLevel(
+-                TicketType.TELEPORT_HOLD_TICKET, initialPositionChunk,
+-                ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
+-                teleportHoldId
++                    TicketType.TELEPORT_HOLD_TICKET, initialPositionChunk,
++                    ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkHolderManager.MAX_TICKET_LEVEL,
++                    teleportHoldId
+             );
+             // adjust passenger tree to final pos/rot/speed
+             for (EntityTreeNode node : fullPassengerTree) {
+@@ -4730,22 +4828,22 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+             // place
+             passengerTree.root.placeInAsync(
+-                originWorld, destination, Entity.TELEPORT_FLAG_LOAD_CHUNK | (takePassengers ? Entity.TELEPORT_FLAG_TELEPORT_PASSENGERS : 0L),
+-                passengerTree,
+-                (Entity teleported) -> {
+-                    if (info.postTeleportTransition() != null) {
+-                        info.postTeleportTransition().onTransition(teleported);
+-                    }
++                    originWorld, destination, Entity.TELEPORT_FLAG_LOAD_CHUNK | (takePassengers ? Entity.TELEPORT_FLAG_TELEPORT_PASSENGERS : 0L),
++                    passengerTree,
++                    (Entity teleported) -> {
++                        if (info.postTeleportTransition() != null) {
++                            info.postTeleportTransition().onTransition(teleported);
++                        }
+ 
+-                    // Kaiiju start - vanilla end teleportation
++                        // Kaiiju start - vanilla end teleportation
+                     /*if (teleportComplete != null) {
+                         teleportComplete.accept(teleported);
+                     }*/
+-                    if (tpComplete != null){
+-                        tpComplete.accept(teleported);
++                        if (tpComplete != null) {
++                            tpComplete.accept(teleported);
++                        }
++                        // Kaiiju end
+                     }
+-                    // Kaiiju end
+-                }
+             );
+         });
+ 
+@@ -4797,9 +4895,9 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 org.bukkit.util.Vector before = bukkitEntity.getVelocity();
+                 org.bukkit.util.Vector after = org.bukkit.craftbukkit.util.CraftVector.toBukkit(velocity);
+                 org.bukkit.event.entity.EntityPortalExitEvent event = new org.bukkit.event.entity.EntityPortalExitEvent(
+-                    bukkitEntity,
+-                    bukkitEntity.getLocation(), to.clone(),
+-                    before, after
++                        bukkitEntity,
++                        bukkitEntity.getLocation(), to.clone(),
++                        before, after
+                 );
+                 event.callEvent();
+ 
+@@ -4878,7 +4976,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             entityx.restoreFrom(this);
+             this.removeAfterChangingDimensions();
+             entityx.teleportSetPosition(PositionMoveRotation.of(teleportTransition), teleportTransition.relatives());
+-            if (this.inWorld) newLevel.addDuringTeleport(entityx); // CraftBukkit - Don't spawn the new entity if the current entity isn't spawned
++            if (this.inWorld)
++                newLevel.addDuringTeleport(entityx); // CraftBukkit - Don't spawn the new entity if the current entity isn't spawned
+ 
+             for (Entity entity2 : list) {
+                 entity2.startRiding(entityx, true);
+@@ -4906,11 +5005,11 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         float f1 = teleportTransition.xRot() + (teleportTransition.relatives().contains(Relative.X_ROT) ? 0.0F : entity.getXRot() - this.getXRot());
+         Vec3 vec3 = entity.position().subtract(this.position());
+         Vec3 vec31 = teleportTransition.position()
+-            .add(
+-                teleportTransition.relatives().contains(Relative.X) ? 0.0 : vec3.x(),
+-                teleportTransition.relatives().contains(Relative.Y) ? 0.0 : vec3.y(),
+-                teleportTransition.relatives().contains(Relative.Z) ? 0.0 : vec3.z()
+-            );
++                .add(
++                        teleportTransition.relatives().contains(Relative.X) ? 0.0 : vec3.x(),
++                        teleportTransition.relatives().contains(Relative.Y) ? 0.0 : vec3.y(),
++                        teleportTransition.relatives().contains(Relative.Z) ? 0.0 : vec3.z()
++                );
+         return teleportTransition.withPosition(vec31).withRotation(f, f1).transitionAsPassenger();
+     }
+ 
+@@ -4921,14 +5020,14 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             if (entity instanceof ServerPlayer serverPlayer) {
+                 if (controllingPassenger != null && serverPlayer.getId() == controllingPassenger.getId()) {
+                     serverPlayer.connection
+-                        .send(
+-                            ClientboundTeleportEntityPacket.teleport(
+-                                this.getId(), PositionMoveRotation.of(teleportTransition), teleportTransition.relatives(), this.onGround
+-                            )
+-                        );
++                            .send(
++                                    ClientboundTeleportEntityPacket.teleport(
++                                            this.getId(), PositionMoveRotation.of(teleportTransition), teleportTransition.relatives(), this.onGround
++                                    )
++                            );
+                 } else {
+                     serverPlayer.connection
+-                        .send(ClientboundTeleportEntityPacket.teleport(this.getId(), PositionMoveRotation.of(this), Set.of(), this.onGround));
++                            .send(ClientboundTeleportEntityPacket.teleport(this.getId(), PositionMoveRotation.of(this), Set.of(), this.onGround));
+                 }
+             }
+         }
+@@ -4991,10 +5090,10 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     // CraftBukkit start
+     public @Nullable org.bukkit.craftbukkit.event.CraftPortalEvent callPortalEvent(
+-        Entity entity,
+-        org.bukkit.Location exit,
+-        org.bukkit.event.player.PlayerTeleportEvent.TeleportCause cause,
+-        int searchRadius, int creationRadius
++            Entity entity,
++            org.bukkit.Location exit,
++            org.bukkit.event.player.PlayerTeleportEvent.TeleportCause cause,
++            int searchRadius, int creationRadius
+     ) {
+         org.bukkit.entity.Entity bukkitEntity = entity.getBukkitEntity();
+         org.bukkit.Location enter = bukkitEntity.getLocation();
+@@ -5032,7 +5131,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     public float getBlockExplosionResistance(
+-        Explosion explosion, BlockGetter level, BlockPos pos, BlockState blockState, FluidState fluidState, float explosionPower
++            Explosion explosion, BlockGetter level, BlockPos pos, BlockState blockState, FluidState fluidState, float explosionPower
+     ) {
+         return explosionPower;
+     }
+@@ -5055,7 +5154,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         category.setDetail("Entity Name", () -> this.getName().getString());
+         category.setDetail("Entity's Exact location", String.format(Locale.ROOT, "%.2f, %.2f, %.2f", this.getX(), this.getY(), this.getZ()));
+         category.setDetail(
+-            "Entity's Block location", CrashReportCategory.formatLocation(this.level(), Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ()))
++                "Entity's Block location", CrashReportCategory.formatLocation(this.level(), Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ()))
+         );
+         Vec3 deltaMovement = this.getDeltaMovement();
+         category.setDetail("Entity's Momentum", String.format(Locale.ROOT, "%.2f, %.2f, %.2f", deltaMovement.x, deltaMovement.y, deltaMovement.z));
+@@ -5101,7 +5200,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     @Override
+     public Component getDisplayName() {
+         return PlayerTeam.formatNameForTeam(this.getTeam(), this.getName())
+-            .withStyle(style -> style.withHoverEvent(this.createHoverEvent()).withInsertion(this.getStringUUID()));
++                .withStyle(style -> style.withHoverEvent(this.createHoverEvent()).withInsertion(this.getStringUUID()));
+     }
+ 
+     public void setCustomName(@Nullable Component name) {
+@@ -5193,11 +5292,11 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         this.reapplyPosition();
+         boolean flag = dimensions.width() <= 4.0F && dimensions.height() <= 4.0F;
+         if (!this.level.isClientSide
+-            && !this.firstTick
+-            && !this.noPhysics
+-            && flag
+-            && (dimensions.width() > entityDimensions.width() || dimensions.height() > entityDimensions.height())
+-            && !(this instanceof Player)) {
++                && !this.firstTick
++                && !this.noPhysics
++                && flag
++                && (dimensions.width() > entityDimensions.width() || dimensions.height() > entityDimensions.height())
++                && !(this instanceof Player)) {
+             this.fudgePositionAfterSizeChange(entityDimensions);
+         }
+     }
+@@ -5387,19 +5486,25 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     private Stream<Entity> getIndirectPassengersStream() {
+-        if (this.passengers.isEmpty()) { return Stream.of(); } // Paper - Optimize indirect passenger iteration
++        if (this.passengers.isEmpty()) {
++            return Stream.of();
++        } // Paper - Optimize indirect passenger iteration
+         return this.passengers.stream().flatMap(Entity::getSelfAndPassengers);
+     }
+ 
+     @Override
+     public Stream<Entity> getSelfAndPassengers() {
+-        if (this.passengers.isEmpty()) { return Stream.of(this); } // Paper - Optimize indirect passenger iteration
++        if (this.passengers.isEmpty()) {
++            return Stream.of(this);
++        } // Paper - Optimize indirect passenger iteration
+         return Stream.concat(Stream.of(this), this.getIndirectPassengersStream());
+     }
+ 
+     @Override
+     public Stream<Entity> getPassengersAndSelf() {
+-        if (this.passengers.isEmpty()) { return Stream.of(this); } // Paper - Optimize indirect passenger iteration
++        if (this.passengers.isEmpty()) {
++            return Stream.of(this);
++        } // Paper - Optimize indirect passenger iteration
+         return Stream.concat(this.passengers.stream().flatMap(Entity::getPassengersAndSelf), Stream.of(this));
+     }
+ 
+@@ -5418,11 +5523,13 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     public int countPlayerPassengers() {
+-        return (int)this.getIndirectPassengersStream().filter(entity -> entity instanceof Player).count();
++        return (int) this.getIndirectPassengersStream().filter(entity -> entity instanceof Player).count();
+     }
+ 
+     public boolean hasExactlyOnePlayerPassenger() {
+-        if (this.passengers.isEmpty()) { return false; } // Paper - Optimize indirect passenger iteration
++        if (this.passengers.isEmpty()) {
++            return false;
++        } // Paper - Optimize indirect passenger iteration
+         return this.countPlayerPassengers() == 1;
+     }
+ 
+@@ -5536,7 +5643,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     public CommandSourceStack createCommandSourceStackForNameResolution(ServerLevel level) {
+         return new CommandSourceStack(
+-            this.commandSource, this.position(), this.getRotationVector(), level, 0, this.getName().getString(), this.getDisplayName(), level.getServer(), this // CraftBukkit
++                this.commandSource, this.position(), this.getRotationVector(), level, 0, this.getName().getString(), this.getDisplayName(), level.getServer(), this // CraftBukkit
+         );
+     }
+ 
+@@ -5546,8 +5653,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         double d1 = target.y - vec3.y;
+         double d2 = target.z - vec3.z;
+         double squareRoot = Math.sqrt(d * d + d2 * d2);
+-        this.setXRot(Mth.wrapDegrees((float)(-(Mth.atan2(d1, squareRoot) * 180.0F / (float)Math.PI))));
+-        this.setYRot(Mth.wrapDegrees((float)(Mth.atan2(d2, d) * 180.0F / (float)Math.PI) - 90.0F));
++        this.setXRot(Mth.wrapDegrees((float) (-(Mth.atan2(d1, squareRoot) * 180.0F / (float) Math.PI))));
++        this.setYRot(Mth.wrapDegrees((float) (Mth.atan2(d2, d) * 180.0F / (float) Math.PI) - 90.0F));
+         this.setYHeadRot(this.getYRot());
+         this.xRotO = this.getXRot();
+         this.yRotO = this.getYRot();
+@@ -5706,7 +5813,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+                                 mutablePos.set(currX | (currChunkX << 4), currY | (currChunkY << 4), currZ | (currChunkZ << 4));
+ 
+-                                final double height = (double)((float)mutablePos.getY() + fluidState.getHeight(world, mutablePos));
++                                final double height = (double) ((float) mutablePos.getY() + fluidState.getHeight(world, mutablePos));
+                                 final double diff = height - boundingBox.minY;
+ 
+                                 if (diff < 0.0) {
+@@ -5746,7 +5853,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         pushVector = pushVector.scale(1.0 / totalPushes);
+         final Vec3 currMovement = this.getDeltaMovement();
+ 
+-        if (!((Entity)(Object)this instanceof Player)) {
++        if (!((Entity) (Object) this instanceof Player)) {
+             pushVector = pushVector.normalize();
+         }
+ 
+@@ -5830,7 +5937,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+ 
+     public void setDeltaMovement(Vec3 deltaMovement) {
+         synchronized (this.posLock) { // Paper - detailed watchdog information
+-        this.deltaMovement = deltaMovement;
++            this.deltaMovement = deltaMovement;
+         } // Paper - detailed watchdog information
+     }
+ 
+@@ -5918,8 +6025,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         // Paper start - rewrite chunk system
+         if (this.updatingSectionStatus) {
+             LOGGER.error(
+-                "Refusing to update position for entity " + this + " to position " + new Vec3(x, y, z)
+-                    + " since it is processing a section status update", new Throwable()
++                    "Refusing to update position for entity " + this + " to position " + new Vec3(x, y, z)
++                            + " since it is processing a section status update", new Throwable()
+             );
+             return;
+         }
+@@ -5931,7 +6038,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         boolean posChanged = this.position.x != x || this.position.y != y || this.position.z != z;
+         if (posChanged) { // Folia - region threading
+             synchronized (this.posLock) { // Paper - detailed watchdog information
+-            this.position = new Vec3(x, y, z);
++                this.position = new Vec3(x, y, z);
+             } // Paper - detailed watchdog information
+             int floor = Mth.floor(x);
+             int floor1 = Mth.floor(y);
+@@ -6083,7 +6190,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     @Override
+     public final void setRemoved(Entity.RemovalReason removalReason, @Nullable org.bukkit.event.entity.EntityRemoveEvent.Cause cause) { // CraftBukkit - add Bukkit remove cause
+         // Paper start - rewrite chunk system
+-        if (!((ca.spottedleaf.moonrise.patches.chunk_system.level.ChunkSystemLevel)this.level).moonrise$getEntityLookup().canRemoveEntity((Entity)(Object)this)) {
++        if (!((ca.spottedleaf.moonrise.patches.chunk_system.level.ChunkSystemLevel) this.level).moonrise$getEntityLookup().canRemoveEntity((Entity) (Object) this)) {
+             LOGGER.warn("Entity " + this + " is currently prevented from being removed from the world since it is processing section status updates", new Throwable());
+             return;
+         }
+@@ -6101,7 +6208,9 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             this.stopRiding();
+         }
+ 
+-        if (this.removalReason != Entity.RemovalReason.UNLOADED_TO_CHUNK) { this.getPassengers().forEach(Entity::stopRiding); } // Paper - rewrite chunk system
++        if (this.removalReason != Entity.RemovalReason.UNLOADED_TO_CHUNK) {
++            this.getPassengers().forEach(Entity::stopRiding);
++        } // Paper - rewrite chunk system
+         this.levelCallback.onRemove(removalReason);
+         this.onRemoval(removalReason);
+         // Paper start - Folia schedulers
+@@ -6117,10 +6226,12 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+ 
+     // Folia start - region threading
+-    protected void preRemove(Entity.RemovalReason reason) {}
++    protected void preRemove(Entity.RemovalReason reason) {
++    }
+     // Folia end - region threading
+ 
+     // Paper start - Folia schedulers
++
+     /**
+      * Invoked only when the entity is truly removed from the server, never to be added to any world.
+      */
+@@ -6128,6 +6239,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         // we need to force create the bukkit entity so that the scheduler can be retired...
+         this.getBukkitEntity().taskScheduler.retire();
+     }
++
+     // Paper end - Folia schedulers
+     // Paper start - optimise Folia entity scheduler
+     public final void registerScheduler() {
+@@ -6143,8 +6255,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     @Override
+     public boolean shouldBeSaved() {
+         return (this.removalReason == null || this.removalReason.shouldSave())
+-            && !this.isPassenger()
+-            && (!this.isVehicle() || !((ca.spottedleaf.moonrise.patches.chunk_system.entity.ChunkSystemEntity)this).moonrise$hasAnyPlayerPassengers()); // Paper - rewrite chunk system
++                && !this.isPassenger()
++                && (!this.isVehicle() || !((ca.spottedleaf.moonrise.patches.chunk_system.entity.ChunkSystemEntity) this).moonrise$hasAnyPlayerPassengers()); // Paper - rewrite chunk system
+     }
+ 
+     @Override
+@@ -6181,8 +6293,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         double d1 = Mth.lerp(d, this.getX(), targetX);
+         double d2 = Mth.lerp(d, this.getY(), targetY);
+         double d3 = Mth.lerp(d, this.getZ(), targetZ);
+-        float f = (float)Mth.rotLerp(d, (double)this.getYRot(), targetYRot);
+-        float f1 = (float)Mth.lerp(d, (double)this.getXRot(), targetXRot);
++        float f = (float) Mth.rotLerp(d, (double) this.getYRot(), targetYRot);
++        float f1 = (float) Mth.lerp(d, (double) this.getXRot(), targetXRot);
+         this.setPos(d1, d2, d3);
+         this.setRot(f, f1);
+     }
+@@ -6217,16 +6329,16 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     @Override
+     public <T> T get(DataComponentType<? extends T> component) {
+         if (component == DataComponents.CUSTOM_NAME) {
+-            return castComponentValue((DataComponentType<T>)component, this.getCustomName());
++            return castComponentValue((DataComponentType<T>) component, this.getCustomName());
+         } else {
+-            return component == DataComponents.CUSTOM_DATA ? castComponentValue((DataComponentType<T>)component, this.customData) : null;
++            return component == DataComponents.CUSTOM_DATA ? castComponentValue((DataComponentType<T>) component, this.customData) : null;
+         }
+     }
+ 
+     @Nullable
+     @Contract("_,!null->!null;_,_->_")
+     protected static <T> T castComponentValue(DataComponentType<T> componentType, @Nullable Object value) {
+-        return (T)value;
++        return (T) value;
+     }
+ 
+     public <T> void setComponent(DataComponentType<T> component, T value) {
+@@ -6330,5 +6442,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+     }
+     // Paper end - Expose entity id counter
+ 
+-    public boolean shouldTickHot() { return this.tickCount > 20 * 10 && this.isAlive(); } // KioCG
++    public boolean shouldTickHot() {
++        return this.tickCount > 20 * 10 && this.isAlive();
++    } // KioCG
+ }
+diff --git a/net/minecraft/world/level/Level.java b/net/minecraft/world/level/Level.java
+index 49b7a7f5a9367dff6231e36049b0f7dd8435f96c..ca11f39b883bc3cd964adeb5440fa1a3424c9632 100644
+--- a/net/minecraft/world/level/Level.java
++++ b/net/minecraft/world/level/Level.java
+@@ -11,6 +11,8 @@ import java.util.function.Consumer;
+ import java.util.function.Predicate;
+ import java.util.stream.Collectors;
+ import javax.annotation.Nullable;
++
++import me.coderfrish.region.RegonizedWorldDataSwitcher;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportedException;
+@@ -816,15 +818,18 @@ public abstract class Level implements LevelAccessor, UUIDLookup<Entity>, AutoCl
+     public volatile io.papermc.paper.threadedregions.RegionizedServer.WorldLevelData tickData;
+     public final java.util.concurrent.ConcurrentHashMap.KeySetView<net.minecraft.server.level.ChunkHolder, Boolean> needsChangeBroadcasting = java.util.concurrent.ConcurrentHashMap.newKeySet();
+ 
++    public final RegonizedWorldDataSwitcher worldDataSwitcher = new RegonizedWorldDataSwitcher();
++
+     public io.papermc.paper.threadedregions.RegionizedWorldData getCurrentWorldData() {
+         final io.papermc.paper.threadedregions.RegionizedWorldData ret = io.papermc.paper.threadedregions.TickRegionScheduler.getCurrentRegionizedWorldData();
+         if (ret == null) {
+-            return ret;
++            return this.worldDataSwitcher.getLastMatch();
+         }
+         Level world = ret.world;
+         if (world != this) {
+-            throw new IllegalStateException("World mismatch: expected " + this.getWorld().getName() + " but got " + world.getWorld().getName());
++            return this.worldDataSwitcher.getLastMatch();
+         }
++        this.worldDataSwitcher.updateCurrent(ret);
+         return ret;
+     }
+ 
