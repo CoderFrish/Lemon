@@ -1,16 +1,17 @@
-package me.coderfrish.scheduler.task;
+package me.coderfrish.scheduler;
 
-import me.coderfrish.scheduler.LemonMintScheduledTask;
-import me.coderfrish.scheduler.LemonMintScheduler;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 public class LemonMintTask implements BukkitTask {
-    private final LemonMintScheduledTask task;
+    private final ScheduledTask task;
+    private final boolean sync;
 
-    public LemonMintTask(LemonMintScheduledTask task) {
+    public LemonMintTask(ScheduledTask task, boolean sync) {
         this.task = task;
+        this.sync = sync;
         LemonMintScheduler.tasks.add(this);
     }
 
@@ -38,5 +39,13 @@ public class LemonMintTask implements BukkitTask {
     public void cancel() {
         LemonMintScheduler.tasks.remove(this);
         task.cancel();
+    }
+
+    static LemonMintTask setupAsyncTask(ScheduledTask task) {
+        return new LemonMintTask(task, false);
+    }
+
+    static LemonMintTask setupSyncTask(ScheduledTask task) {
+        return new LemonMintTask(task, true);
     }
 }
