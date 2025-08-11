@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LemonMintSchedulerTaskManager<T> {
+public class LemonMintTaskMgr<T> {
     private static final int START_ID = 1;
 
     private final AtomicInteger nextId = new AtomicInteger(START_ID);

@@ -1,0 +1,141 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Mon, 11 Aug 2025 15:36:28 +0800
+Subject: [PATCH] Added Disabled TickThread Error Message.
+
+
+diff --git a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
+index e417c9a140778954572fb8bc190fad64feacffe0..7188d6f429882efac41786269f341135131481e6 100644
+--- a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
++++ b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
+@@ -49,71 +49,87 @@ public class TickThread extends Thread {
+     @Deprecated
+     public static void ensureTickThread(final String reason) {
+         if (!isTickThread()) {
+-            LOGGER.error("Thread failed main thread check: " + reason + ", context=" + getThreadContext(), new Throwable());
+-            throw new IllegalStateException(reason);
++            if(me.coderfrish.config.experiment.TickThreadErrorConfig.enable) {
++                LOGGER.error("Thread failed main thread check: " + reason + ", context=" + getThreadContext(), new Throwable());
++                throw new IllegalStateException(reason);
++            }
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final BlockPos pos, final String reason) {
+         if (!isTickThreadFor(world, pos)) {
+-            final String ex = "Thread failed main thread check: " +
+-                               reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos;
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++            if(me.coderfrish.config.experiment.TickThreadErrorConfig.enable) {
++                final String ex = "Thread failed main thread check: " +
++                        reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos;
++                LOGGER.error(ex, new Throwable());
++                throw new IllegalStateException(ex);
++            }
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final BlockPos pos, final int blockRadius, final String reason) {
+         if (!isTickThreadFor(world, pos, blockRadius)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos + ", block_radius=" + blockRadius;
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++            if(me.coderfrish.config.experiment.TickThreadErrorConfig.enable) {
++                final String ex = "Thread failed main thread check: " +
++                        reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos + ", block_radius=" + blockRadius;
++                LOGGER.error(ex, new Throwable());
++                throw new IllegalStateException(ex);
++            }
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final ChunkPos pos, final String reason) {
+         if (!isTickThreadFor(world, pos)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + pos;
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++            if(me.coderfrish.config.experiment.TickThreadErrorConfig.enable) {
++                final String ex = "Thread failed main thread check: " +
++                        reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + pos;
++                LOGGER.error(ex, new Throwable());
++                throw new IllegalStateException(ex);
++            }
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final int chunkX, final int chunkZ, final String reason) {
+         if (!isTickThreadFor(world, chunkX, chunkZ)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + new ChunkPos(chunkX, chunkZ);
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++            if(me.coderfrish.config.experiment.TickThreadErrorConfig.enable) {
++                final String ex = "Thread failed main thread check: " +
++                        reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + new ChunkPos(chunkX, chunkZ);
++                LOGGER.error(ex, new Throwable());
++                throw new IllegalStateException(ex);
++            }
+         }
+     }
+ 
+     public static void ensureTickThread(final Entity entity, final String reason) {
+         if (!isTickThreadFor(entity)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", entity=" + EntityUtil.dumpEntity(entity);
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++            if(me.coderfrish.config.experiment.TickThreadErrorConfig.enable) {
++                final String ex = "Thread failed main thread check: " +
++                        reason + ", context=" + getThreadContext() + ", entity=" + EntityUtil.dumpEntity(entity);
++                LOGGER.error(ex, new Throwable());
++                throw new IllegalStateException(ex);
++            }
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final AABB aabb, final String reason) {
+         if (!isTickThreadFor(world, aabb)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", aabb=" + aabb;
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++            if(me.coderfrish.config.experiment.TickThreadErrorConfig.enable) {
++                final String ex = "Thread failed main thread check: " +
++                        reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", aabb=" + aabb;
++                LOGGER.error(ex, new Throwable());
++                throw new IllegalStateException(ex);
++            }
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final double blockX, final double blockZ, final String reason) {
+         if (!isTickThreadFor(world, blockX, blockZ)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + new Vec3(blockX, 0.0, blockZ);
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++            if(me.coderfrish.config.experiment.TickThreadErrorConfig.enable) {
++                final String ex = "Thread failed main thread check: " +
++                        reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + new Vec3(blockX, 0.0, blockZ);
++                LOGGER.error(ex, new Throwable());
++                throw new IllegalStateException(ex);
++            }
+         }
+     }
+ 
+diff --git a/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java b/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java
+index 07332940c0f3cbf9d7ca2953eec3c79264a26c67..48ca6582a7b1bc30bbff3337ff6360ac8e73cfe7 100644
+--- a/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java
++++ b/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java
+@@ -202,8 +202,6 @@ public final class EntityScheduler {
+      * @throws IllegalStateException If the scheduler is retired.
+      */
+     public void executeTick() {
+-        me.coderfrish.scheduler.LemonMintScheduler.globalSyncScheduler.tick();
+-        me.coderfrish.scheduler.LemonMintScheduler.globalAsyncScheduler.tick();
+         final Entity thisEntity = this.entity.getHandleRaw();
+ 
+         TickThread.ensureTickThread(thisEntity, "May not tick entity scheduler asynchronously");
