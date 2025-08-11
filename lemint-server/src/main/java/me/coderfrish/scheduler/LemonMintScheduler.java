@@ -85,41 +85,53 @@ public class LemonMintScheduler implements BukkitScheduler {
 
     @Override
     public @NotNull BukkitTask runTaskLater(@NotNull Plugin plugin, @NotNull Runnable task, long delay) throws IllegalArgumentException {
+        delay = Math.max(1L, delay);
         return LemonMintTask.setupSyncTask(globalSyncScheduler.runDelayed(plugin, scheduledTask -> task.run(), delay));
     }
 
     @Override
     public void runTaskLater(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> task, long delay) throws IllegalArgumentException {
+        delay = Math.max(1L, delay);
         globalSyncScheduler.runDelayed(plugin, scheduledTask -> task.accept(LemonMintTask.setupSyncTask(scheduledTask)), delay);
     }
 
     @Override
     public @NotNull BukkitTask runTaskLaterAsynchronously(@NotNull Plugin plugin, @NotNull Runnable task, long delay) throws IllegalArgumentException {
+        delay = Math.max(1L, delay);
         return LemonMintTask.setupAsyncTask(globalAsyncScheduler.runDelayed(plugin, scheduledTask -> task.run(), delay, TimeUnit.MICROSECONDS));
     }
 
     @Override
     public void runTaskLaterAsynchronously(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> task, long delay) throws IllegalArgumentException {
+        delay = Math.max(1L, delay);
         globalAsyncScheduler.runDelayed(plugin, scheduledTask -> task.accept(LemonMintTask.setupAsyncTask(scheduledTask)), delay, TimeUnit.MICROSECONDS);
     }
 
     @Override
     public @NotNull BukkitTask runTaskTimer(@NotNull Plugin plugin, @NotNull Runnable task, long delay, long period) throws IllegalArgumentException {
+        delay = Math.max(1L, delay);
+        period = Math.max(1L, period);
         return LemonMintTask.setupSyncTask(globalSyncScheduler.runAtFixedRate(plugin, scheduledTask -> task.run(), delay, period));
     }
 
     @Override
     public void runTaskTimer(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> task, long delay, long period) throws IllegalArgumentException {
+        delay = Math.max(1L, delay);
+        period = Math.max(1L, period);
         globalSyncScheduler.runAtFixedRate(plugin, scheduledTask -> task.accept(LemonMintTask.setupSyncTask(scheduledTask)), delay, period);
     }
 
     @Override
     public @NotNull BukkitTask runTaskTimerAsynchronously(@NotNull Plugin plugin, @NotNull Runnable task, long delay, long period) throws IllegalArgumentException {
+        delay = Math.max(1L, delay);
+        period = Math.max(1L, period);
         return LemonMintTask.setupAsyncTask(globalAsyncScheduler.runAtFixedRate(plugin, scheduledTask -> task.run(), delay, period, TimeUnit.MICROSECONDS));
     }
 
     @Override
     public void runTaskTimerAsynchronously(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> task, long delay, long period) throws IllegalArgumentException {
+        delay = Math.max(1L, delay);
+        period = Math.max(1L, period);
         globalAsyncScheduler.runAtFixedRate(plugin, scheduledTask -> task.accept(LemonMintTask.setupAsyncTask(scheduledTask)), delay, period, TimeUnit.MICROSECONDS);
     }
 
