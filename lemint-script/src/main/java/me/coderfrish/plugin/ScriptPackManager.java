@@ -1,6 +1,7 @@
 package me.coderfrish.plugin;
 
 import me.coderfrish.constant.NumberConstant;
+import me.coderfrish.plugin.api.ScriptPlugin;
 import me.coderfrish.plugin.exception.InvalidPluginPackException;
 import me.coderfrish.plugin.pack.PackEntry;
 import me.coderfrish.plugin.pack.PluginPack;
@@ -54,6 +55,16 @@ public class ScriptPackManager {
             return pluginPack;
         } catch (IOException e) {
             throw new InvalidPluginPackException(e);
+        }
+    }
+
+    public static InputStream getResource(ScriptPlugin plugin, String name) {
+        File dataFolder = new File(ScriptPluginManager.packs.get(plugin), name);
+
+        try {
+            return new FileInputStream(dataFolder);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 

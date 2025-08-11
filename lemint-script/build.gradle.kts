@@ -11,3 +11,7 @@ tasks.withType<JavaCompile> {
     compilerArgs.add("-Xlint:-removal")
     compilerArgs.add("-Xlint:-dep-ann")
 }
+
+tasks.test {
+    useJUnitPlatform()
+}

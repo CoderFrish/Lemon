@@ -1,5 +1,6 @@
 package me.coderfrish.plugin.api;
 
+import me.coderfrish.plugin.ScriptPackManager;
 import me.coderfrish.plugin.ScriptPluginManager;
 import me.coderfrish.plugin.exception.InvalidScriptException;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -16,13 +17,41 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ScriptConfig {
     private final Map<String, YamlConfiguration> configs = new ConcurrentHashMap<>();
     private final ScriptPlugin plugin;
+    private final boolean isBundler;
 
-    public ScriptConfig(ScriptPlugin plugin) {
+    public ScriptConfig(ScriptPlugin plugin, boolean isBundler) {
         this.plugin = plugin;
+        this.isBundler = isBundler;
     }
 
     public void loadDefaults(String defaultConfig) {
         load("config", defaultConfig);
+    }
+
+    public void loadDefault() {
+        if (!isBundler) {
+            throw new InvalidScriptException("This plugin isn`t plugin pack.");
+        }
+
+        try {
+            byte[] bytes = ScriptPackManager.getResource(plugin, "config.yml").readAllBytes();
+            loadDefaults(new String(bytes, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void loadResource(String resource) {
+        if (!isBundler) {
+            throw new InvalidScriptException("This plugin isn`t plugin pack.");
+        }
+
+        try {
+            byte[] bytes = ScriptPackManager.getResource(plugin, resource).readAllBytes();
+            loadDefaults(new String(bytes, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void load(String configName, String defaultConfig) {

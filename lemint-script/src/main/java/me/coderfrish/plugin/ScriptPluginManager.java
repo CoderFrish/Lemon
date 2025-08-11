@@ -3,6 +3,8 @@ package me.coderfrish.plugin;
 import me.coderfrish.plugin.api.JavaPlugin;
 import me.coderfrish.plugin.api.ScriptPlugin;
 import me.coderfrish.plugin.api.ScriptPluginMeta;
+import me.coderfrish.plugin.api.enabled.LoadOrder;
+import me.coderfrish.plugin.api.meta.Author;
 import me.coderfrish.plugin.exception.InvalidScriptException;
 import me.coderfrish.plugin.pack.PluginPack;
 import org.bukkit.plugin.PluginBase;
@@ -13,6 +15,7 @@ import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.io.IOAccess;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +27,8 @@ public class ScriptPluginManager {
     private static final List<ScriptPlugin> plugins = new CopyOnWriteArrayList<>();
     private static final Map<ScriptPlugin, Value> installers = new ConcurrentHashMap<>();
     private static final Set<Context> contexts = new CopyOnWriteArraySet<>();
-    private static final Map<ScriptPlugin, PluginBase> javaPlugins =  new ConcurrentHashMap<>();
+    private static final Map<ScriptPlugin, PluginBase> javaPlugins = new ConcurrentHashMap<>();
+    public static final Map<ScriptPlugin, File> packs = new ConcurrentHashMap<>();
 
     public static void loadPlugins(File pluginFolder) {
         for (File file : pluginFolder.listFiles()) {
@@ -33,35 +37,32 @@ public class ScriptPluginManager {
             }
 
             if (file.getName().endsWith(".pack")) {
-                ScriptUnpackManager.register(file);
+                loadPackPlugins(file);
             }
         }
 
-        loadPackPlugins();
         ScriptUnpackManager.save();
     }
 
-    private static void loadPackPlugins() {
-        List<PluginPack> packs = ScriptPackManager.getPacks();
-        packs.forEach(pluginPack -> {
-            File dataFolder = new File(ScriptUnpackManager.dataFolder, pluginPack.getSha());
-            File main = new File(dataFolder, pluginPack.getMain());
+    private static void loadPackPlugins(File file) {
+        PluginPack pluginPack = ScriptUnpackManager.register(file);
+        File dataFolder = new File(ScriptUnpackManager.dataFolder, pluginPack.getSha());
+        File main = new File(dataFolder, pluginPack.getMain());
 
-            Context context = Context.newBuilder()
-                    .logHandler(PrintStream.nullOutputStream())
-                    .allowHostAccess(HostAccess.ALL)
-                    .allowHostClassLookup(className -> true)
-                    .option("js.esm-eval-returns-exports", "true")
-                    .allowIO(IOAccess.ALL)
-                    .allowNativeAccess(false)
-                    .build();
+        Context context = Context.newBuilder()
+                .logHandler(PrintStream.nullOutputStream())
+                .allowHostAccess(HostAccess.ALL)
+                .allowHostClassLookup(className -> true)
+                .option("js.esm-eval-returns-exports", "true")
+                .allowIO(IOAccess.ALL)
+                .allowNativeAccess(false)
+                .build();
 
-            try {
-                newPluginInstance(main, context);
-            } catch (IOException e) {
-                throw new InvalidScriptException(e);
-            }
-        });
+        try {
+            newPluginInstance(main, context, true, dataFolder);
+        } catch (IOException e) {
+            throw new InvalidScriptException(e);
+        }
     }
 
     private static void loadSinglePlugin(File file) {
@@ -74,24 +75,27 @@ public class ScriptPluginManager {
                     .allowNativeAccess(false)
                     .build();
 
-            newPluginInstance(file, context);
+            newPluginInstance(file, context, false, null);
         } catch (IOException e) {
             throw new InvalidScriptException(e);
         }
     }
 
-    private static void newPluginInstance(File file, Context context) throws IOException {
+    private static void newPluginInstance(File file, Context context, boolean isBundler, File dataFolder) throws IOException {
         Source source = Source.newBuilder("js", file)
                 .mimeType("application/javascript+module").build();
         Value module = context.eval(source);
         Value plugin = module.getMember("default");
         ScriptPluginMeta meta = conversionToMeta(plugin);
-        ScriptPlugin scriptPlugin = new ScriptPlugin(meta);
-        Value installer = plugin.getMember("installer").execute(scriptPlugin);
+        ScriptPlugin scriptPlugin = new ScriptPlugin(meta, isBundler);
+        Value installer = plugin.getMember("installer");
 
+        context.getBindings("js").putMember("plugin", scriptPlugin);
         plugins.add(scriptPlugin);
         installers.put(scriptPlugin, installer);
         contexts.add(context);
+
+        if (isBundler) packs.put(scriptPlugin, dataFolder);
     }
 
     public static void onLoad() {
@@ -174,7 +178,49 @@ public class ScriptPluginManager {
             throw new InvalidScriptException("Missing plugin installer");
         }
 
-        return new ScriptPluginMeta(jName, jVersion, jDescription, installer);
+        // loadOrder
+        Value loadOrder = value.getMember("load");
+        LoadOrder jLoadOrder = LoadOrder.DEFAULT;
+        if (loadOrder != null) {
+            jLoadOrder = LoadOrder.valueOf(loadOrder.asString());
+        }
+
+        // authors
+        Value authors = value.getMember("authors");
+        List<Author> jAuthors = new ArrayList<>();
+        if (authors != null) {
+            jAuthors.addAll((List<Author>) authors.as(List.class));
+        }
+
+        // website
+        Value website = value.getMember("website");
+        String jHome = "";
+        String jIssues = "";
+        String jSource = "";
+        if (website != null) {
+            Value home = website.getMember("home");
+            if (home != null) {
+                jHome = home.asString();
+            }
+
+            Value issues = website.getMember("issues");
+            if (issues != null) {
+                jIssues = issues.asString();
+            }
+
+            Value source = website.getMember("source");
+            if (source != null) {
+                jSource = source.asString();
+            }
+        }
+
+        Value license = value.getMember("license");
+        String jLicense = "";
+        if (license != null) {
+            jLicense = license.asString();
+        }
+
+        return new ScriptPluginMeta(jName, jVersion, jDescription, installer, jLoadOrder, jAuthors, jHome, jIssues, jSource, jLicense);
     }
 
     public static List<ScriptPlugin> getPlugins() {
