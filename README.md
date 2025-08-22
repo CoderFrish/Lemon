@@ -43,7 +43,10 @@
 ## 4 | 联系
 QQ群: [1020403749](https://qm.qq.com/q/RKzZJH4JKW) | Discord群组: [点击加入](https://discord.com/invite/39K7Jz4F) | 邮箱: [3167717663@qq.com](mailto:3167717663@qq.com)
 
-## 5 | 最后
+## 5 | BStats
+[![bStats Graph Data](https://bstats.org/signatures/server-implementation/LemonMint.svg)](https://bstats.org/plugin/server-implementation/LemonMint)
+
+## 6 | 最后
 > [!TIP]
 > 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
 
