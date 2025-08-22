@@ -45,8 +45,8 @@ paperweight {
 }
 
 val paperMavenPublicUrl = "https://repo.papermc.io/repository/maven-public/"
-val menthaMavenPublicUrl = "https://repo.menthamc.com/repository/maven-public/"
-val menthaMavenSnapshotsUrl = "https://repo.menthamc.com/repository/maven-snapshots/"
+val menthaMavenPublicUrl = "https://repo.menthamc.org/repository/maven-public/"
+val menthaMavenSnapshotsUrl = "https://repo.menthamc.org/repository/maven-snapshots/"
 
 subprojects {
     apply(plugin = "java-library")

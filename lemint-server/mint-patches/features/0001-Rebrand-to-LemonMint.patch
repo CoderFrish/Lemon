@@ -1,11 +1,11 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Frish2021 <1573880184@qq.com>
-Date: Tue, 22 Jul 2025 19:31:19 +0800
-Subject: [PATCH] Fix bukkit api of scoreboard.
+Date: Sat, 7 Jun 2025 19:48:12 +0800
+Subject: [PATCH] Rebrand to LemonMint
 
 
 diff --git a/src/main/java/dev/bacteriawa/mint/config/MintConfig.java b/src/main/java/dev/bacteriawa/mint/config/MintConfig.java
-index d1c3faee25afa2d035fd40f531b9705e323b8fe2..0e724317263ba2d64b3dba6bf5cb51cff79db0da 100644
+index 8a8ec5ca5d9312efad7463bf70b835e263b6666a..4e187b8a489188cd7ed39428cc910fa3f3eac975 100644
 --- a/src/main/java/dev/bacteriawa/mint/config/MintConfig.java
 +++ b/src/main/java/dev/bacteriawa/mint/config/MintConfig.java
 @@ -126,7 +126,7 @@ public class MintConfig {

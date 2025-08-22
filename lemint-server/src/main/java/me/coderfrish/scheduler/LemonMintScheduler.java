@@ -17,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+@Deprecated
 public class LemonMintScheduler implements BukkitScheduler {
     public static final LemonMintTaskMgr<BukkitTask> tasks = new LemonMintTaskMgr<>();
     public static final GlobalRegionScheduler globalSyncScheduler = Bukkit.getGlobalRegionScheduler();
@@ -165,7 +166,7 @@ public class LemonMintScheduler implements BukkitScheduler {
     }
 
     @Deprecated
-    @Override
+//    @Override
     public void mainThreadHeartbeat() {
         throw new UnsupportedOperationException("Folia server isn`t supported yet.");
     }
