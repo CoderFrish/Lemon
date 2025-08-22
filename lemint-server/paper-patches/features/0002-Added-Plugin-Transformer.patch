@@ -1,0 +1,101 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Fri, 22 Aug 2025 22:44:17 +0800
+Subject: [PATCH] Added Plugin Transformer.
+
+
+diff --git a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+index 70413fddd23ca1165cb5090cce4fddcb1bbca93f..46c3d5a39df30c8018d2223d24c705f8381883c3 100644
+--- a/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
++++ b/src/main/java/io/papermc/paper/plugin/PluginInitializerManager.java
+@@ -12,6 +12,7 @@ import java.util.Set;
+ import java.util.TreeSet;
+ import java.util.function.Function;
+ import joptsimple.OptionSet;
++import me.coderfrish.transformer.PluginTransformer;
+ import net.minecraft.server.dedicated.DedicatedServer;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.bukkit.plugin.java.LibraryLoader;
+@@ -31,6 +32,7 @@ public class PluginInitializerManager {
+     private final Path pluginDirectory;
+     private final Path updateDirectory;
+     public final io.papermc.paper.pluginremap.@org.checkerframework.checker.nullness.qual.MonotonicNonNull PluginRemapper pluginRemapper; // Paper
++    public final PluginTransformer pluginTransformer; // LemonMint
+ 
+     PluginInitializerManager(final Path pluginDirectory, final Path updateDirectory) {
+         this.pluginDirectory = pluginDirectory;
+@@ -38,6 +40,9 @@ public class PluginInitializerManager {
+         this.pluginRemapper = Boolean.getBoolean("paper.disablePluginRemapping")
+             ? null
+             : PluginRemapper.create(pluginDirectory);
++        this.pluginTransformer = !me.coderfrish.config.experiment.BukkitASMTransformer.enable
++            ? null
++            : PluginTransformer.create(pluginDirectory.toFile());
+         LibraryLoader.REMAPPER = this.pluginRemapper == null ? Function.identity() : this.pluginRemapper::remapLibraries;
+     }
+ 
+diff --git a/src/main/java/io/papermc/paper/plugin/loader/PaperClasspathBuilder.java b/src/main/java/io/papermc/paper/plugin/loader/PaperClasspathBuilder.java
+index 21a0a4e29c0eb1b4f7dc89ad3df481ca89dbf1a4..2179827b1249d34ec4d14250e3b885cab2c80bf5 100644
+--- a/src/main/java/io/papermc/paper/plugin/loader/PaperClasspathBuilder.java
++++ b/src/main/java/io/papermc/paper/plugin/loader/PaperClasspathBuilder.java
+@@ -17,6 +17,8 @@ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.jar.JarFile;
+ import java.util.logging.Logger;
++
++import me.coderfrish.transformer.PluginTransformer;
+ import org.jetbrains.annotations.NotNull;
+ 
+ public class PaperClasspathBuilder implements PluginClasspathBuilder {
+diff --git a/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java b/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java
+index 6369b13e1fcdbdb25dd9d6e4d3bffdedbee4f739..52bacfb37ef2525bba7c49dce519ad323dbf1514 100644
+--- a/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java
++++ b/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java
+@@ -18,12 +18,20 @@ import java.nio.file.Path;
+ import java.util.jar.JarEntry;
+ import java.util.jar.JarFile;
+ import java.util.logging.Logger;
++
++import me.coderfrish.transformer.PluginTransformer;
+ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+ 
+ class PaperPluginProviderFactory implements PluginTypeFactory<PaperPluginParent, PaperPluginMeta> {
+ 
+     @Override
+     public PaperPluginParent build(JarFile file, PaperPluginMeta configuration, Path source) {
++        try {
++            file = PluginTransformer.getInstance().transformer(file);
++        } catch (IOException e) {
++            throw new RuntimeException(e);
++        }
++
+         // Folia start - block plugins not marked as supported
+         if (!configuration.isFoliaSupported()) {
+             throw new RuntimeException("Could not load plugin '" + configuration.getDisplayName() + "' as it is not marked as supporting Folia!");
+diff --git a/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java b/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java
+index 335058589eeba934105bea31a0c3aea2293a5597..7ad155a03f2d340a68f5c38c1d15f990130b9cb6 100644
+--- a/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java
++++ b/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java
+@@ -12,6 +12,8 @@ import io.papermc.paper.plugin.provider.util.ProviderUtil;
+ import io.papermc.paper.util.MappingEnvironment;
+ import java.util.List;
+ import java.util.logging.Logger;
++
++import me.coderfrish.transformer.PluginTransformer;
+ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+ import org.bukkit.plugin.InvalidDescriptionException;
+ import org.bukkit.plugin.PluginDescriptionFile;
+@@ -43,6 +45,13 @@ class SpigotPluginProviderFactory implements PluginTypeFactory<SpigotPluginProvi
+         // Copied from SimplePluginManager#loadPlugins
+         // Spigot doesn't validate the name when the config is created, and instead when the plugin is loaded.
+         // Paper plugin configuration will do these checks in config serializer instead of when this is created.
++        // 标记了一处地点
++        try {
++            file = PluginTransformer.getInstance().transformer(file);
++        } catch (IOException e) {
++            throw new RuntimeException(e);
++        }
++
+         String name = configuration.getRawName();
+         if (PluginConfigConstraints.RESERVED_KEYS.contains(name.toLowerCase(Locale.ROOT))) {
+             throw new InvalidDescriptionException("Restricted name, cannot use %s as a plugin name.".formatted(name));
