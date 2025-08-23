@@ -1,11 +1,13 @@
 package me.coderfrish.scheduler;
 
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@ApiStatus.Internal
 public class TransferTaskManager {
     private static final int START_ID = 1;
 

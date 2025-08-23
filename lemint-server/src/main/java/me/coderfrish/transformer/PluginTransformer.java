@@ -3,6 +3,7 @@ package me.coderfrish.transformer;
 import me.coderfrish.utility.CheckUtility;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.ApiStatus;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -21,6 +22,7 @@ import java.util.jar.JarOutputStream;
 
 import static org.objectweb.asm.Opcodes.*;
 
+@ApiStatus.Internal
 public class PluginTransformer {
     private final static Logger Logger = LoggerFactory.getLogger("PluginTransformer");
 
@@ -56,13 +58,38 @@ public class PluginTransformer {
                 );
 
                 put(
+                        "org/bukkit/scheduler/BukkitScheduler.runTaskTimerAsynchronously(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;JJ)Lorg/bukkit/scheduler/BukkitTask;",
+                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTaskTimerAsynchronously", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;JJ)Lorg/bukkit/scheduler/BukkitTask;")
+                );
+
+                put(
                         "org/bukkit/scheduler/BukkitScheduler.runTaskLater(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;J)Lorg/bukkit/scheduler/BukkitTask;",
                         new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTaskLater", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;J)Lorg/bukkit/scheduler/BukkitTask;")
                 );
 
                 put(
+                        "org/bukkit/scheduler/BukkitScheduler.runTaskLaterAsynchronously(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;J)Lorg/bukkit/scheduler/BukkitTask;",
+                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTaskLaterAsynchronously", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;J)Lorg/bukkit/scheduler/BukkitTask;")
+                );
+
+                put(
                         "org/bukkit/scheduler/BukkitScheduler.runTask(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;)Lorg/bukkit/scheduler/BukkitTask;",
                         new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTask", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;)Lorg/bukkit/scheduler/BukkitTask;")
+                );
+
+                put(
+                        "org/bukkit/scheduler/BukkitScheduler.runTaskAsynchronously(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;)Lorg/bukkit/scheduler/BukkitTask;",
+                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTaskAsynchronously", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;)Lorg/bukkit/scheduler/BukkitTask;")
+                );
+
+                put(
+                        "org/bukkit/scheduler/BukkitScheduler.cancelTasks(Lorg/bukkit/plugin/Plugin;)V",
+                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "cancelTasks", "(Lorg/bukkit/plugin/Plugin;)V")
+                );
+
+                put(
+                        "org/bukkit/scheduler/BukkitScheduler.cancelTask(I)V",
+                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "cancelTask", "(I)V")
                 );
             }
         };
@@ -153,6 +180,17 @@ public class PluginTransformer {
     private ClassVisitor classVisitor(ClassWriter cw) {
         return new ClassVisitor(ASM_API, cw) {
             @Override
+            /* About BukkitRunnable Lambda class transfer, if it is extended BukkitRunnable class that it can transfer to TransferRunnable.*/
+            public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+                if (superName.equals("org/bukkit/scheduler/BukkitRunnable")) {
+                    super.visit(version, access, name, signature, "me/coderfrish/scheduler/TransferRunnable", interfaces);
+                    return;
+                }
+
+                super.visit(version, access, name, signature, superName, interfaces);
+            }
+
+            @Override
             public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
                 MethodVisitor methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions);
                 return new SchedulerMethodVisitor(methodVisitor);
@@ -171,10 +209,20 @@ public class PluginTransformer {
             if (SCHEDULER_MAPPINGS.containsKey(methodKey)) {
                 if ("org/bukkit/scheduler/BukkitScheduler".equals(owner) && opcode == INVOKEINTERFACE) {
                     MappingInfo mappingInfo = SCHEDULER_MAPPINGS.get(methodKey);
-                    String newDesc = "(Lorg/bukkit/scheduler/BukkitScheduler;" + mappingInfo.descriptor.substring(1);
-                    super.visitMethodInsn(INVOKESTATIC, mappingInfo.owner, mappingInfo.name, newDesc, false);
+                    super.visitMethodInsn(INVOKESTATIC, mappingInfo.owner, mappingInfo.name, mappingInfo.descriptor, false);
                     return;
                 }
+            }
+
+            /* About BukkitRunnable Lambda class transfer, if it is extended BukkitRunnable class that it can transfer to TransferRunnable.*/
+            if (owner.equals("org/bukkit/scheduler/BukkitRunnable") && (opcode == INVOKEVIRTUAL || opcode == INVOKESPECIAL)) {
+                super.visitMethodInsn(opcode, "me/coderfrish/scheduler/TransferRunnable", "<init>", "()V", false);
+                return;
+            }
+
+            if (owner.equals("org/bukkit/Bukkit") && name.equals("getScheduler") && opcode == INVOKESTATIC) {
+                mv.visitInsn(NOP);
+                return;
             }
 
             super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
