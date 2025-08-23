@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Frish2021 <1573880184@qq.com>
-Date: Sun, 3 Aug 2025 12:42:53 +0800
-Subject: [PATCH] ServerBuildInfo git rebase to LemonMint.
+Date: Sat, 7 Jun 2025 19:48:12 +0800
+Subject: [PATCH] Rebrand to LemonMint
 
 
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
@@ -13,7 +13,7 @@ index 03ee024d4f592177c2d0c134dfb5959352f42074..54d3de95691aca4a8c6043e62745efc8
       * The brand id for Mint.
       */
 -    Key BRAND_MINT_ID = Key.key("menthamc", "mint");
-+    Key BRAND_MINT_ID = Key.key("menthamc", "lemint");
++    Key BRAND_LEMINT_ID = Key.key("menthamc", "lemint");
      // Mint end
  
      /**

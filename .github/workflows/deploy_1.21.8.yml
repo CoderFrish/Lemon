@@ -81,4 +81,5 @@ jobs:
           artifacts: |
             target/**
           makeLatest: true
+          prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
