@@ -1,0 +1,81 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sat, 23 Aug 2025 15:57:59 +0800
+Subject: [PATCH] Further improve the ASM translator.
+
+
+diff --git a/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java b/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java
+index 52bacfb37ef2525bba7c49dce519ad323dbf1514..83c9a0889bb657ea190daf5aa9524318cbe7cf15 100644
+--- a/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java
++++ b/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java
+@@ -26,17 +26,14 @@ class PaperPluginProviderFactory implements PluginTypeFactory<PaperPluginParent,
+ 
+     @Override
+     public PaperPluginParent build(JarFile file, PaperPluginMeta configuration, Path source) {
+-        try {
+-            file = PluginTransformer.getInstance().transformer(file);
+-        } catch (IOException e) {
+-            throw new RuntimeException(e);
++        if (me.coderfrish.config.experiment.BukkitASMTransformer.enable) {
++            try {
++                file = PluginTransformer.getInstance().transformer(file);
++            } catch (IOException e) {
++                throw new RuntimeException(e);
++            }
+         }
+ 
+-        // Folia start - block plugins not marked as supported
+-        if (!configuration.isFoliaSupported()) {
+-            throw new RuntimeException("Could not load plugin '" + configuration.getDisplayName() + "' as it is not marked as supporting Folia!");
+-        }
+-        // Folia end - block plugins not marked as supported
+         Logger jul = PaperPluginLogger.getLogger(configuration);
+         ComponentLogger logger = ComponentLogger.logger(jul.getName());
+         PluginProviderContext context = PluginProviderContextImpl.create(configuration, logger, source);
+diff --git a/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java b/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java
+index 7ad155a03f2d340a68f5c38c1d15f990130b9cb6..959d5d46f09e97a4bf8f85fbf140629b60a0dcf9 100644
+--- a/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java
++++ b/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java
+@@ -37,19 +37,16 @@ class SpigotPluginProviderFactory implements PluginTypeFactory<SpigotPluginProvi
+ 
+     @Override
+     public SpigotPluginProvider build(JarFile file, PluginDescriptionFile configuration, Path source) throws InvalidDescriptionException {
+-        // Folia start - block plugins not marked as supported
+-        if (!configuration.isFoliaSupported()) {
+-            throw new RuntimeException("Could not load plugin '" + configuration.getDisplayName() + "' as it is not marked as supporting Folia!");
+-        }
+-        // Folia end - block plugins not marked as supported
+         // Copied from SimplePluginManager#loadPlugins
+         // Spigot doesn't validate the name when the config is created, and instead when the plugin is loaded.
+         // Paper plugin configuration will do these checks in config serializer instead of when this is created.
+         // 标记了一处地点
+-        try {
+-            file = PluginTransformer.getInstance().transformer(file);
+-        } catch (IOException e) {
+-            throw new RuntimeException(e);
++        if (me.coderfrish.config.experiment.BukkitASMTransformer.enable) {
++            try {
++                file = PluginTransformer.getInstance().transformer(file);
++            } catch (IOException e) {
++                throw new RuntimeException(e);
++            }
+         }
+ 
+         String name = configuration.getRawName();
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
+index 679529d94c16960527e5d76adb61c7e536f55d3e..c1aad9203af20102e560571435dfa75150b37c1b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
+@@ -366,12 +366,6 @@ public final class CraftMagicNumbers implements UnsafeValues {
+             throw new InvalidPluginException("Unsupported API version " + descriptionFile.getAPIVersion());
+         }
+ 
+-        // Folia start - block plugins not marked as supported
+-        if (!descriptionFile.isFoliaSupported()) {
+-            throw new InvalidPluginException("Plugin " + descriptionFile.getFullName() + " is not marked as supporting regionised multithreading");
+-        }
+-        // Folia end - block plugins not marked as supported
+-
+         if (toCheck.isOlderThan(minimumVersion)) {
+             // Older than supported
+             throw new InvalidPluginException("Plugin API version " + descriptionFile.getAPIVersion() + " is lower than the minimum allowed version. Please update or replace it.");
