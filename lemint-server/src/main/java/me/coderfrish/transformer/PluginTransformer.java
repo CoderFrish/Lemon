@@ -10,6 +10,8 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import summer.foliaPhantom.FoliaPhantomExtra;
+import summer.foliaPhantom.PluginPatcher;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -38,61 +40,13 @@ public class PluginTransformer {
 
     private static final int ASM_API = ASM9;
 
+    private PluginPatcher pluginPatcher = new PluginPatcher(java.util.logging.Logger.getLogger("PluginPatcher"));
+
     private final File rootFolder;
-    private final File pluginDirectory;
 
     public PluginTransformer(File pluginDirectory) {
         instance = this;
-        this.pluginDirectory = pluginDirectory;
         this.rootFolder = new File(pluginDirectory, ".plugin-transferred");
-    }
-
-    private static final Map<String, MappingInfo> SCHEDULER_MAPPINGS;
-
-    static {
-        SCHEDULER_MAPPINGS = new ConcurrentHashMap<>() {
-            {
-                put(
-                        "org/bukkit/scheduler/BukkitScheduler.runTaskTimer(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;JJ)Lorg/bukkit/scheduler/BukkitTask;",
-                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTaskTimer", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;JJ)Lorg/bukkit/scheduler/BukkitTask;")
-                );
-
-                put(
-                        "org/bukkit/scheduler/BukkitScheduler.runTaskTimerAsynchronously(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;JJ)Lorg/bukkit/scheduler/BukkitTask;",
-                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTaskTimerAsynchronously", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;JJ)Lorg/bukkit/scheduler/BukkitTask;")
-                );
-
-                put(
-                        "org/bukkit/scheduler/BukkitScheduler.runTaskLater(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;J)Lorg/bukkit/scheduler/BukkitTask;",
-                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTaskLater", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;J)Lorg/bukkit/scheduler/BukkitTask;")
-                );
-
-                put(
-                        "org/bukkit/scheduler/BukkitScheduler.runTaskLaterAsynchronously(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;J)Lorg/bukkit/scheduler/BukkitTask;",
-                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTaskLaterAsynchronously", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;J)Lorg/bukkit/scheduler/BukkitTask;")
-                );
-
-                put(
-                        "org/bukkit/scheduler/BukkitScheduler.runTask(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;)Lorg/bukkit/scheduler/BukkitTask;",
-                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTask", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;)Lorg/bukkit/scheduler/BukkitTask;")
-                );
-
-                put(
-                        "org/bukkit/scheduler/BukkitScheduler.runTaskAsynchronously(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;)Lorg/bukkit/scheduler/BukkitTask;",
-                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "runTaskAsynchronously", "(Lorg/bukkit/plugin/Plugin;Ljava/lang/Runnable;)Lorg/bukkit/scheduler/BukkitTask;")
-                );
-
-                put(
-                        "org/bukkit/scheduler/BukkitScheduler.cancelTasks(Lorg/bukkit/plugin/Plugin;)V",
-                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "cancelTasks", "(Lorg/bukkit/plugin/Plugin;)V")
-                );
-
-                put(
-                        "org/bukkit/scheduler/BukkitScheduler.cancelTask(I)V",
-                        new MappingInfo("me/coderfrish/scheduler/TransferScheduler", "cancelTask", "(I)V")
-                );
-            }
-        };
     }
 
     private record MappingInfo(String owner, String name, String descriptor) {}
@@ -102,7 +56,7 @@ public class PluginTransformer {
         if (!this.isFoliaSupported(jarFile)) {
             File copiedOriginalJar = new File(rootFolder, "original-classpath" + "/" +  name);
             File transferredJar = new File(rootFolder, "transferred-classpath" + "/" +  name);
-            File originalJar = new File(pluginDirectory, name);
+            File originalJar = new File(jarFile.getName());
 
             if (!copiedOriginalJar.getParentFile().exists())
                 copiedOriginalJar.getParentFile().mkdirs();
@@ -112,7 +66,10 @@ public class PluginTransformer {
 
             if (!copiedOriginalJar.exists()) {
                 FileUtils.copyFile(originalJar, copiedOriginalJar);
-                return transformer(copiedOriginalJar, transferredJar, jarFile.getName());
+
+                pluginPatcher.patchPlugin(originalJar, transferredJar);
+//                return transformer(copiedOriginalJar, transferredJar, jarFile.getName());
+                return new JarFile(transferredJar);
             }
 
             if (copiedOriginalJar.exists()) {
@@ -148,7 +105,6 @@ public class PluginTransformer {
                         ClassReader cr = new ClassReader(is);
                         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
 
-                        cr.accept(classVisitor(cw), 0);
                         jos.write(cw.toByteArray());
                     }
                 } else {
@@ -175,57 +131,5 @@ public class PluginTransformer {
             }
         }
         return false;
-    }
-
-    private ClassVisitor classVisitor(ClassWriter cw) {
-        return new ClassVisitor(ASM_API, cw) {
-            @Override
-            /* About BukkitRunnable Lambda class transfer, if it is extended BukkitRunnable class that it can transfer to TransferRunnable.*/
-            public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-                if (superName.equals("org/bukkit/scheduler/BukkitRunnable")) {
-                    super.visit(version, access, name, signature, "me/coderfrish/scheduler/TransferRunnable", interfaces);
-                    return;
-                }
-
-                super.visit(version, access, name, signature, superName, interfaces);
-            }
-
-            @Override
-            public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-                MethodVisitor methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions);
-                return new SchedulerMethodVisitor(methodVisitor);
-            }
-        };
-    }
-
-    private static final class SchedulerMethodVisitor extends MethodVisitor {
-        SchedulerMethodVisitor(MethodVisitor methodVisitor) {
-            super(ASM_API, methodVisitor);
-        }
-
-        @Override
-        public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
-            String methodKey = owner + "." + name + descriptor;
-            if (SCHEDULER_MAPPINGS.containsKey(methodKey)) {
-                if ("org/bukkit/scheduler/BukkitScheduler".equals(owner) && opcode == INVOKEINTERFACE) {
-                    MappingInfo mappingInfo = SCHEDULER_MAPPINGS.get(methodKey);
-                    super.visitMethodInsn(INVOKESTATIC, mappingInfo.owner, mappingInfo.name, mappingInfo.descriptor, false);
-                    return;
-                }
-            }
-
-            /* About BukkitRunnable Lambda class transfer, if it is extended BukkitRunnable class that it can transfer to TransferRunnable.*/
-            if (owner.equals("org/bukkit/scheduler/BukkitRunnable") && (opcode == INVOKEVIRTUAL || opcode == INVOKESPECIAL)) {
-                super.visitMethodInsn(opcode, "me/coderfrish/scheduler/TransferRunnable", "<init>", "()V", false);
-                return;
-            }
-
-            if (owner.equals("org/bukkit/Bukkit") && name.equals("getScheduler") && opcode == INVOKESTATIC) {
-                mv.visitInsn(NOP);
-                return;
-            }
-
-            super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
-        }
     }
 }
