@@ -7,11 +7,11 @@ import dev.bacteriawa.mint.config.Configuration;
 @Configuration(name = "legacy_bukkit_plugin", type = ConfigCategory.experiment)
 public class LegacyBukkitPluginConfig {
     @ConfigField
-    public static boolean foliaSupportedField = true;
+    public static boolean foliaSupportedField = false;
 
     @ConfigField
-    public static boolean scheduler = false;
+    public static boolean scheduler = true;
 
     @ConfigField
-    public static boolean transformer = false;
+    public static boolean transformer = true;
 }

@@ -15,11 +15,9 @@
 ```
 
 ## 2 | 特性
- - 对于Bukkit Scoreboard API与原版Scoreboard command的恢复
- - 对于Bukkit Enity or Player Teleport API的基本恢复
- - 对于Bukkit Scheduler API的简单恢复（并不代表全部恢复）
+ - 部分Bukkit插件的支持
  - Purpur的6格末影箱
- - JavaScript脚本插件支持（进行中）
+ - JavaScript脚本插件支持（暂时移除）
 
 ## 3 | API
 ```xml

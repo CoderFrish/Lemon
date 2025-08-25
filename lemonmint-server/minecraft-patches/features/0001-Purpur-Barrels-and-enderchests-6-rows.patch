@@ -87,10 +87,10 @@ index 0fffa384f928ab84451331380968fb4650eafe26..c8953e4a221eb261c983768f492222c2
          return new ChestMenu(MenuType.GENERIC_9x6, containerId, playerInventory, container, 6);
      }
 diff --git a/net/minecraft/world/inventory/PlayerEnderChestContainer.java b/net/minecraft/world/inventory/PlayerEnderChestContainer.java
-index beb74bc8398de8b48f41af7daef14d624826310e..d0baa4b94aba21f3152dee44e97a77552847b2b2 100644
+index 51148b7b95c93a9e25da70ac9275c63f1458d84c..3e030c3301f74aa7faf7a89e6bb63c678331b231 100644
 --- a/net/minecraft/world/inventory/PlayerEnderChestContainer.java
 +++ b/net/minecraft/world/inventory/PlayerEnderChestContainer.java
-@@ -25,11 +25,18 @@ public class PlayerEnderChestContainer extends SimpleContainer {
+@@ -26,11 +26,18 @@ public class PlayerEnderChestContainer extends SimpleContainer {
      }
  
      public PlayerEnderChestContainer(Player owner) {
