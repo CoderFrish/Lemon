@@ -3,7 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         mavenLocal()
-        maven("https://repo.menthamc.com/repository/maven-public/")
+        maven("https://repo.menthamc.org/repository/maven-public/")
     }
 }
 
@@ -11,7 +11,7 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
 }
 
-rootProject.name = "lemint"
-include("lemint-api")
-include("lemint-server")
-include("lemint-script")
+rootProject.name = "lemonmint"
+include("lemonmint-api")
+include("lemonmint-server")
+include("lemonmint-script")

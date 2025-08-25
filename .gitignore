@@ -4,9 +4,9 @@
 build/
 run/
 
-lemint-server/build.gradle.kts
-lemint-api/build.gradle.kts
-lemint-server/src/minecraft/
+lemonmint-server/build.gradle.kts
+lemonmint-api/build.gradle.kts
+lemonmint-server/src/minecraft/
 paper-server/
 paper-api/
 mint-api/

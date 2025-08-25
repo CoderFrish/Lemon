@@ -13,40 +13,40 @@ paperweight {
 
         patchFile {
             path = "mint-server/build.gradle.kts"
-            outputFile = file("lemint-server/build.gradle.kts")
-            patchFile = file("lemint-server/build.gradle.kts.patch")
+            outputFile = file("lemonmint-server/build.gradle.kts")
+            patchFile = file("lemonmint-server/build.gradle.kts.patch")
         }
 
         patchFile {
             path = "mint-api/build.gradle.kts"
-            outputFile = file("lemint-api/build.gradle.kts")
-            patchFile = file("lemint-api/build.gradle.kts.patch")
+            outputFile = file("lemonmint-api/build.gradle.kts")
+            patchFile = file("lemonmint-api/build.gradle.kts.patch")
         }
 
         patchRepo("paperApi") {
             upstreamPath = "paper-api"
-            patchesDir = file("lemint-api/paper-patches")
+            patchesDir = file("lemonmint-api/paper-patches")
             outputDir = file("paper-api")
         }
 
         patchRepo("foliaApi") {
             upstreamPath = "folia-api"
-            patchesDir = file("lemint-api/folia-patches")
+            patchesDir = file("lemonmint-api/folia-patches")
             outputDir = file("folia-api")
         }
 
         patchDir("mintApi") {
             upstreamPath = "mint-api"
             excludes = listOf("build.gradle.kts", "build.gradle.kts.patch", "paper-patches", "folia-patches")
-            patchesDir = file("lemint-api/mint-patches")
+            patchesDir = file("lemonmint-api/mint-patches")
             outputDir = file("mint-api")
         }
     }
 }
 
 val paperMavenPublicUrl = "https://repo.papermc.io/repository/maven-public/"
-val menthaMavenPublicUrl = "https://repo.menthamc.com/repository/maven-public/"
-val menthaMavenSnapshotsUrl = "https://repo.menthamc.com/repository/maven-snapshots/"
+val menthaMavenPublicUrl = "https://repo.menthamc.org/repository/maven-public/"
+val menthaMavenSnapshotsUrl = "https://repo.menthamc.org/repository/maven-snapshots/"
 
 subprojects {
     apply(plugin = "java-library")

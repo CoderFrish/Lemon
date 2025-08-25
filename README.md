@@ -32,8 +32,8 @@
 
 <dependencies>
     <dependency>
-        <groupId>me.coderfrish.lemint</groupId>
-        <artifactId>lemint-api</artifactId>
+        <groupId>me.coderfrish</groupId>
+        <artifactId>lemonmint-api</artifactId>
         <version>1.21.8-R0.1-SNAPSHOT</version>
         <scope>provided</scope>
     </dependency>

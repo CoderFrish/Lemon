@@ -4,6 +4,7 @@ prop() {
 
 commit_tag=$(git log --pretty='%h' -1)
 version=$(prop version)
+mcVersion=$(prop mcVersion)
 
 # Set environment variable
 echo "commit_tag=${commit_tag}" >> $GITHUB_ENV
@@ -13,4 +14,4 @@ echo "version=${version}" >> $GITHUB_ENV
 echo "mcversion=$(prop mcVersion)" >> $GITHUB_ENV
 
 mkdir "target"
-mv lemint-server/build/libs/lemint-paperclip-$version-mojmap.jar target/LemonMint-$version.jar
+mv lemonmint-server/build/libs/lemonmint-paperclip-$version-mojmap.jar target/LemonMint-$mcVersion-$commit_tag.jar
