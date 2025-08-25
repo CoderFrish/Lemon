@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+import static me.coderfrish.utility.FutureUtility.toFuture;
+
 public class FixedCraftScheduler extends CraftScheduler {
     public static final FixedScheduleTaskMgr tasks = new FixedScheduleTaskMgr();
     public final GlobalRegionScheduler globalSyncScheduler;
@@ -30,8 +32,11 @@ public class FixedCraftScheduler extends CraftScheduler {
 
     @Override
     public void cancelTasks(@NotNull Plugin plugin) {
-        globalSyncScheduler.cancelTasks(plugin);
-        globalAsyncScheduler.cancelTasks(plugin);
+        for (BukkitTask task : tasks) {
+            if (task.getOwner() == plugin) {
+                task.cancel();
+            }
+        }
     }
 
     @Override
@@ -149,15 +154,5 @@ public class FixedCraftScheduler extends CraftScheduler {
         Runnable runnable = toFuture(future, task);
         this.runTask(plugin, st -> runnable.run());
         return future;
-    }
-
-    private static <T> Runnable toFuture(CompletableFuture<T> future, Callable<T> task) {
-        return () -> {
-            try {
-                future.complete(task.call());
-            } catch (Exception e) {
-                future.completeExceptionally(e);
-            }
-        };
     }
 }
