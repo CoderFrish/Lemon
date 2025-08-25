@@ -3,9 +3,9 @@ name: LemonMint CI - ver/1.21.8
 on:
   push:
     paths:
-      - "lemint-server/**/*"
-      - "lemint-api/**/*"
-      - "lemint-script/**/*"
+      - "../../lemonmint-server/**/*"
+      - "../../lemonmint-api/**/*"
+      - "../../lemonmint-script/**/*"
       - ".github/workflows/deploy_1.21.8.yml"
       - "scripts/*.sh"
       - "build.gradle.kts"
