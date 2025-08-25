@@ -22,7 +22,8 @@ public class ScriptCommand {
     }
 
     public void register(String command, ProxyExecutable executor, ProxyExecutable tabCompleter, Value meta) {
-        PluginCommand pluginCommand = new PluginCommand(command, getBukkitJavaPlugin());
+        PluginCommand pluginCommand = null;
+        //  new PluginCommand(command, getBukkitJavaPlugin())
         pluginCommand.setExecutor((sender, command0, label, args) ->
                 (boolean) executor.execute(Value.asValue(sender), Value.asValue(command0), Value.asValue(label), Value.asValue(args)));
 

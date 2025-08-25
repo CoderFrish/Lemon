@@ -3,21 +3,22 @@ package me.coderfrish.scheduler;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-public class LemonMintTask implements BukkitTask {
-    private final ScheduledTask task;
+class FixedScheduledTask implements BukkitTask {
+    public final ScheduledTask task;
     private final boolean sync;
 
-    public LemonMintTask(ScheduledTask task, boolean sync) {
+    FixedScheduledTask(ScheduledTask task, boolean sync) {
         this.task = task;
         this.sync = sync;
-        LemonMintScheduler.tasks.add(this);
+        FixedCraftScheduler.tasks.add(this);
     }
 
     @Override
     public int getTaskId() {
-        return LemonMintScheduler.tasks.getId(this);
+        return FixedCraftScheduler.tasks.getId(this);
     }
 
     @Override
@@ -27,7 +28,7 @@ public class LemonMintTask implements BukkitTask {
 
     @Override
     public boolean isSync() {
-        return true;
+        return sync;
     }
 
     @Override
@@ -35,17 +36,22 @@ public class LemonMintTask implements BukkitTask {
         return task.isCancelled();
     }
 
+    @ApiStatus.Internal
+    ScheduledTask task() {
+        return task;
+    }
+
     @Override
     public void cancel() {
-        LemonMintScheduler.tasks.remove(this);
         task.cancel();
+        FixedCraftScheduler.tasks.remove(this);
     }
 
-    static LemonMintTask setupAsyncTask(ScheduledTask task) {
-        return new LemonMintTask(task, false);
+    static BukkitTask setupSyncTask(ScheduledTask task) {
+        return new FixedScheduledTask(task, true);
     }
 
-    static LemonMintTask setupSyncTask(ScheduledTask task) {
-        return new LemonMintTask(task, true);
+    static BukkitTask setupAsyncTask(ScheduledTask task) {
+        return new FixedScheduledTask(task, false);
     }
 }
