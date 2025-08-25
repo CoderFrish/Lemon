@@ -3,9 +3,9 @@ name: LemonMint CI - ver/1.21.8
 on:
   push:
     paths:
-      - "../../lemonmint-server/**/*"
-      - "../../lemonmint-api/**/*"
-      - "../../lemonmint-script/**/*"
+      - "lemonmint-server/**/*"
+      - "lemonmint-api/**/*"
+      - "lemonmint-script/**/*"
       - ".github/workflows/deploy_1.21.8.yml"
       - "scripts/*.sh"
       - "build.gradle.kts"
@@ -56,12 +56,6 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: LemonMint CI Artifacts
-          path: lemint-server/build/libs/*-paperclip-*-mojmap.jar
 
       - name : Configure environment
         run: |
