@@ -31,6 +31,13 @@ jobs:
           distribution: 'zulu'
           architecture: x64
 
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+
       - name: Configure Git
         run: |
           git config --global user.email "no-reply@github.com"
