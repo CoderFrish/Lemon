@@ -37,6 +37,11 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
+          key: ${{ runner.os }}-build-${{ env.commit_tag }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.commit_tag }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
 
       - name: Configure Git
         run: |
