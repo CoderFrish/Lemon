@@ -31,18 +31,6 @@ jobs:
           distribution: 'zulu'
           architecture: x64
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-build-${{ env.commit_tag }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.commit_tag }}
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-
       - name: Configure Git
         run: |
           git config --global user.email "no-reply@github.com"
@@ -72,6 +60,18 @@ jobs:
       - name : Configure environment
         run: |
           sh scripts/set_env.sh
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-build-${{ env.commit_tag }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.commit_tag }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
 
       - name: Create Release
         uses: ncipollo/release-action@v1
