@@ -1,10 +1,10 @@
 package me.coderfrish.config.misc;
 
 import dev.bacteriawa.mint.config.ConfigCategory;
-import dev.bacteriawa.mint.config.ConfigField;
-import dev.bacteriawa.mint.config.Configuration;
+import dev.bacteriawa.mint.config.annotation.Config;
+import dev.bacteriawa.mint.config.annotation.ConfigField;
 
-@Configuration(type = ConfigCategory.misc, name = "ender_chest_six_rows")
+@Config(category = ConfigCategory.misc, name = "ender_chest_six_rows")
 public class EnderChestSixRowsConfig {
     @ConfigField
     public static boolean enderChestSixRows = false;

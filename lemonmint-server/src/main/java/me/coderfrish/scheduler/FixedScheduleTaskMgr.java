@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Deprecated
 public class FixedScheduleTaskMgr implements Iterable<BukkitTask>{
     private static final int START_ID = 1;
 

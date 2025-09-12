@@ -22,6 +22,7 @@ import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+@Deprecated
 public class ASMTransformer {
     private static ASMTransformer INSTANCE;
     private static Logger logger = LoggerFactory.getLogger("ASMTransformer");
