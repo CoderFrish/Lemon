@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 
 import static me.coderfrish.utility.FutureUtility.toFuture;
 
+@Deprecated
 public class FixedCraftScheduler extends CraftScheduler {
     public static final FixedScheduleTaskMgr tasks = new FixedScheduleTaskMgr();
     public final GlobalRegionScheduler globalSyncScheduler;

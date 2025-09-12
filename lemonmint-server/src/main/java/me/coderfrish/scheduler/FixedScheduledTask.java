@@ -6,6 +6,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 class FixedScheduledTask implements BukkitTask {
     public final ScheduledTask task;
     private final boolean sync;

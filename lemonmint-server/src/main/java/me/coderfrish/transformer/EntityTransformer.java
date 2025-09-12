@@ -7,6 +7,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 
+@Deprecated
 public class EntityTransformer extends ClassVisitor {
     private static final int ASM_VERSION =  ASMTransformer.ASM_VERSION;
 

@@ -1,5 +1,6 @@
 package me.coderfrish.exception;
 
+@Deprecated
 public class LemonMintRuntimeException extends RuntimeException {
     public LemonMintRuntimeException(String message) {
         super(message);

@@ -13,6 +13,7 @@ import static me.coderfrish.scheduler.FixedScheduledTask.setupAsyncTask;
 import static me.coderfrish.scheduler.FixedScheduledTask.setupSyncTask;
 import static me.coderfrish.utility.FutureUtility.toFuture;
 
+@Deprecated
 public class FixedEntityScheduler {
     public static final Map<String, MappingInfo> ENTITY_SCHEDULE_METHOD_MAPPINGS = new ConcurrentHashMap<>();
     public static final Map<String, List<String>> ENTITY_INVOKE_LIST = new ConcurrentHashMap<>();
