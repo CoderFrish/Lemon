@@ -1,0 +1,126 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sat, 13 Sep 2025 23:05:58 +0800
+Subject: [PATCH] Recovered `Bukkit.getScheduler()` method and disabled Folia
+ Entity operation thread checker.
+
+
+diff --git a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
+index e417c9a140778954572fb8bc190fad64feacffe0..657f2bd23ca0985b11daeb9345544c92c129b699 100644
+--- a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
++++ b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
+@@ -49,71 +49,71 @@ public class TickThread extends Thread {
+     @Deprecated
+     public static void ensureTickThread(final String reason) {
+         if (!isTickThread()) {
+-            LOGGER.error("Thread failed main thread check: " + reason + ", context=" + getThreadContext(), new Throwable());
+-            throw new IllegalStateException(reason);
++//            LOGGER.error("Thread failed main thread check: " + reason + ", context=" + getThreadContext(), new Throwable());
++//            throw new IllegalStateException(reason);
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final BlockPos pos, final String reason) {
+         if (!isTickThreadFor(world, pos)) {
+-            final String ex = "Thread failed main thread check: " +
+-                               reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos;
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++//            final String ex = "Thread failed main thread check: " +
++//                               reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos;
++//            LOGGER.error(ex, new Throwable());
++//            throw new IllegalStateException(ex);
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final BlockPos pos, final int blockRadius, final String reason) {
+         if (!isTickThreadFor(world, pos, blockRadius)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos + ", block_radius=" + blockRadius;
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++//            final String ex = "Thread failed main thread check: " +
++//                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos + ", block_radius=" + blockRadius;
++//            LOGGER.error(ex, new Throwable());
++//            throw new IllegalStateException(ex);
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final ChunkPos pos, final String reason) {
+         if (!isTickThreadFor(world, pos)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + pos;
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++//            final String ex = "Thread failed main thread check: " +
++//                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + pos;
++//            LOGGER.error(ex, new Throwable());
++//            throw new IllegalStateException(ex);
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final int chunkX, final int chunkZ, final String reason) {
+         if (!isTickThreadFor(world, chunkX, chunkZ)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + new ChunkPos(chunkX, chunkZ);
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++//            final String ex = "Thread failed main thread check: " +
++//                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + new ChunkPos(chunkX, chunkZ);
++//            LOGGER.error(ex, new Throwable());
++//            throw new IllegalStateException(ex);
+         }
+     }
+ 
+     public static void ensureTickThread(final Entity entity, final String reason) {
+         if (!isTickThreadFor(entity)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", entity=" + EntityUtil.dumpEntity(entity);
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++//            final String ex = "Thread failed main thread check: " +
++//                reason + ", context=" + getThreadContext() + ", entity=" + EntityUtil.dumpEntity(entity);
++//            LOGGER.error(ex, new Throwable());
++//            throw new IllegalStateException(ex);
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final AABB aabb, final String reason) {
+         if (!isTickThreadFor(world, aabb)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", aabb=" + aabb;
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++//            final String ex = "Thread failed main thread check: " +
++//                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", aabb=" + aabb;
++//            LOGGER.error(ex, new Throwable());
++//            throw new IllegalStateException(ex);
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final double blockX, final double blockZ, final String reason) {
+         if (!isTickThreadFor(world, blockX, blockZ)) {
+-            final String ex = "Thread failed main thread check: " +
+-                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + new Vec3(blockX, 0.0, blockZ);
+-            LOGGER.error(ex, new Throwable());
+-            throw new IllegalStateException(ex);
++//            final String ex = "Thread failed main thread check: " +
++//                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + new Vec3(blockX, 0.0, blockZ);
++//            LOGGER.error(ex, new Throwable());
++//            throw new IllegalStateException(ex);
+         }
+     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+index fad85bea8643a3a88ec5c4194de7a5060e81c136..f6bb8456bd9b9a14a222e2238542336701b83b00 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+@@ -514,7 +514,7 @@ public class CraftScheduler implements BukkitScheduler {
+     }
+ 
+     protected CraftTask handle(final CraftTask task, final long delay) { // Paper
+-        if (true) throw new UnsupportedOperationException(); // Folia - region threading
++//        if (true) throw new UnsupportedOperationException(); // Folia - region threading
+         // Paper start
+         if (!this.isAsyncScheduler && !task.isSync()) {
+             this.asyncScheduler.handle(task, delay);
