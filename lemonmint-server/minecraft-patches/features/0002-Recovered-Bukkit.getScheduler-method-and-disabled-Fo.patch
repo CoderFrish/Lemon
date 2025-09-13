@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sat, 13 Sep 2025 23:05:58 +0800
+Subject: [PATCH] Recovered `Bukkit.getScheduler()` method and disabled Folia
+ Entity operation thread checker.
+
+
+diff --git a/io/papermc/paper/threadedregions/RegionizedServer.java b/io/papermc/paper/threadedregions/RegionizedServer.java
+index e1842ab8f20271a8b20ab8462b09a4745a612a9a..7edaa8bce82d7f8dc1a710b4e84b62589912fccb 100644
+--- a/io/papermc/paper/threadedregions/RegionizedServer.java
++++ b/io/papermc/paper/threadedregions/RegionizedServer.java
+@@ -20,6 +20,7 @@ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.server.network.ServerGamePacketListenerImpl;
+ import net.minecraft.world.level.GameRules;
+ import org.bukkit.Bukkit;
++import org.bukkit.craftbukkit.scheduler.CraftScheduler;
+ import org.slf4j.Logger;
+ import java.util.ArrayList;
+ import java.util.Collections;
+@@ -305,6 +306,7 @@ public final class RegionizedServer {
+ 
+         // scheduler
+         ((FoliaGlobalRegionScheduler)Bukkit.getGlobalRegionScheduler()).tick();
++        ((CraftScheduler) Bukkit.getServer().getScheduler()).mainThreadHeartbeat(); // CraftBukkit
+ 
+         // commands
+         ((DedicatedServer)MinecraftServer.getServer()).handleConsoleInputs();
