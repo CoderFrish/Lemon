@@ -14,4 +14,3 @@ plugins {
 rootProject.name = "lemonmint"
 include("lemonmint-api")
 include("lemonmint-server")
-include("lemonmint-script")

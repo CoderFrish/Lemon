@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sat, 13 Sep 2025 20:34:59 +0800
+Subject: [PATCH] Purpur Barrels and enderchests 6 rows
+
+
+diff --git a/src/main/resources/assets/mint/lang/en_us.json b/src/main/resources/assets/mint/lang/en_us.json
+index cbc62b2bf2b5c077e426d4d22d8f6f671c7e66ec..bad19f521557b3133534263e6ae2bce3b0e82fa5 100644
+--- a/src/main/resources/assets/mint/lang/en_us.json
++++ b/src/main/resources/assets/mint/lang/en_us.json
+@@ -90,5 +90,8 @@
+   "optimisations.reduce_sensor_work.delayTicks": "Delay ticks for sensor work",
+   "optimisations.reduce_entity_move_packets.reduceUselessEntityMovePackets": "Reduce useless entity move packets.",
+   "optimisations.suffocation_optimization.enabled": "Enable suffocation optimization.",
+-  "optimisations.unlimit_packet.disablePacketLimit": "Disable packet limit."
++  "optimisations.unlimit_packet.disablePacketLimit": "Disable packet limit.",
++  "misc.ender_chest_six_rows.enderChestSixRows": "When enabled, ender chests should have six rows of inventory space",
++  "misc.ender_chest_six_rows.enderChestPermissionRows": "Use permission nodes to determine the number of rows. By default, with this setting enabled, all players have rows unless otherwise specified using permissions",
++  "misc.ender_chest_six_rows.barrelRows": "The amount of rows a barrel should have. Min: 1, Max: 6"
+ }
+\ No newline at end of file
+diff --git a/src/main/resources/assets/mint/lang/zh_cn.json b/src/main/resources/assets/mint/lang/zh_cn.json
+index 89ed047e7d21789946814c4e1c180b150eb0d80e..41a6fa9a987af74ed04435b9b7e228cb5b983327 100644
+--- a/src/main/resources/assets/mint/lang/zh_cn.json
++++ b/src/main/resources/assets/mint/lang/zh_cn.json
+@@ -90,5 +90,8 @@
+   "optimisations.reduce_sensor_work.delayTicks": "传感器工作延迟刻数",
+   "optimisations.reduce_entity_move_packets.reduceUselessEntityMovePackets": "减少无用的实体移动数据包",
+   "optimisations.suffocation_optimization.enabled": "启用窒息优化",
+-  "optimisations.unlimit_packet.disablePacketLimit": "禁用数据包限制"
++  "optimisations.unlimit_packet.disablePacketLimit": "禁用数据包限制",
++  "misc.ender_chest_six_rows.enderChestSixRows": "启用时，末影箱应该有六行库存空间",
++  "misc.ender_chest_six_rows.enderChestPermissionRows": "使用权限节点确定行数。默认情况下，启用此设置后，除非使用权限另有指定，否则所有玩家都有",
++  "misc.ender_chest_six_rows.barrelRows": "一个桶应该有的行数。最小值：1，最大值：6"
+ }
+\ No newline at end of file
