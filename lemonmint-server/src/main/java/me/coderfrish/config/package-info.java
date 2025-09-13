@@ -1,3 +1,6 @@
+/**
+ * This is LemonMint Config Package.
+ */
 @ConfigPackage
 package me.coderfrish.config;
 
