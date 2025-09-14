@@ -1,4 +1,4 @@
-package me.coderfrish.config.misc;
+package me.coderfrish.lemonmint.config.misc;
 
 import dev.bacteriawa.mint.config.ConfigCategory;
 import dev.bacteriawa.mint.config.annotation.Config;

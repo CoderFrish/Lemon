@@ -1,23 +1,37 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Frish2021 <1573880184@qq.com>
 Date: Tue, 29 Jul 2025 21:06:35 +0800
-Subject: [PATCH] Purpur Barrels and enderchests 6 rows
+Subject: [PATCH] Purpur Barrels and enderchests 6 rows.
 
-By: William Blake Galbreath <blake.galbreath@gmail.com>
-As part of: Purpur (https://github.com/PurpurMC/Purpur/blob/ver/1.21.8/purpur-server/minecraft-patches/features/0003-Barrels-and-enderchests-6-rows.patch)
-Licensed under: MIT (https://github.com/PurpurMC/Purpur/blob/ver/1.21.8/LICENSE)
 
 diff --git a/net/minecraft/server/players/PlayerList.java b/net/minecraft/server/players/PlayerList.java
-index 976a8982a0b0a9ae459cf08e13d69031d4238eca..5b19be7d146956711efa37f7c4fc2f1f2a4d8699 100644
+index 976a8982a0b0a9ae459cf08e13d69031d4238eca..2292d91096d0fd57e9a3c1e2739778c538aa957f 100644
 --- a/net/minecraft/server/players/PlayerList.java
 +++ b/net/minecraft/server/players/PlayerList.java
-@@ -1071,6 +1071,27 @@ public abstract class PlayerList {
+@@ -1,7 +1,6 @@
+ package net.minecraft.server.players;
+ 
+ import com.google.common.collect.Lists;
+-import com.google.common.collect.Maps;
+ import com.google.common.collect.Sets;
+ import com.mojang.authlib.GameProfile;
+ import com.mojang.logging.LogUtils;
+@@ -19,6 +18,8 @@ import java.util.UUID;
+ import java.util.function.Function;
+ import java.util.function.Predicate;
+ import javax.annotation.Nullable;
++
++import me.coderfrish.lemonmint.config.misc.EnderChestSixRowsConfig;
+ import net.minecraft.ChatFormatting;
+ import net.minecraft.FileUtil;
+ import net.minecraft.commands.CommandSourceStack;
+@@ -1071,6 +1072,27 @@ public abstract class PlayerList {
          player.getBukkitEntity().recalculatePermissions(); // CraftBukkit
          this.server.getCommands().sendCommands(player);
          } // Paper - Add sendOpLevel API
 +
 +        // Lemint start - Purpur Barrels and enderchests 6 rows
-+        if (me.coderfrish.config.misc.EnderChestSixRowsConfig.enderChestSixRows && me.coderfrish.config.misc.EnderChestSixRowsConfig.enderChestPermissionRows) {
++        if (EnderChestSixRowsConfig.enderChestSixRows && EnderChestSixRowsConfig.enderChestPermissionRows) {
 +            org.bukkit.craftbukkit.entity.CraftHumanEntity bukkit = player.getBukkitEntity();
 +            if (bukkit.hasPermission("lemint.enderchest.rows.six")) {
 +                player.sixRowEnderchestSlotCount = 54;
@@ -87,15 +101,24 @@ index 0fffa384f928ab84451331380968fb4650eafe26..c8953e4a221eb261c983768f492222c2
          return new ChestMenu(MenuType.GENERIC_9x6, containerId, playerInventory, container, 6);
      }
 diff --git a/net/minecraft/world/inventory/PlayerEnderChestContainer.java b/net/minecraft/world/inventory/PlayerEnderChestContainer.java
-index 51148b7b95c93a9e25da70ac9275c63f1458d84c..3e030c3301f74aa7faf7a89e6bb63c678331b231 100644
+index 51148b7b95c93a9e25da70ac9275c63f1458d84c..39666aaf9274c9f1c4d962e10414695f9331ce31 100644
 --- a/net/minecraft/world/inventory/PlayerEnderChestContainer.java
 +++ b/net/minecraft/world/inventory/PlayerEnderChestContainer.java
-@@ -26,11 +26,18 @@ public class PlayerEnderChestContainer extends SimpleContainer {
+@@ -1,6 +1,8 @@
+ package net.minecraft.world.inventory;
+ 
+ import javax.annotation.Nullable;
++
++import me.coderfrish.lemonmint.config.misc.EnderChestSixRowsConfig;
+ import net.minecraft.world.ItemStackWithSlot;
+ import net.minecraft.world.SimpleContainer;
+ import net.minecraft.world.entity.player.Player;
+@@ -26,11 +28,18 @@ public class PlayerEnderChestContainer extends SimpleContainer {
      }
  
      public PlayerEnderChestContainer(Player owner) {
 -        super(27);
-+        super(me.coderfrish.config.misc.EnderChestSixRowsConfig.enderChestSixRows ? 54 : 27); // Lemint - Purpur Barrels and enderchests 6 rows
++        super(EnderChestSixRowsConfig.enderChestSixRows ? 54 : 27); // Lemint - Purpur Barrels and enderchests 6 rows
          this.owner = owner;
          // CraftBukkit end
      }
@@ -111,27 +134,36 @@ index 51148b7b95c93a9e25da70ac9275c63f1458d84c..3e030c3301f74aa7faf7a89e6bb63c67
          this.activeChest = enderChestBlockEntity;
      }
 diff --git a/net/minecraft/world/level/block/EnderChestBlock.java b/net/minecraft/world/level/block/EnderChestBlock.java
-index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..cbe77a256c7ab42469206b793547765d11ce8507 100644
+index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..eb94d208e1139a8aed0918528fc829370937ddae 100644
 --- a/net/minecraft/world/level/block/EnderChestBlock.java
 +++ b/net/minecraft/world/level/block/EnderChestBlock.java
-@@ -85,8 +85,8 @@ public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> i
+@@ -2,6 +2,8 @@ package net.minecraft.world.level.block;
+ 
+ import com.mojang.serialization.MapCodec;
+ import javax.annotation.Nullable;
++
++import me.coderfrish.lemonmint.config.misc.EnderChestSixRowsConfig;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.core.particles.ParticleTypes;
+@@ -85,8 +87,8 @@ public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> i
                  enderChestInventory.setActiveChest(enderChestBlockEntity); // Needs to happen before ChestMenu.threeRows as it is required for opening animations
                  if (level instanceof ServerLevel serverLevel && player.openMenu(
                      new SimpleMenuProvider(
 -                        (containerId, playerInventory, player1) -> ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
 -                    )
-+                            (containerId, playerInventory, player1) -> me.coderfrish.config.misc.EnderChestSixRowsConfig.enderChestSixRows ? getEnderChestSixRows(containerId, playerInventory, player, enderChestInventory) : ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
++                            (containerId, playerInventory, player1) -> EnderChestSixRowsConfig.enderChestSixRows ? getEnderChestSixRows(containerId, playerInventory, player, enderChestInventory) : ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
 +                    ) // Lemint - Purpur Barrels and enderchests 6 rows
                  ).isPresent()) {
                  // Paper end - Fix InventoryOpenEvent cancellation - moved up;
                      player.awardStat(Stats.OPEN_ENDERCHEST);
-@@ -100,6 +100,35 @@ public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> i
+@@ -100,6 +102,35 @@ public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> i
          }
      }
  
 +    // Lemint start - Purpur Barrels and enderchests 6 rows
 +    private ChestMenu getEnderChestSixRows(int syncId, net.minecraft.world.entity.player.Inventory inventory, Player player, PlayerEnderChestContainer playerEnderChestContainer) {
-+        if (me.coderfrish.config.misc.EnderChestSixRowsConfig.enderChestPermissionRows) {
++        if (EnderChestSixRowsConfig.enderChestPermissionRows) {
 +            org.bukkit.craftbukkit.entity.CraftHumanEntity bukkitPlayer = player.getBukkitEntity();
 +            if (bukkitPlayer.hasPermission("purpur.enderchest.rows.six")) {
 +                player.sixRowEnderchestSlotCount = 54;
@@ -162,16 +194,23 @@ index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..cbe77a256c7ab42469206b793547765d
      public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
          return new EnderChestBlockEntity(pos, state);
 diff --git a/net/minecraft/world/level/block/entity/BarrelBlockEntity.java b/net/minecraft/world/level/block/entity/BarrelBlockEntity.java
-index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..9ede89faf435a8d9e9d687cf8a0cb56f494bd6c3 100644
+index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..b60338aae4390e2b4e5a9c7cdcb22da5ee0f4c3f 100644
 --- a/net/minecraft/world/level/block/entity/BarrelBlockEntity.java
 +++ b/net/minecraft/world/level/block/entity/BarrelBlockEntity.java
-@@ -56,7 +56,17 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
+@@ -1,5 +1,6 @@
+ package net.minecraft.world.level.block.entity;
+ 
++import me.coderfrish.lemonmint.config.misc.EnderChestSixRowsConfig;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.NonNullList;
+ import net.minecraft.core.Vec3i;
+@@ -56,7 +57,17 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
      }
      // CraftBukkit end
  
 -    private NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
 +    // Lemint start - Purpur Barrels and enderchests 6 rows
-+    private NonNullList<ItemStack> items = NonNullList.withSize(switch (me.coderfrish.config.misc.EnderChestSixRowsConfig.barrelRows) {
++    private NonNullList<ItemStack> items = NonNullList.withSize(switch (EnderChestSixRowsConfig.barrelRows) {
 +        case 6 -> 54;
 +        case 5 -> 45;
 +        case 4 -> 36;
@@ -184,13 +223,13 @@ index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..9ede89faf435a8d9e9d687cf8a0cb56f
      public final ContainerOpenersCounter openersCounter = new ContainerOpenersCounter() {
          @Override
          protected void onOpen(Level level, BlockPos pos, BlockState state) {
-@@ -108,7 +118,16 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
+@@ -108,7 +119,16 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
  
      @Override
      public int getContainerSize() {
 -        return 27;
 +        // Lemint start - Purpur Barrels and enderchests 6 rows
-+        return switch (me.coderfrish.config.misc.EnderChestSixRowsConfig.barrelRows) {
++        return switch (EnderChestSixRowsConfig.barrelRows) {
 +            case 6 -> 54;
 +            case 5 -> 45;
 +            case 4 -> 36;
@@ -202,13 +241,13 @@ index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..9ede89faf435a8d9e9d687cf8a0cb56f
      }
  
      @Override
-@@ -128,7 +147,16 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
+@@ -128,7 +148,16 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
  
      @Override
      protected AbstractContainerMenu createMenu(int id, Inventory player) {
 -        return ChestMenu.threeRows(id, player, this);
 +        // Lemint start - Purpur Barrels and enderchests 6 rows
-+        return switch (me.coderfrish.config.misc.EnderChestSixRowsConfig.barrelRows) {
++        return switch (EnderChestSixRowsConfig.barrelRows) {
 +            case 6 -> ChestMenu.sixRows(id, player, this);
 +            case 5 -> ChestMenu.fiveRows(id, player, this);
 +            case 4 -> ChestMenu.fourRows(id, player, this);

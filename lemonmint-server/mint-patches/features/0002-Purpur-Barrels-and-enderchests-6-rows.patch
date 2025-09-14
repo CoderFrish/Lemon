@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Frish2021 <1573880184@qq.com>
 Date: Sat, 13 Sep 2025 20:34:59 +0800
-Subject: [PATCH] Purpur Barrels and enderchests 6 rows
+Subject: [PATCH] Purpur Barrels and enderchests 6 rows.
 
 
 diff --git a/src/main/resources/assets/mint/lang/en_us.json b/src/main/resources/assets/mint/lang/en_us.json
