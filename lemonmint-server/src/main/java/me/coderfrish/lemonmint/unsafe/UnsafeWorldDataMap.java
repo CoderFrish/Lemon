@@ -1,4 +1,4 @@
-package me.coderfrish.lemonmint.core;
+package me.coderfrish.lemonmint.unsafe;
 
 import io.papermc.paper.threadedregions.RegionizedWorldData;
 import net.minecraft.world.level.Level;

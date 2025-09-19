@@ -1,19 +1,18 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Frish2021 <1573880184@qq.com>
 Date: Sun, 14 Sep 2025 14:26:45 +0800
-Subject: [PATCH] Fixed BukkitScheduler getCurrentWorldData be null in
- executing block operation.
+Subject: [PATCH] Unsafe BukkitScheduler world api executing operation.
 
 
 diff --git a/io/papermc/paper/threadedregions/TickRegionScheduler.java b/io/papermc/paper/threadedregions/TickRegionScheduler.java
-index fa6b8d756195c1b430cc11214a901bd42eebc98d..e8ff2db5fa50372123a2fdfe7c1d019fa89dec1e 100644
+index fa6b8d756195c1b430cc11214a901bd42eebc98d..d03d755128a25f5af7c0216f441f0714e4817564 100644
 --- a/io/papermc/paper/threadedregions/TickRegionScheduler.java
 +++ b/io/papermc/paper/threadedregions/TickRegionScheduler.java
 @@ -5,6 +5,7 @@ import ca.spottedleaf.concurrentutil.util.TimeUtil;
  import ca.spottedleaf.moonrise.common.util.TickThread;
  import com.mojang.logging.LogUtils;
  import io.papermc.paper.util.TraceUtil;
-+import me.coderfrish.lemonmint.core.UnsafeWorldDataMap;
++import me.coderfrish.lemonmint.unsafe.UnsafeWorldDataMap;
  import net.minecraft.server.MinecraftServer;
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.world.level.ChunkPos;
@@ -26,7 +25,7 @@ index fa6b8d756195c1b430cc11214a901bd42eebc98d..e8ff2db5fa50372123a2fdfe7c1d019f
          } else {
              tickThreadRunner.currentTickingWorldRegionizedData = null;
 diff --git a/net/minecraft/world/level/Level.java b/net/minecraft/world/level/Level.java
-index 49b7a7f5a9367dff6231e36049b0f7dd8435f96c..e85c8a6809f56a22e934aa28fea5de689a87a7a4 100644
+index 49b7a7f5a9367dff6231e36049b0f7dd8435f96c..9d8476abea4452b6296d268864735bec72e14564 100644
 --- a/net/minecraft/world/level/Level.java
 +++ b/net/minecraft/world/level/Level.java
 @@ -4,16 +4,16 @@ import com.google.common.collect.Lists;
@@ -41,7 +40,7 @@ index 49b7a7f5a9367dff6231e36049b0f7dd8435f96c..e85c8a6809f56a22e934aa28fea5de68
  import java.util.stream.Collectors;
  import javax.annotation.Nullable;
 +
-+import me.coderfrish.lemonmint.core.UnsafeWorldDataMap;
++import me.coderfrish.lemonmint.unsafe.UnsafeWorldDataMap;
  import net.minecraft.CrashReport;
  import net.minecraft.CrashReportCategory;
 -import net.minecraft.ReportedException;
@@ -81,13 +80,22 @@ index 49b7a7f5a9367dff6231e36049b0f7dd8435f96c..e85c8a6809f56a22e934aa28fea5de68
  import net.minecraft.server.level.ServerLevel;
  import org.bukkit.craftbukkit.CraftServer;
  import org.bukkit.craftbukkit.CraftWorld;
-@@ -819,7 +814,8 @@ public abstract class Level implements LevelAccessor, UUIDLookup<Entity>, AutoCl
+@@ -819,12 +814,13 @@ public abstract class Level implements LevelAccessor, UUIDLookup<Entity>, AutoCl
      public io.papermc.paper.threadedregions.RegionizedWorldData getCurrentWorldData() {
          final io.papermc.paper.threadedregions.RegionizedWorldData ret = io.papermc.paper.threadedregions.TickRegionScheduler.getCurrentRegionizedWorldData();
          if (ret == null) {
 -            return ret;
+-        }
+-        Level world = ret.world;
+-        if (world != this) {
+-            throw new IllegalStateException("World mismatch: expected " + this.getWorld().getName() + " but got " + world.getWorld().getName());
 +//            return ret;
 +            return UnsafeWorldDataMap.get(this);
          }
-         Level world = ret.world;
-         if (world != this) {
++//        Level world = ret.world;
++//        if (world != this) {
++//            throw new IllegalStateException("World mismatch: expected " + this.getWorld().getName() + " but got " + world.getWorld().getName());
++//        }
+         return ret;
+     }
+ 
