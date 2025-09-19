@@ -29,7 +29,7 @@ index d3d3d6468c09b5f33ac98f6938b849d413d1af3d..1c1af85d78f1b123d5cba6ebde7fecfc
              SharedConstants.getCurrentVersion().name(),
              getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
 diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
-index e529f9c42fe9362400fb16c8b7e66e860844abba..ba2fec962cd3e7083b9457289972e973fa8157ae 100644
+index e529f9c42fe9362400fb16c8b7e66e860844abba..ee62d288d1744b8995e78bbdd9d95c0b0b3a8da8 100644
 --- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
 +++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
 @@ -11,7 +11,7 @@ public final class Versioning {
@@ -37,7 +37,7 @@ index e529f9c42fe9362400fb16c8b7e66e860844abba..ba2fec962cd3e7083b9457289972e973
          String result = "Unknown-Version";
  
 -        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/dev.bacteriawa.mint/mint-api/pom.properties"); // Mint
-+        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/me.coderfrish/lemonmint-api/pom.properties"); // LemonMint
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/me.coderfrish.lemonmint/lemonmint-api/pom.properties"); // LemonMint
          Properties properties = new Properties();
  
          if (stream != null) {

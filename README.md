@@ -30,7 +30,7 @@
 
 <dependencies>
     <dependency>
-        <groupId>me.coderfrish</groupId>
+        <groupId>me.coderfrish.lemonmint</groupId>
         <artifactId>lemonmint-api</artifactId>
         <version>1.21.8-R0.1-SNAPSHOT</version>
         <scope>provided</scope>
