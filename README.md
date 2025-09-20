@@ -1,23 +1,29 @@
-<img src="./public/LemonMint.png" alt="Logo" align="right" width="220">
+<img src="./public/LemonMint.png" alt="Logo" align="left" width="220">
 
 # LemonMint
 
-<h4>LemonMint是在Mint的基础上努力让更多的Bukkit插件能够运行，并且在原基础上修复被破坏的特性和改进性能、并添加独特的特性。</h4>
+*LemonMint是在Mint的基础上努力让更多的Bukkit插件能够运行，并且在原基础上修复被破坏的特性和改进性能、并添加独特的特性。*
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/MenthaMC/LemonMint?style=for-the-badge&logo=github&label=Stars&logoColor=white&color=ffda65)
 ![GitHub Release Date](https://img.shields.io/github/release-date/MenthaMC/LemonMint?style=for-the-badge&logo=github&label=Release&logoColor=white&color=06d094)
 ![GitHub Downloads](https://img.shields.io/github/downloads/MenthaMC/LemonMint/total?style=for-the-badge&logo=github&label=Downloads&logoColor=white&color=c4a400)
+![Created At](https://img.shields.io/github/created-at/MenthaMC/LemonMint?style=for-the-badge&color=blue)
+[![License](https://img.shields.io/github/license/MenthaMC/LemonMint?style=for-the-badge&color=green)](README.md)
 
 ## 1 | 下载与构建
 任何版本都可以在 [Release](https://github.com/MenthaMC/LemonMint/releases) 中找到，也可以通过以下步骤构建
 ```shell
+# 克隆LemonMint的代码仓库
+git clone https://github.com/MenthaMC/LemonMint.git
+cd LemonMint
+
+# 应用LemonMint的补丁并创建Paperclip Jar文件
 ./gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar
 ```
 
-## 2 | 特性
- - 一部分的Legacy Bukkit插件支持
- - Purpur的6格末影箱
- - JavaScript脚本插件支持（暂时移除）
+## 2 | 相关特性
+
+ - 重构中，以前的特性全部废弃...
 
 ## 3 | API
 ```xml
@@ -39,7 +45,10 @@
 ```
 
 ## 4 | 联系
-QQ群: [1020403749](https://qm.qq.com/q/RKzZJH4JKW) | Discord群组: [点击加入](https://discord.com/invite/39K7Jz4F) | 邮箱: [3167717663@qq.com](mailto:3167717663@qq.com)
+
+ - QQ群: [1020403749](https://qm.qq.com/q/RKzZJH4JKW) 
+ - Discord群组: [点击加入](https://discord.com/invite/39K7Jz4F) 
+ - 邮箱: [3167717663@qq.com](mailto:3167717663@qq.com)
 
 ## 5 | BStats
 [![bStats Graph Data](https://bstats.org/signatures/server-implementation/LemonMint.svg)](https://bstats.org/plugin/server-implementation/LemonMint)
