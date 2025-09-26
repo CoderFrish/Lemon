@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Fri, 26 Sep 2025 21:05:00 +0800
+Subject: [PATCH] Rebased Paper to Lemon.
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+index 652ff54e7c50412503725d628bfe72ed03059790..3591b9714889876f56085a9e0ceb93191599ed29 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -17,7 +17,12 @@ public interface ServerBuildInfo {
+     /**
+      * The brand id for Paper.
+      */
+-    Key BRAND_PAPER_ID = Key.key("papermc", "paper");
++//    Key BRAND_PAPER_ID = Key.key("papermc", "paper");
++
++    /**
++     * The brand id for Lemon.
++     */
++    Key BRAND_LEMON_ID = Key.key("coderfrish", "lemon");
+ 
+     /**
+      * Gets the {@code ServerBuildInfo}.
