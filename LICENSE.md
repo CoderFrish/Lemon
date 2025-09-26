@@ -1,21 +1,10 @@
 # LemonMint license
 
-LemonMint inherits its licensing from the included upstream projects.
+LemonMint inherits licenses from upstream projects.
 
-As such, LemonMint is licensed under the
-[GNU General Public License version 3](licenses/GPL-3.md); as it inherits it from Folia,
-who in turn inherits it from the original Paper, Spigot, Bukkit and CraftBukkit projects.
+Paperweight files are licensed under [MIT](https://opensource.org/licenses/MIT) (included in `licenses/MIT.txt`).
+Patches are licensed under MIT, unless indicated differently in their header (some patches are licensed under [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) (included in `licenses/GPL-3.0.txt`), [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.html) (included in `licenses/LGPL-3.0.txt`), or [Apache-2.0](https://www.apache.org/licenses/) (included in `licenses/Apache-2.0.txt`)).
+Certain patches are derived from other projects and retain the original licenses, as noted in the patch header.
+Binaries are licensed under GPL-3.0.
 
-Any author who is _not_ listed below should be presumed to have released their work
-under the original [GPL](licenses/GPL-3.md) license.
-
-In the interest of promoting a better Minecraft platform for everyone, contributors
-may choose to release their code under the more permissive [MIT License](licenses/MIT.md).
-
-The authors listed below have chosen to release their code under that more permissive
-[MIT License](licenses/MIT.md). Any contributor who wants their name added below
-should submit a pull request to this project to add their name.
-
-```text
-
-```
+Also see [PaperMC/Paper](https://github.com/PaperMC/Paper), [PaperMC/paperweight](https://github.com/PaperMC/paperweight), and the repositories of other dependencies used by this project for their respective licenses.

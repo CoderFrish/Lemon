@@ -1,15 +1,10 @@
 .gradle/
 .idea/
-.vscode/
 build/
 run/
 
-lemonmint-server/build.gradle.kts
-lemonmint-api/build.gradle.kts
-lemonmint-server/src/minecraft/
+lemon-server/build.gradle.kts
+lemon-api/build.gradle.kts
+lemon-server/src/minecraft/
 paper-server/
 paper-api/
-mint-api/
-mint-server/
-folia-api/
-folia-server/
