@@ -3,8 +3,8 @@
 build/
 run/
 
-lemon-server/build.gradle.kts
-lemon-api/build.gradle.kts
-lemon-server/src/minecraft/
+traium-server/build.gradle.kts
+traium-api/build.gradle.kts
+traium-server/src/minecraft/
 paper-server/
 paper-api/
