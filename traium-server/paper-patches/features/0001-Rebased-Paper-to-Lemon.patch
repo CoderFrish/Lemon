@@ -14,7 +14,7 @@ index 74ffdc823e66fc5ec027c4b7c462382bcbfe2be2..0c5c4a2ac12a5c71f47e5ddf24bc3477
  
 -    private static final String BRAND_PAPER_NAME = "Paper";
 +//    private static final String BRAND_PAPER_NAME = "Paper";
-+    private static final String BRAND_Lemon_NAME = "Lemon";
++    private static final String BRAND_TRAIUM_NAME = "Traium";
  
      private static final String BUILD_DEV = "DEV";
  
@@ -23,10 +23,10 @@ index 74ffdc823e66fc5ec027c4b7c462382bcbfe2be2..0c5c4a2ac12a5c71f47e5ddf24bc3477
              getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
                  .map(Key::key)
 -                .orElse(BRAND_PAPER_ID),
-+                .orElse(BRAND_LEMON_ID),
++                .orElse(BRAND_TRAIUM_ID),
              getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
 -                .orElse(BRAND_PAPER_NAME),
-+                .orElse(BRAND_Lemon_NAME),
++                .orElse(BRAND_TRAIUM_NAME),
              SharedConstants.getCurrentVersion().id(),
              SharedConstants.getCurrentVersion().name(),
              getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
@@ -39,7 +39,7 @@ index 774556a62eb240da42e84db4502e2ed43495be17..c03183032f72d5fdf10853b5cd833ba1
          String result = "Unknown-Version";
  
 -        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/io.papermc.paper/paper-api/pom.properties");
-+        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/me.coderfrish.lemon/lemon-api/pom.properties");
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/me.coderfrish.traium/traium-api/pom.properties");
          Properties properties = new Properties();
  
          if (stream != null) {

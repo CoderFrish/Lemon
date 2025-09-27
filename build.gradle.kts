@@ -12,20 +12,20 @@ paperweight {
 
         patchFile {
             path = "paper-server/build.gradle.kts"
-            outputFile = file("lemon-server/build.gradle.kts")
-            patchFile = file("lemon-server/build.gradle.kts.patch")
+            outputFile = file("traium-server/build.gradle.kts")
+            patchFile = file("traium-server/build.gradle.kts.patch")
         }
 
         patchFile {
             path = "paper-api/build.gradle.kts"
-            outputFile = file("lemon-api/build.gradle.kts")
-            patchFile = file("lemon-api/build.gradle.kts.patch")
+            outputFile = file("traium-api/build.gradle.kts")
+            patchFile = file("traium-api/build.gradle.kts.patch")
         }
 
         patchDir("paperApi") {
             upstreamPath = "paper-api"
             excludes = setOf("build.gradle.kts")
-            patchesDir = file("lemon-api/paper-patches")
+            patchesDir = file("traium-api/paper-patches")
             outputDir = file("paper-api")
         }
     }

@@ -1,6 +1,6 @@
-# LemonMint license
+# Traium license
 
-LemonMint inherits licenses from upstream projects.
+Traium inherits licenses from upstream projects.
 
 Paperweight files are licensed under [MIT](https://opensource.org/licenses/MIT) (included in `licenses/MIT.txt`).
 Patches are licensed under MIT, unless indicated differently in their header (some patches are licensed under [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) (included in `licenses/GPL-3.0.txt`), [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.html) (included in `licenses/LGPL-3.0.txt`), or [Apache-2.0](https://www.apache.org/licenses/) (included in `licenses/Apache-2.0.txt`)).

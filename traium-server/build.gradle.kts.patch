@@ -4,16 +4,16 @@
      minecraftVersion = providers.gradleProperty("mcVersion")
      gitFilePatches = false
  
-+    val lemon = forks.register("lemon") {
++    val traium = forks.register("traium") {
 +        upstream.patchDir("paperServer") {
 +            upstreamPath = "paper-server"
 +            excludes = setOf("src/minecraft", "patches", "build.gradle.kts")
-+            patchesDir = rootDirectory.dir("lemon-server/paper-patches")
++            patchesDir = rootDirectory.dir("traium-server/paper-patches")
 +            outputDir = rootDirectory.dir("paper-server")
 +        }
 +    }
 +
-+    activeFork = lemon
++    activeFork = traium
 +
      spigot {
          enabled = true
@@ -35,7 +35,7 @@
  
  dependencies {
 -    implementation(project(":paper-api"))
-+    implementation(project(":lemon-api"))
++    implementation(project(":traium-api"))
      implementation("ca.spottedleaf:concurrentutil:0.0.3")
      implementation("org.jline:jline-terminal-ffm:3.27.1") // use ffm on java 22+
      implementation("org.jline:jline-terminal-jni:3.27.1") // fall back to jni on java 21
@@ -63,18 +63,18 @@
          attributes(
              "Main-Class" to "org.bukkit.craftbukkit.Main",
 -            "Implementation-Title" to "Paper",
-+            "Implementation-Title" to "Lemon",
++            "Implementation-Title" to "Traium",
              "Implementation-Version" to implementationVersion,
              "Implementation-Vendor" to date,
 -            "Specification-Title" to "Paper",
-+            "Specification-Title" to "Lemon",
++            "Specification-Title" to "Traium",
              "Specification-Version" to project.version,
 -            "Specification-Vendor" to "Paper Team",
 -            "Brand-Id" to "papermc:paper",
 -            "Brand-Name" to "Paper",
 +            "Specification-Vendor" to "CoderFrish",
-+            "Brand-Id" to "coderfrish:lemon",
-+            "Brand-Name" to "Lemon",
++            "Brand-Id" to "coderfrish:traium",
++            "Brand-Name" to "Traium",
              "Build-Number" to (build ?: ""),
              "Build-Time" to buildTime.toString(),
              "Git-Branch" to gitBranch,
@@ -83,7 +83,7 @@
  
  fill {
 -    project("paper")
-+    project("lemon")
++    project("traium")
      versionFamily(paperweight.minecraftVersion.map { it.split(".", "-").takeWhile { part -> part.toIntOrNull() != null }.take(2).joinToString(".") })
      version(paperweight.minecraftVersion)
  

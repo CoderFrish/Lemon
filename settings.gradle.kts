@@ -9,6 +9,6 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-rootProject.name = "lemon"
-include("lemon-api")
-include("lemon-server")
+rootProject.name = "traium"
+include("traium-api")
+include("traium-server")
