@@ -1,0 +1,20 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Sat, 27 Sep 2025 21:09:58 +0800
+Subject: [PATCH] Rebased Paper to Traium.
+
+
+diff --git a/net/minecraft/server/packs/repository/ServerPacksSource.java b/net/minecraft/server/packs/repository/ServerPacksSource.java
+index 3d482f3eed2d320477d5375a04ebdde22820a00f..87defd67d00f045d1ef1b33cb42581de69582432 100644
+--- a/net/minecraft/server/packs/repository/ServerPacksSource.java
++++ b/net/minecraft/server/packs/repository/ServerPacksSource.java
+@@ -74,6 +74,9 @@ public class ServerPacksSource extends BuiltInPackSource {
+         if ("paper".equals(id)) {
+             info = new PackLocationInfo(id, title, PackSource.BUILT_IN, Optional.empty());
+             packConfig = new PackSelectionConfig(true, Pack.Position.TOP, true);
++        } else if ("traium".equals(id)) {
++            info = new PackLocationInfo(id, title, PackSource.BUILT_IN, Optional.empty());
++            packConfig = new PackSelectionConfig(true, Pack.Position.TOP, true);
+         } else {
+             info = createBuiltInPackLocation(id, title);
+             packConfig = FEATURE_SELECTION_CONFIG;
