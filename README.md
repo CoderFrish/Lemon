@@ -39,5 +39,5 @@ cd Lemon
 > [!TIP]
 > 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
 
-[![Star](https://www.star-history.com/embed?secret=#CoderFrish/Lemon&Date)](https://www.star-history.com/#CoderFrish/Lemon&Date) \
+[![Star](https://api.star-history.com/svg?repos=CoderFrish/Lemon&type=Date)](https://www.star-history.com/#CoderFrish/Lemon&Date) \
 如果你想为Lemon贡献代码，可以通过Fork此项目并发布Pull Request，如果贡献的代码你觉得激进的话，那么请务必添加可开关的选项。
