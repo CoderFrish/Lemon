@@ -44,3 +44,4 @@ jobs:
             - **Build Date**: ${{ env.build_date }}
           artifacts: traium-server/build/libs/Traium-${{ env.version }}.jar
           token: ${{ secrets.GITHUB_TOKEN }}
+          makeLatest: true
