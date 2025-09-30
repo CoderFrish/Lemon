@@ -1,4 +1,4 @@
-name: Deploy By Traium CI
+name: Deploy Traium By Traium CI
 
 on:
   push:
