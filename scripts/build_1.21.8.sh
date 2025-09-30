@@ -3,7 +3,7 @@ prop() {
 }
 
 mcversion=$(prop mcVersion)
-grdversion=$(prop version)
+version=$(prop version)
 commitid=$(git log --pretty='%h' -1)
 build_date=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
 
@@ -14,10 +14,10 @@ chmod +x gradlew
 ./gradlew applyAllPatches
 ./gradlew createMojmapPaperclipJar
 
-echo "version=$grdversion" >> $GITHUB_ENV
+echo "version=$version" >> $GITHUB_ENV
 echo "mcversion=$mcversion" >> $GITHUB_ENV
 echo "commit_id=$commitid" >> $GITHUB_ENV
-echo "build_date=$BUILD_DATE" >> $GITHUB_ENV
+echo "build_date=$build_date" >> $GITHUB_ENV
 echo "commit_msg=$(git log --pretty='> [%h] %s' -1)" >> $GITHUB_ENV
 
-mv traium-server/build/libs/traium-paperclip-$grdversion-mojmap.jar traium-server/build/libs/traium-$grdversion.jar
+mv traium-server/build/libs/traium-paperclip-$version-mojmap.jar traium-server/build/libs/Traium-$version.jar
