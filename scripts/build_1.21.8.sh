@@ -20,4 +20,4 @@ echo "commit_id=$commitid" >> $GITHUB_ENV
 echo "build_date=$BUILD_DATE" >> $GITHUB_ENV
 echo "commit_msg=$(git log --pretty='> [%h] %s' -1)" >> $GITHUB_ENV
 
-mv traium-server/build/libs/traium-paperclip-$grdversion-mojmap.jar build/libs/traium-$grdversion.jar
+mv traium-server/build/libs/traium-paperclip-$grdversion-mojmap.jar traium-server/build/libs/traium-$grdversion.jar
