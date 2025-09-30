@@ -26,7 +26,6 @@ jobs:
         run: sh scripts/build_1.21.8.sh
 
       - name: Create Release
-        if: github.event_name != 'pull_request'
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ env.commit_id }}
