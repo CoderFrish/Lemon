@@ -1,3 +1,5 @@
+<img src="public/logo.png" width="200" align="left"/>
+
 # Traium
 
 *一个上游为Paper的服务端*
