@@ -3,6 +3,12 @@ name: Deploy Traium By Traium CI
 on:
   push:
     branches: [ "ver/1.21.8" ]
+    paths-ignore:
+      - README.md
+      - LICENSE.md
+      - .gitignore
+      - licenses/**/*
+      - public/**/*
 
 jobs:
   build:
