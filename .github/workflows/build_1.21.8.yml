@@ -38,10 +38,10 @@ jobs:
             > This release is automatically built by GitHub Actions.
               
             #### 📜 Latest Commit Message:
-            > ${{ env.commit_msg }}
+            ${{ env.commit_msg }}
               
             #### 📊 Build Information:
             - **Build Status**: ✅ Success
             - **Build Date**: ${{ env.build_date }}
-          artifacts: build/libs/traium-${{ env.version }}.jar
+          artifacts: traium-server/build/libs/traium-${{ env.version }}.jar
           token: ${{ secrets.GITHUB_TOKEN }}
