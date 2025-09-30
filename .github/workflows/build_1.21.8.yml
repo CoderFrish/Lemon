@@ -33,7 +33,7 @@ jobs:
           name: Traium ${{ env.mcversion }} - ${{ env.commit_id }}
           body: |
             ### 📦 Version: `${{ env.mcversion }}` | Commit: [${{ env.commit_id }}](https://github.com/CoderFrish/commit/${{ env.commit_id }})
-            ![download](https://img.shields.io/github/downloads/CoderFrish/Traium/${{ env.commit_id }}/total?color=red&style=flat-square)
+            ![download](https://img.shields.io/github/downloads/CoderFrish/Traium/${{ env.commit_id }}/total?style=for-the-badge)
               
             > This release is automatically built by GitHub Actions.
               
@@ -43,5 +43,5 @@ jobs:
             #### 📊 Build Information:
             - **Build Status**: ✅ Success
             - **Build Date**: ${{ env.build_date }}
-          artifacts: traium-server/build/libs/traium-${{ env.version }}.jar
+          artifacts: traium-server/build/libs/Traium-${{ env.version }}.jar
           token: ${{ secrets.GITHUB_TOKEN }}
