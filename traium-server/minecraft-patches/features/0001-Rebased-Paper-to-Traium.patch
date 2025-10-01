@@ -4,33 +4,19 @@ Date: Sat, 27 Sep 2025 21:09:58 +0800
 Subject: [PATCH] Rebased Paper to Traium.
 
 
-diff --git a/net/minecraft/locale/Language.java b/net/minecraft/locale/Language.java
-index 7b9e2a1a208b46a69c16e6afd8b502259893574f..2ca21650cbbb79c34b4006e10fa8851ec40e1d75 100644
---- a/net/minecraft/locale/Language.java
-+++ b/net/minecraft/locale/Language.java
-@@ -65,7 +65,7 @@ public abstract class Language {
-         };
-     }
- 
--    private static void parseTranslations(BiConsumer<String, String> output, String languagePath) {
-+    public static void parseTranslations(BiConsumer<String, String> output, String languagePath) {
-         try (InputStream resourceAsStream = Language.class.getResourceAsStream(languagePath)) {
-             loadFromJson(resourceAsStream, output);
-         } catch (JsonParseException | IOException var7) {
 diff --git a/net/minecraft/server/Main.java b/net/minecraft/server/Main.java
-index fd3553bdc1c3cdbf6aa3dc00e0a4987f8eaa4fb8..f6c0d06fa4b13d4f651effbfdd36c6aff618e79e 100644
+index fd3553bdc1c3cdbf6aa3dc00e0a4987f8eaa4fb8..040398588c8f790638246ba00d744f78f7a52312 100644
 --- a/net/minecraft/server/Main.java
 +++ b/net/minecraft/server/Main.java
-@@ -20,6 +20,8 @@ import joptsimple.OptionParser;
+@@ -20,6 +20,7 @@ import joptsimple.OptionParser;
  import joptsimple.OptionSet;
  import joptsimple.OptionSpec;
  import joptsimple.util.PathConverter;
 +import me.coderfrish.traium.config.TraiumConfig;
-+import me.coderfrish.traium.i18n.TraiumI18n;
  import net.minecraft.CrashReport;
  import net.minecraft.DefaultUncaughtExceptionHandler;
  import net.minecraft.SharedConstants;
-@@ -108,6 +110,7 @@ public class Main {
+@@ -108,6 +109,7 @@ public class Main {
              if (optionSet.has("jfrProfile")) { // CraftBukkit
                  JvmProfiler.INSTANCE.start(Environment.SERVER);
              }
@@ -38,15 +24,6 @@ index fd3553bdc1c3cdbf6aa3dc00e0a4987f8eaa4fb8..f6c0d06fa4b13d4f651effbfdd36c6af
  
              io.papermc.paper.plugin.PluginInitializerManager.load(optionSet); // Paper
              Bootstrap.bootStrap();
-@@ -141,6 +144,8 @@ public class Main {
-                 return;
-             }
- 
-+            TraiumI18n.init(); // Traium - Supported Traium I18n.
-+
-             // Spigot start
-             boolean eulaAgreed = Boolean.getBoolean("com.mojang.eula.agree");
-             if (eulaAgreed) {
 diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
 index 9243bb11e3f968d0bf0eb2e3dc9295c0232bc15d..094e3ba7f7be903d112910b6eb61a07e2a5825b5 100644
 --- a/net/minecraft/server/MinecraftServer.java
@@ -60,25 +37,23 @@ index 9243bb11e3f968d0bf0eb2e3dc9295c0232bc15d..094e3ba7f7be903d112910b6eb61a07e
      }
  
 diff --git a/net/minecraft/server/dedicated/DedicatedServer.java b/net/minecraft/server/dedicated/DedicatedServer.java
-index 98927d4a5fba2a0dcdb147ac10b82c3286ccdc6b..06d319605051569afd7c8f2c07228a9f8001b0b1 100644
+index 98927d4a5fba2a0dcdb147ac10b82c3286ccdc6b..c329ae20c2cb51423fe893d78d6e356c52e7a2c3 100644
 --- a/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -19,6 +19,9 @@ import java.util.List;
+@@ -19,6 +19,8 @@ import java.util.List;
  import java.util.Locale;
  import java.util.Optional;
  import javax.annotation.Nullable;
 +
 +import me.coderfrish.traium.config.TraiumConfig;
-+import me.coderfrish.traium.i18n.TraiumI18n;
  import net.minecraft.DefaultUncaughtExceptionHandler;
  import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
  import net.minecraft.SharedConstants;
-@@ -161,6 +164,9 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -161,6 +163,8 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              this.setLocalIp(properties.serverIp);
          }
  
 +        TraiumConfig.setupTraium(); // Traium - Setup Traium config System.
-+        TraiumI18n.preInit(); // Traium - Supported Traium I18n.
 +
          // Spigot start
          this.setPlayerList(new DedicatedPlayerList(this, this.registries(), this.playerDataStorage));
