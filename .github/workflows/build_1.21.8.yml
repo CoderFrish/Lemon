@@ -9,6 +9,7 @@ on:
       - .gitignore
       - licenses/**/*
       - public/**/*
+      - .gitattributes
 
 jobs:
   build:
