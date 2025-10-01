@@ -1,4 +1,4 @@
-package me.coderfrish.traium.configuration;
+package me.coderfrish.traium.config;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

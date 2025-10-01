@@ -1,4 +1,4 @@
-package me.coderfrish.traium.configuration;
+package me.coderfrish.traium.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 
@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 
-import static me.coderfrish.traium.TraiumConstants.CONFIG_GLOBAL_FILE;
+import static me.coderfrish.traium.utils.Constants.CONFIG_GLOBAL_FILE;
 
 public class TraiumConfig {
     private static final String CONFIG_NAME_PATTERN = "^[A-Za-z0-9-_]+$";
@@ -47,8 +47,7 @@ public class TraiumConfig {
     })
     public static String serverBrandName = "Traium";
 
-    public static void setupTraium() {
-    }
+    public static void setupTraium() {}
 
     public static void loadAllConfig() throws Exception {
         loadAllConfigValue();

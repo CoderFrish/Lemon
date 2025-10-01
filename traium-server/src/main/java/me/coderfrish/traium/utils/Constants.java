@@ -1,8 +1,8 @@
-package me.coderfrish.traium;
+package me.coderfrish.traium.utils;
 
 import java.io.File;
 
-public class TraiumConstants {
+public class Constants {
     public static final File CONFIG_FOLDER = new File("traium_config");
 
     public static final File CONFIG_GLOBAL_FILE = new File(CONFIG_FOLDER, "traium_global.toml");

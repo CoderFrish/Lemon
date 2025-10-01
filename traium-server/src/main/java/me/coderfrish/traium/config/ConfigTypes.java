@@ -1,4 +1,4 @@
-package me.coderfrish.traium.configuration;
+package me.coderfrish.traium.config;
 
 public enum ConfigTypes {
     globals("globals"),

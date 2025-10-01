@@ -5,7 +5,7 @@ Subject: [PATCH] Purpur Barrels and enderchests six rows.
 
 
 diff --git a/net/minecraft/server/players/PlayerList.java b/net/minecraft/server/players/PlayerList.java
-index e1fd699b33832c0f01b14023db7cc2b9d6797227..9f65e887ba104a1c3ee385b3b1dacd813e320972 100644
+index e1fd699b33832c0f01b14023db7cc2b9d6797227..3851b43a052b00408aa25e5749ccdc09f261982a 100644
 --- a/net/minecraft/server/players/PlayerList.java
 +++ b/net/minecraft/server/players/PlayerList.java
 @@ -985,6 +985,27 @@ public abstract class PlayerList {
@@ -14,7 +14,7 @@ index e1fd699b33832c0f01b14023db7cc2b9d6797227..9f65e887ba104a1c3ee385b3b1dacd81
          } // Paper - Add sendOpLevel API
 +
 +        // Traium start - Purpur Barrels and enderchests 6 rows
-+        if (me.coderfrish.traium.configuration.TraiumConfig.enderChestSixRows && me.coderfrish.traium.configuration.TraiumConfig.enderChestPermissionRows) {
++        if (me.coderfrish.traium.config.TraiumConfig.enderChestSixRows && me.coderfrish.traium.config.TraiumConfig.enderChestPermissionRows) {
 +            org.bukkit.craftbukkit.entity.CraftHumanEntity bukkit = player.getBukkitEntity();
 +            if (bukkit.hasPermission("traium.enderchest.rows.six")) {
 +                player.sixRowEnderchestSlotCount = 54;
@@ -85,7 +85,7 @@ index 0fffa384f928ab84451331380968fb4650eafe26..ea2fd33356458d52c7a6de38144601f6
      public ChestMenu(MenuType<?> type, int containerId, Inventory playerInventory, Container container, int rows) {
          super(type, containerId);
 diff --git a/net/minecraft/world/inventory/PlayerEnderChestContainer.java b/net/minecraft/world/inventory/PlayerEnderChestContainer.java
-index 51148b7b95c93a9e25da70ac9275c63f1458d84c..337bf0da894bab50a9b60a61345c3c0e93c326b1 100644
+index 51148b7b95c93a9e25da70ac9275c63f1458d84c..5697dc7808b2ccf2a644eb2ab79fc5ba8bea7989 100644
 --- a/net/minecraft/world/inventory/PlayerEnderChestContainer.java
 +++ b/net/minecraft/world/inventory/PlayerEnderChestContainer.java
 @@ -26,11 +26,18 @@ public class PlayerEnderChestContainer extends SimpleContainer {
@@ -93,7 +93,7 @@ index 51148b7b95c93a9e25da70ac9275c63f1458d84c..337bf0da894bab50a9b60a61345c3c0e
  
      public PlayerEnderChestContainer(Player owner) {
 -        super(27);
-+        super(me.coderfrish.traium.configuration.TraiumConfig.enderChestSixRows ? 54 : 27); // Traium - Purpur Barrels and enderchests 6 rows
++        super(me.coderfrish.traium.config.TraiumConfig.enderChestSixRows ? 54 : 27); // Traium - Purpur Barrels and enderchests 6 rows
          this.owner = owner;
          // CraftBukkit end
      }
@@ -109,7 +109,7 @@ index 51148b7b95c93a9e25da70ac9275c63f1458d84c..337bf0da894bab50a9b60a61345c3c0e
          this.activeChest = enderChestBlockEntity;
      }
 diff --git a/net/minecraft/world/level/block/EnderChestBlock.java b/net/minecraft/world/level/block/EnderChestBlock.java
-index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..ef30b17195609d02c012385d43af475c8cee7101 100644
+index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..e2ebbea0aa3936899850380ac498cdfa93e3f290 100644
 --- a/net/minecraft/world/level/block/EnderChestBlock.java
 +++ b/net/minecraft/world/level/block/EnderChestBlock.java
 @@ -85,8 +85,8 @@ public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> i
@@ -118,7 +118,7 @@ index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..ef30b17195609d02c012385d43af475c
                      new SimpleMenuProvider(
 -                        (containerId, playerInventory, player1) -> ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
 -                    )
-+                            (containerId, playerInventory, player1) -> me.coderfrish.traium.configuration.TraiumConfig.enderChestSixRows ? getEnderChestSixRows(containerId, playerInventory, player, enderChestInventory) : ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
++                            (containerId, playerInventory, player1) -> me.coderfrish.traium.config.TraiumConfig.enderChestSixRows ? getEnderChestSixRows(containerId, playerInventory, player, enderChestInventory) : ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
 +                    ) // Traium - Purpur Barrels and enderchests 6 rows
                  ).isPresent()) {
                  // Paper end - Fix InventoryOpenEvent cancellation - moved up;
@@ -129,7 +129,7 @@ index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..ef30b17195609d02c012385d43af475c
  
 +    // Traium start - Purupr Barrels and enderchests 6 rows
 +    private ChestMenu getEnderChestSixRows(int syncId, net.minecraft.world.entity.player.Inventory inventory, Player player, PlayerEnderChestContainer playerEnderChestContainer) {
-+        if (me.coderfrish.traium.configuration.TraiumConfig.enderChestPermissionRows) {
++        if (me.coderfrish.traium.config.TraiumConfig.enderChestPermissionRows) {
 +            org.bukkit.craftbukkit.entity.CraftHumanEntity bukkitPlayer = player.getBukkitEntity();
 +            if (bukkitPlayer.hasPermission("traium.enderchest.rows.six")) {
 +                player.sixRowEnderchestSlotCount = 54;
@@ -160,7 +160,7 @@ index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..ef30b17195609d02c012385d43af475c
      public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
          return new EnderChestBlockEntity(pos, state);
 diff --git a/net/minecraft/world/level/block/entity/BarrelBlockEntity.java b/net/minecraft/world/level/block/entity/BarrelBlockEntity.java
-index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..9eb1003ff0888f67d0e766bc3b7c96c49501617f 100644
+index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..561195318bb36d531a3946c20da62b655e8e35b4 100644
 --- a/net/minecraft/world/level/block/entity/BarrelBlockEntity.java
 +++ b/net/minecraft/world/level/block/entity/BarrelBlockEntity.java
 @@ -56,7 +56,15 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
@@ -168,7 +168,7 @@ index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..9eb1003ff0888f67d0e766bc3b7c96c4
      // CraftBukkit end
  
 -    private NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
-+    private NonNullList<ItemStack> items = NonNullList.withSize(switch (me.coderfrish.traium.configuration.TraiumConfig.barrelRows) {
++    private NonNullList<ItemStack> items = NonNullList.withSize(switch (me.coderfrish.traium.config.TraiumConfig.barrelRows) {
 +        case 6 -> 54;
 +        case 5 -> 45;
 +        case 4 -> 36;
@@ -185,7 +185,7 @@ index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..9eb1003ff0888f67d0e766bc3b7c96c4
      @Override
      public int getContainerSize() {
 -        return 27;
-+        return switch (me.coderfrish.traium.configuration.TraiumConfig.barrelRows) {
++        return switch (me.coderfrish.traium.config.TraiumConfig.barrelRows) {
 +            case 6 -> 54;
 +            case 5 -> 45;
 +            case 4 -> 36;
@@ -203,7 +203,7 @@ index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..9eb1003ff0888f67d0e766bc3b7c96c4
      protected AbstractContainerMenu createMenu(int id, Inventory player) {
 -        return ChestMenu.threeRows(id, player, this);
 +        // Traium start - Purpur Barrels and enderchests 6 rows
-+        return switch (me.coderfrish.traium.configuration.TraiumConfig.barrelRows) {
++        return switch (me.coderfrish.traium.config.TraiumConfig.barrelRows) {
 +            case 6 -> ChestMenu.sixRows(id, player, this);
 +            case 5 -> ChestMenu.fiveRows(id, player, this);
 +            case 4 -> ChestMenu.fourRows(id, player, this);
