@@ -1,7 +1,8 @@
 package me.coderfrish.traium.configuration;
 
 public enum ConfigTypes {
-    globals("globals");
+    globals("globals"),
+    misc("misc");
 
     private final String keyword;
 

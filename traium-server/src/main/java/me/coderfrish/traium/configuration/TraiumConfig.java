@@ -21,6 +21,15 @@ public class TraiumConfig {
         }
     }
 
+    @ConfigField(type = ConfigTypes.misc, parent = "ender_chest_six_rows")
+    public static int barrelRows = 3;
+
+    @ConfigField(type = ConfigTypes.misc, parent = "ender_chest_six_rows")
+    public static boolean enderChestSixRows = false;
+
+    @ConfigField(type = ConfigTypes.misc, parent = "ender_chest_six_rows")
+    public static boolean enderChestPermissionRows = false;
+
     public static void setupTraium() {
     }
 
