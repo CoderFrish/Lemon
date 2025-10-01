@@ -7,7 +7,6 @@ on:
       - README.md
       - LICENSE.md
       - .gitignore
-      - licenses/**/*
       - public/**/*
       - .gitattributes
 
