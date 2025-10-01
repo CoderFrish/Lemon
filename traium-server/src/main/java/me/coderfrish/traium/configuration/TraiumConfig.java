@@ -30,6 +30,9 @@ public class TraiumConfig {
     @ConfigField(type = ConfigTypes.misc, parent = "ender_chest_six_rows")
     public static boolean enderChestPermissionRows = false;
 
+    @ConfigField(type = ConfigTypes.misc, parent = "server_brand_name")
+    public static String serverModName = "Traium";
+
     public static void setupTraium() {
     }
 

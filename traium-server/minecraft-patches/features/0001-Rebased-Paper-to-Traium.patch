@@ -4,6 +4,60 @@ Date: Sat, 27 Sep 2025 21:09:58 +0800
 Subject: [PATCH] Rebased Paper to Traium.
 
 
+diff --git a/net/minecraft/server/Main.java b/net/minecraft/server/Main.java
+index fd3553bdc1c3cdbf6aa3dc00e0a4987f8eaa4fb8..ab860ca4003fad40dcfee6d03ec6a5f86ad32edc 100644
+--- a/net/minecraft/server/Main.java
++++ b/net/minecraft/server/Main.java
+@@ -20,6 +20,7 @@ import joptsimple.OptionParser;
+ import joptsimple.OptionSet;
+ import joptsimple.OptionSpec;
+ import joptsimple.util.PathConverter;
++import me.coderfrish.traium.configuration.TraiumConfig;
+ import net.minecraft.CrashReport;
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.SharedConstants;
+@@ -108,6 +109,7 @@ public class Main {
+             if (optionSet.has("jfrProfile")) { // CraftBukkit
+                 JvmProfiler.INSTANCE.start(Environment.SERVER);
+             }
++            TraiumConfig.loadAllConfig(); // Traium - Setup Traium Configuration System.
+ 
+             io.papermc.paper.plugin.PluginInitializerManager.load(optionSet); // Paper
+             Bootstrap.bootStrap();
+diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
+index 9243bb11e3f968d0bf0eb2e3dc9295c0232bc15d..65251d733278ae9cc5312271ead2f1b632f40c2c 100644
+--- a/net/minecraft/server/MinecraftServer.java
++++ b/net/minecraft/server/MinecraftServer.java
+@@ -1856,6 +1856,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+ 
+     @DontObfuscate
+     public String getServerModName() {
++        if(true) return me.coderfrish.traium.configuration.TraiumConfig.serverModName;
+         return io.papermc.paper.ServerBuildInfo.buildInfo().brandName(); // Paper
+     }
+ 
+diff --git a/net/minecraft/server/dedicated/DedicatedServer.java b/net/minecraft/server/dedicated/DedicatedServer.java
+index 98927d4a5fba2a0dcdb147ac10b82c3286ccdc6b..63f117b7144ba901c57af7343fa9124184d947fb 100644
+--- a/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -19,6 +19,8 @@ import java.util.List;
+ import java.util.Locale;
+ import java.util.Optional;
+ import javax.annotation.Nullable;
++
++import me.coderfrish.traium.configuration.TraiumConfig;
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
+ import net.minecraft.SharedConstants;
+@@ -161,6 +163,8 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             this.setLocalIp(properties.serverIp);
+         }
+ 
++        TraiumConfig.setupTraium(); // Traium - Setup Traium Configuration System.
++
+         // Spigot start
+         this.setPlayerList(new DedicatedPlayerList(this, this.registries(), this.playerDataStorage));
+         org.spigotmc.SpigotConfig.init((java.io.File) this.options.valueOf("spigot-settings"));
 diff --git a/net/minecraft/server/packs/repository/ServerPacksSource.java b/net/minecraft/server/packs/repository/ServerPacksSource.java
 index 3d482f3eed2d320477d5375a04ebdde22820a00f..6e1f6033b4e851426fba4964ba90beb7d36887eb 100644
 --- a/net/minecraft/server/packs/repository/ServerPacksSource.java
