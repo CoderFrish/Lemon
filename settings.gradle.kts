@@ -10,5 +10,6 @@ plugins {
 }
 
 rootProject.name = "traium"
+include("test-plugin")
 include("traium-api")
 include("traium-server")
