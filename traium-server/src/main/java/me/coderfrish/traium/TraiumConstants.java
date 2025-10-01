@@ -3,5 +3,13 @@ package me.coderfrish.traium;
 import java.io.File;
 
 public class TraiumConstants {
-    public static final File CONFIG_FILE = new File("traium.toml");
+    public static final File CONFIG_FOLDER = new File("traium_config");
+
+    public static final File CONFIG_GLOBAL_FILE = new File(CONFIG_FOLDER, "traium_global.toml");
+
+    static {
+        if (!CONFIG_FOLDER.exists()) {
+            CONFIG_FOLDER.mkdirs();
+        }
+    }
 }

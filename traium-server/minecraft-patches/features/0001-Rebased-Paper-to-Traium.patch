@@ -25,14 +25,14 @@ index fd3553bdc1c3cdbf6aa3dc00e0a4987f8eaa4fb8..ab860ca4003fad40dcfee6d03ec6a5f8
              io.papermc.paper.plugin.PluginInitializerManager.load(optionSet); // Paper
              Bootstrap.bootStrap();
 diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
-index 9243bb11e3f968d0bf0eb2e3dc9295c0232bc15d..65251d733278ae9cc5312271ead2f1b632f40c2c 100644
+index 9243bb11e3f968d0bf0eb2e3dc9295c0232bc15d..0bf6669531c12061f03762d9586836016357a5ac 100644
 --- a/net/minecraft/server/MinecraftServer.java
 +++ b/net/minecraft/server/MinecraftServer.java
 @@ -1856,6 +1856,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
  
      @DontObfuscate
      public String getServerModName() {
-+        if(true) return me.coderfrish.traium.configuration.TraiumConfig.serverModName;
++        if(true) return me.coderfrish.traium.configuration.TraiumConfig.serverBrandName;
          return io.papermc.paper.ServerBuildInfo.buildInfo().brandName(); // Paper
      }
  
