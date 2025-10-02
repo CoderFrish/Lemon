@@ -7,26 +7,33 @@ plugins {
 }
 
 paperweight {
-    upstreams.paper {
-        ref = providers.gradleProperty("paperRef")
+    upstreams.register("folia") {
+        repo = github("PaperMC", "Folia")
+        ref = providers.gradleProperty("foliaRef")
 
         patchFile {
-            path = "paper-server/build.gradle.kts"
+            path = "folia-server/build.gradle.kts"
             outputFile = file("traium-server/build.gradle.kts")
             patchFile = file("traium-server/build.gradle.kts.patch")
         }
 
         patchFile {
-            path = "paper-api/build.gradle.kts"
+            path = "folia-api/build.gradle.kts"
             outputFile = file("traium-api/build.gradle.kts")
             patchFile = file("traium-api/build.gradle.kts.patch")
         }
 
-        patchDir("paperApi") {
+        patchRepo("paperApi") {
             upstreamPath = "paper-api"
-            excludes = setOf("build.gradle.kts")
             patchesDir = file("traium-api/paper-patches")
             outputDir = file("paper-api")
+        }
+
+        patchDir("foliaApi") {
+            upstreamPath = "folia-api"
+            excludes = listOf("build.gradle.kts", "build.gradle.kts.patch", "paper-patches")
+            patchesDir = file("traium-api/folia-patches")
+            outputDir = file("folia-api")
         }
     }
 }

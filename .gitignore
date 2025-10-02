@@ -8,3 +8,5 @@ traium-api/build.gradle.kts
 traium-server/src/minecraft/
 paper-server/
 paper-api/
+folia-server/
+folia-api/
