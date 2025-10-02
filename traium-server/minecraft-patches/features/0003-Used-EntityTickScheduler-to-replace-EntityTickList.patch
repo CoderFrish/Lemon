@@ -1,0 +1,249 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Thu, 2 Oct 2025 10:53:54 +0800
+Subject: [PATCH] Used EntityTickScheduler to replace EntityTickList.
+
+
+diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
+index 094e3ba7f7be903d112910b6eb61a07e2a5825b5..00083eaa6d58249d841afaeb72d0a44c5ec6f81e 100644
+--- a/net/minecraft/server/MinecraftServer.java
++++ b/net/minecraft/server/MinecraftServer.java
+@@ -268,7 +268,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+     private String serverId;
+     public MinecraftServer.ReloadableResources resources;
+     private final StructureTemplateManager structureTemplateManager;
+-    private final ServerTickRateManager tickRateManager;
++    public final ServerTickRateManager tickRateManager;
+     protected WorldData worldData;
+     public PotionBrewing potionBrewing;
+     private FuelValues fuelValues;
+diff --git a/net/minecraft/server/level/ServerLevel.java b/net/minecraft/server/level/ServerLevel.java
+index dda8d38ef61672cc714d9e5a475f9b0412ed5ff9..9aa7e3b1edac56970cd83757e179ac565124e98d 100644
+--- a/net/minecraft/server/level/ServerLevel.java
++++ b/net/minecraft/server/level/ServerLevel.java
+@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
+ import java.util.stream.Stream;
+ import javax.annotation.Nonnull;
+ import javax.annotation.Nullable;
++
++import me.coderfrish.traium.utils.scheduler.EntityTickScheduler;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportType;
+@@ -52,7 +54,6 @@ import net.minecraft.network.protocol.game.ClientboundBlockEventPacket;
+ import net.minecraft.network.protocol.game.ClientboundDamageEventPacket;
+ import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+ import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+-import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
+ import net.minecraft.network.protocol.game.ClientboundLevelEventPacket;
+ import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
+ import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
+@@ -74,7 +75,6 @@ import net.minecraft.util.CsvOutput;
+ import net.minecraft.util.Mth;
+ import net.minecraft.util.ProgressListener;
+ import net.minecraft.util.RandomSource;
+-import net.minecraft.util.datafix.DataFixTypes;
+ import net.minecraft.util.profiling.Profiler;
+ import net.minecraft.util.profiling.ProfilerFiller;
+ import net.minecraft.util.valueproviders.IntProvider;
+@@ -127,18 +127,14 @@ import net.minecraft.world.level.chunk.ChunkAccess;
+ import net.minecraft.world.level.chunk.ChunkGenerator;
+ import net.minecraft.world.level.chunk.LevelChunk;
+ import net.minecraft.world.level.chunk.LevelChunkSection;
+-import net.minecraft.world.level.chunk.storage.EntityStorage;
+ import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
+-import net.minecraft.world.level.chunk.storage.SimpleRegionStorage;
+ import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
+ import net.minecraft.world.level.dimension.LevelStem;
+ import net.minecraft.world.level.dimension.end.EndDragonFight;
+-import net.minecraft.world.level.entity.EntityPersistentStorage;
+ import net.minecraft.world.level.entity.EntityTickList;
+ import net.minecraft.world.level.entity.EntityTypeTest;
+ import net.minecraft.world.level.entity.LevelCallback;
+ import net.minecraft.world.level.entity.LevelEntityGetter;
+-import net.minecraft.world.level.entity.PersistentEntitySectionManager;
+ import net.minecraft.world.level.gameevent.DynamicGameEventListener;
+ import net.minecraft.world.level.gameevent.GameEvent;
+ import net.minecraft.world.level.gameevent.GameEventDispatcher;
+@@ -158,7 +154,6 @@ import net.minecraft.world.level.saveddata.maps.MapIndex;
+ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+ import net.minecraft.world.level.storage.DimensionDataStorage;
+ import net.minecraft.world.level.storage.LevelStorageSource;
+-import net.minecraft.world.level.storage.ServerLevelData;
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.Vec3;
+ import net.minecraft.world.phys.shapes.BooleanOp;
+@@ -182,7 +177,7 @@ public class ServerLevel extends Level implements ServerEntityGetter, WorldGenLe
+     private final MinecraftServer server;
+     public final net.minecraft.world.level.storage.PrimaryLevelData serverLevelData; // CraftBukkit - type
+     private int lastSpawnChunkRadius;
+-    final EntityTickList entityTickList = new EntityTickList();
++    private final EntityTickScheduler tickScheduler = new EntityTickScheduler();
+     private final ServerWaypointManager waypointManager;
+     // Paper - rewrite chunk system
+     private final GameEventDispatcher gameEventDispatcher;
+@@ -280,6 +275,11 @@ public class ServerLevel extends Level implements ServerEntityGetter, WorldGenLe
+     }
+     // Paper end
+ 
++    @Override
++    public EntityTickScheduler getTickScheduler() {
++        return tickScheduler;
++    }
++
+     // Paper start - optimise getPlayerByUUID
+     @Nullable
+     @Override
+@@ -789,32 +789,7 @@ public class ServerLevel extends Level implements ServerEntityGetter, WorldGenLe
+             }
+ 
+             io.papermc.paper.entity.activation.ActivationRange.activateEntities(this); // Paper - EAR
+-            this.entityTickList
+-                .forEach(
+-                    entity -> {
+-                        if (!entity.isRemoved()) {
+-                            if (!tickRateManager.isEntityFrozen(entity)) {
+-                                profilerFiller.push("checkDespawn");
+-                                entity.checkDespawn();
+-                                profilerFiller.pop();
+-                                if (true) { // Paper - rewrite chunk system
+-                                    Entity vehicle = entity.getVehicle();
+-                                    if (vehicle != null) {
+-                                        if (!vehicle.isRemoved() && vehicle.hasPassenger(entity)) {
+-                                            return;
+-                                        }
+-
+-                                        entity.stopRiding();
+-                                    }
+-
+-                                    profilerFiller.push("tick");
+-                                    this.guardEntityTick(this::tickNonPassenger, entity);
+-                                    profilerFiller.pop();
+-                                }
+-                            }
+-                        }
+-                    }
+-                );
++            getTickScheduler().tick();
+             profilerFiller.pop();
+             this.tickBlockEntities();
+         }
+@@ -824,6 +799,32 @@ public class ServerLevel extends Level implements ServerEntityGetter, WorldGenLe
+         profilerFiller.pop();
+     }
+ 
++    private void tickEntity(Entity entity) {
++        ProfilerFiller profilerFiller = Profiler.get();
++
++        if (!entity.isRemoved()) {
++            if (!MinecraftServer.getServer().tickRateManager.isEntityFrozen(entity)) {
++                profilerFiller.push("checkDespawn");
++                entity.checkDespawn();
++                profilerFiller.pop();
++                if (true) { // Paper - rewrite chunk system
++                    Entity vehicle = entity.getVehicle();
++                    if (vehicle != null) {
++                        if (!vehicle.isRemoved() && vehicle.hasPassenger(entity)) {
++                            return;
++                        }
++
++                        entity.stopRiding();
++                    }
++
++                    profilerFiller.push("tick");
++                    ServerLevel.this.guardEntityTick(ServerLevel.this::tickNonPassenger, entity);
++                    profilerFiller.pop();
++                }
++            }
++        }
++    }
++
+     @Override
+     public boolean shouldTickBlocksAt(long chunkPos) {
+         // Paper start - rewrite chunk system
+@@ -1294,7 +1295,7 @@ public class ServerLevel extends Level implements ServerEntityGetter, WorldGenLe
+     private void tickPassenger(Entity ridingEntity, Entity passengerEntity, final boolean isActive) { // Paper - EAR 2
+         if (passengerEntity.isRemoved() || passengerEntity.getVehicle() != ridingEntity) {
+             passengerEntity.stopRiding();
+-        } else if (passengerEntity instanceof Player || this.entityTickList.contains(passengerEntity)) {
++        } else if (passengerEntity instanceof Player || this.getTickScheduler().isQueue(passengerEntity)) {
+             passengerEntity.setOldPosAndRot();
+             passengerEntity.tickCount++;
+             passengerEntity.totalEntityAge++; // Paper - age-like counter for all entities
+@@ -2622,6 +2623,8 @@ public class ServerLevel extends Level implements ServerEntityGetter, WorldGenLe
+     // Paper end - optimize redstone (Alternate Current)
+ 
+     final class EntityCallbacks implements LevelCallback<Entity> {
++        private EntityTickScheduler.ScheduledTask task;
++
+         @Override
+         public void onCreated(Entity entity) {
+             if (entity instanceof WaypointTransmitter waypointTransmitter && waypointTransmitter.isTransmittingWaypoint()) {
+@@ -2642,16 +2645,17 @@ public class ServerLevel extends Level implements ServerEntityGetter, WorldGenLe
+         @Override
+         public void onTickingStart(Entity entity) {
+             if (entity instanceof net.minecraft.world.entity.Marker && !paperConfig().entities.markers.tick) return; // Paper - Configurable marker ticking
+-            ServerLevel.this.entityTickList.add(entity);
++            this.task = ServerLevel.this.getTickScheduler().schedule(entity, () -> ServerLevel.this.tickEntity(entity));
+         }
+ 
+         @Override
+         public void onTickingEnd(Entity entity) {
+-            ServerLevel.this.entityTickList.remove(entity);
+             // Paper start - Reset pearls when they stop being ticked
+             if (ServerLevel.this.paperConfig().fixes.disableUnloadedChunkEnderpearlExploit && ServerLevel.this.paperConfig().misc.legacyEnderPearlBehavior && entity instanceof net.minecraft.world.entity.projectile.ThrownEnderpearl pearl) {
+                 pearl.setOwner(null);
+             }
++
++            this.task.cancel();
+             // Paper end - Reset pearls when they stop being ticked
+         }
+ 
+diff --git a/net/minecraft/world/level/Level.java b/net/minecraft/world/level/Level.java
+index be16627136f7b3979e62308f58b96a2b16ee9f62..d33c95bc5daa293f414ae5645ca6631c01820a3b 100644
+--- a/net/minecraft/world/level/Level.java
++++ b/net/minecraft/world/level/Level.java
+@@ -4,16 +4,16 @@ import com.google.common.collect.Lists;
+ import com.mojang.serialization.Codec;
+ import java.io.IOException;
+ import java.util.Collection;
+-import java.util.Iterator;
+ import java.util.List;
+ import java.util.UUID;
+ import java.util.function.Consumer;
+ import java.util.function.Predicate;
+ import java.util.stream.Collectors;
+ import javax.annotation.Nullable;
++
++import me.coderfrish.traium.utils.scheduler.EntityTickScheduler;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+-import net.minecraft.ReportedException;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.core.Holder;
+@@ -31,7 +31,6 @@ import net.minecraft.server.level.FullChunkStatus;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+-import net.minecraft.util.AbortableIterationConsumer;
+ import net.minecraft.util.Mth;
+ import net.minecraft.util.RandomSource;
+ import net.minecraft.util.StringRepresentable;
+@@ -44,7 +43,6 @@ import net.minecraft.world.damagesource.DamageSources;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntitySelector;
+ import net.minecraft.world.entity.boss.EnderDragonPart;
+-import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.alchemy.PotionBrewing;
+@@ -1945,6 +1943,8 @@ public abstract class Level implements LevelAccessor, UUIDLookup<Entity>, AutoCl
+     @Nullable
+     public abstract MapItemSavedData getMapData(MapId mapId);
+ 
++    public abstract EntityTickScheduler getTickScheduler();
++
+     public void globalLevelEvent(int id, BlockPos pos, int data) {
+     }
+ 
