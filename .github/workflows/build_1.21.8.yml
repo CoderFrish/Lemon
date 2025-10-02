@@ -51,3 +51,4 @@ jobs:
           artifacts: traium-server/build/libs/Traium-${{ env.version }}.jar
           token: ${{ secrets.GITHUB_TOKEN }}
           makeLatest: true
+          prerelease: true
