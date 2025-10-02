@@ -2,7 +2,7 @@ name: Deploy Traium By Traium CI
 
 on:
   push:
-    branches: [ "ver/1.21.8" ]
+    branches: [ "dev/1.21.8-multi-threading-entity" ]
     paths-ignore:
       - README.md
       - LICENSE.md
