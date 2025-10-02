@@ -1,6 +1,7 @@
 package me.coderfrish.traium.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import me.coderfrish.traium.command.TraiumCommand;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -47,7 +48,9 @@ public class TraiumConfig {
     })
     public static String serverBrandName = "Traium";
 
-    public static void setupTraium() {}
+    public static void setupTraium() {
+        new TraiumCommand().register();
+    }
 
     public static void loadAllConfig() throws Exception {
         loadAllConfigValue();
