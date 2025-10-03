@@ -1,4 +1,4 @@
-# Traium license
+# Traium Licenses
 
 Traium inherits licenses from upstream projects.
 
