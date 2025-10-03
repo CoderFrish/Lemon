@@ -1,44 +1,50 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Frish2021 <1573880184@qq.com>
 Date: Fri, 3 Oct 2025 14:09:27 +0800
-Subject: [PATCH] Fixed GlobalRegionScheduler Can`t Execute Entity Task.
+Subject: [PATCH] Allow GlobalRegionScheduler to safely execute NMS calls.
 
 
 diff --git a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
-index e417c9a140778954572fb8bc190fad64feacffe0..3f91dbe5720446b2ea5b9ed93ea62c1e7593b373 100644
+index e417c9a140778954572fb8bc190fad64feacffe0..4784f93b6b0b806bb195019185e2c82b12670257 100644
 --- a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
 +++ b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
-@@ -6,6 +6,7 @@ import io.papermc.paper.threadedregions.RegionizedWorldData;
- import io.papermc.paper.threadedregions.ThreadedRegionizer;
+@@ -7,6 +7,7 @@ import io.papermc.paper.threadedregions.ThreadedRegionizer;
  import io.papermc.paper.threadedregions.TickRegionScheduler;
  import io.papermc.paper.threadedregions.TickRegions;
-+import me.coderfrish.traium.exception.EntityThreadException;
  import net.minecraft.core.BlockPos;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.level.ChunkPos;
-@@ -94,6 +95,7 @@ public class TickThread extends Thread {
+ import net.minecraft.world.level.Level;
+@@ -58,6 +59,7 @@ public class TickThread extends Thread {
+         if (!isTickThreadFor(world, pos)) {
+             final String ex = "Thread failed main thread check: " +
+                                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos;
++            if (RegionizedServer.isGlobalTickThread()) throw new me.coderfrish.traium.exception.region.ThreadException(((ServerLevel) world), pos, ex);
+             LOGGER.error(ex, new Throwable());
+             throw new IllegalStateException(ex);
+         }
+@@ -94,6 +96,7 @@ public class TickThread extends Thread {
          if (!isTickThreadFor(entity)) {
              final String ex = "Thread failed main thread check: " +
                  reason + ", context=" + getThreadContext() + ", entity=" + EntityUtil.dumpEntity(entity);
-+            if (RegionizedServer.isGlobalTickThread()) throw new EntityThreadException(entity, ex);
++            if (RegionizedServer.isGlobalTickThread()) throw new me.coderfrish.traium.exception.entity.ThreadException(entity, ex);
              LOGGER.error(ex, new Throwable());
              throw new IllegalStateException(ex);
          }
 diff --git a/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java b/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java
-index d306f911757a4d556c82c0070d4837db87afc497..7e537c6bd0c51e071973f4fbb663184d040128c2 100644
+index d306f911757a4d556c82c0070d4837db87afc497..539a88d01660e63afb27f24de149229bf09b4f81 100644
 --- a/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java
 +++ b/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java
-@@ -3,6 +3,9 @@ package io.papermc.paper.threadedregions.scheduler;
+@@ -3,6 +3,7 @@ package io.papermc.paper.threadedregions.scheduler;
  import ca.spottedleaf.concurrentutil.util.ConcurrentUtil;
  import ca.spottedleaf.concurrentutil.util.Validate;
  import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-+import me.coderfrish.traium.exception.EntityThreadException;
 +import me.coderfrish.traium.scheduler.SchedulerWrapper;
-+import org.bukkit.craftbukkit.entity.CraftEntity;
  import org.bukkit.plugin.IllegalPluginAccessException;
  import org.bukkit.plugin.Plugin;
  
-@@ -65,7 +68,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -65,7 +66,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
              throw new IllegalPluginAccessException("Plugin attempted to register task while disabled");
          }
  
@@ -47,7 +53,7 @@ index d306f911757a4d556c82c0070d4837db87afc497..7e537c6bd0c51e071973f4fbb663184d
  
          this.scheduleInternal(ret, delayTicks);
  
-@@ -92,7 +95,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -92,7 +93,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
              throw new IllegalPluginAccessException("Plugin attempted to register task while disabled");
          }
  
@@ -56,7 +62,7 @@ index d306f911757a4d556c82c0070d4837db87afc497..7e537c6bd0c51e071973f4fbb663184d
  
          this.scheduleInternal(ret, initialDelayTicks);
  
-@@ -134,7 +137,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -134,7 +135,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
          }
      }
  
@@ -65,7 +71,7 @@ index d306f911757a4d556c82c0070d4837db87afc497..7e537c6bd0c51e071973f4fbb663184d
  
          private static final int STATE_IDLE                = 0;
          private static final int STATE_EXECUTING           = 1;
-@@ -143,15 +146,17 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -143,15 +144,17 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
          private static final int STATE_CANCELLED           = 4;
  
          private final Plugin plugin;
@@ -87,12 +93,18 @@ index d306f911757a4d556c82c0070d4837db87afc497..7e537c6bd0c51e071973f4fbb663184d
              this.run = run;
          }
  
-@@ -178,6 +183,12 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -178,6 +181,18 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
              try {
                  this.run.accept(this);
              } catch (final Throwable throwable) {
-+                if (throwable instanceof EntityThreadException threadException) {
-+                    SchedulerWrapper.wrap(threadException.getEntity().getBukkitEntity(),
++                if (throwable instanceof me.coderfrish.traium.exception.entity.ThreadException threadException) {
++                    SchedulerWrapper.wrapEntity(threadException.getEntity().getBukkitEntity(),
++                            this, delayTicks, periodTicks);
++                    return;
++                }
++
++                if (throwable instanceof me.coderfrish.traium.exception.region.ThreadException threadException) {
++                    SchedulerWrapper.wrapRegion(threadException.getWorld().getWorld(), threadException.getBlockPos(),
 +                            this, delayTicks, periodTicks);
 +                    return;
 +                }
@@ -100,7 +112,7 @@ index d306f911757a4d556c82c0070d4837db87afc497..7e537c6bd0c51e071973f4fbb663184d
                  this.plugin.getLogger().log(Level.WARNING, "Global task for " + this.plugin.getDescription().getFullName() + " generated an exception", throwable);
              } finally {
                  boolean reschedule = false;
-@@ -190,7 +201,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -190,7 +205,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
                  if (!reschedule) {
                      this.run = null;
                  } else {
@@ -109,7 +121,7 @@ index d306f911757a4d556c82c0070d4837db87afc497..7e537c6bd0c51e071973f4fbb663184d
                  }
              }
          }
-@@ -202,11 +213,13 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -202,11 +217,13 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
  
          @Override
          public boolean isRepeatingTask() {
