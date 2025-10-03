@@ -28,6 +28,11 @@ public class TraiumConfig {
     })
     public static String language = "en_us";
 
+    @ConfigField(type = ConfigTypes.misc, parent = "server_brand_name", comments = {
+            "Server brand name displayed to clients."
+    })
+    public static String serverBrandName = "Traium";
+
     @ConfigField(type = ConfigTypes.misc, parent = "ender_chest_six_rows", comments = {
             "The amount of rows a barrel should have. Min: 1, Max: 6"
     })
@@ -42,11 +47,6 @@ public class TraiumConfig {
             "Use permission nodes to determine the number of rows. By default, with this setting enabled, all players have rows unless otherwise specified using permissions"
     })
     public static boolean enderChestPermissionRows = false;
-
-    @ConfigField(type = ConfigTypes.misc, parent = "server_brand_name", comments = {
-            "Server brand name displayed to clients."
-    })
-    public static String serverBrandName = "Traium";
 
     public static void setupTraium() {
         new TraiumCommand().register();
