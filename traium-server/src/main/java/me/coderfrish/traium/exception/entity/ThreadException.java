@@ -1,11 +1,11 @@
-package me.coderfrish.traium.exception;
+package me.coderfrish.traium.exception.entity;
 
 import net.minecraft.world.entity.Entity;
 
-public class EntityThreadException extends RuntimeException {
+public class ThreadException extends RuntimeException {
     private final Entity entity;
 
-    public EntityThreadException(Entity entity, String message) {
+    public ThreadException(Entity entity, String message) {
         super(message);
         this.entity = entity;
     }
