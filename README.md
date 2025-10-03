@@ -20,7 +20,28 @@ cd Traium
 ./gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar
 ```
 
-## 2 | 最后
+## 2 | Development API
+
+Maven
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>me.coderfrish.traium</groupId>
+        <artifactId>traium-api</artifactId>
+        <version>1.21.8-R0.1-SNAPSHOT</version>
+    </dependency>
+</dependencies>
+```
+
+Gradle
+```kotlin
+dependencies {
+    implementation("me.coderfrish.traium:traium-api:1.21.8-R0.1-SNAPSHOT")
+}
+```
+
+## 3 | 最后
 > [!TIP]
 > 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
 

@@ -28,6 +28,12 @@ public class TraiumConfig {
     })
     public static String language = "en_us";
 
+    @ConfigField(name = "enabled", type = ConfigTypes.fixed, parent = "unsafe_teleportation", comments = {
+            "If you want to use sand duping,please turn on this.",
+            "Warning: This would cause some unsafe issues, you could learn more on : https://github.com/PaperMC/Folia/issues/297."
+    })
+    public static boolean enableUnsafeTeleportation = true;
+
     @ConfigField(type = ConfigTypes.misc, parent = "server_brand_name", comments = {
             "Server brand name displayed to clients."
     })
@@ -38,10 +44,10 @@ public class TraiumConfig {
     })
     public static int barrelRows = 3;
 
-    @ConfigField(type = ConfigTypes.misc, parent = "ender_chest_six_rows", comments = {
+    @ConfigField(name = "enabled", type = ConfigTypes.misc, parent = "ender_chest_six_rows", comments = {
             "When enabled, ender chests should have six rows of inventory space."
     })
-    public static boolean enderChestSixRows = false;
+    public static boolean enableEnderChestSixRows = false;
 
     @ConfigField(type = ConfigTypes.misc, parent = "ender_chest_six_rows", comments = {
             "Use permission nodes to determine the number of rows. By default, with this setting enabled, all players have rows unless otherwise specified using permissions"
@@ -66,7 +72,7 @@ public class TraiumConfig {
             String fullPath = String.format("%s.%s.%s",
                     configInfo.type().keyword(),
                     configInfo.parent(),
-                    field.getName()
+                    configInfo.name().isBlank() ? field.getName() : configInfo.name()
             );
 
             if (!configuration.contains(fullPath)) {
