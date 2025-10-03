@@ -2,7 +2,7 @@
 
 # Traium
 
-*基于Folia的服务端，目前尚未确定要干什么。*
+*基于Folia的服务端，在修复Bukkit被破坏的API同时，也为轻生电修复被破坏的原版特性。*
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/TraiumMC/Traium?style=for-the-badge&logo=github&label=Stars&logoColor=white&color=ffda65)
 ![GitHub Release Date](https://img.shields.io/github/release-date/TraiumMC/Traium?style=for-the-badge&logo=github&label=Release&logoColor=white&color=06d094)
