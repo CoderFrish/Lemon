@@ -5,7 +5,7 @@ Subject: [PATCH] Purpur Barrels and enderchests six rows.
 
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
-index 2f41a92465b9da28e026297cc3528898bb1c8412..babbac47bc5f29f69fa938dcb822bb1cc5b96922 100644
+index 2f41a92465b9da28e026297cc3528898bb1c8412..a99c3ef198c426c7142c862172c8fc0a4dee5a1d 100644
 --- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
 @@ -148,8 +148,18 @@ public class CraftContainer extends AbstractContainerMenu {
@@ -13,7 +13,7 @@ index 2f41a92465b9da28e026297cc3528898bb1c8412..babbac47bc5f29f69fa938dcb822bb1c
              case CHEST:
              case ENDER_CHEST:
 +                // Traium - Purpur Barrels and enderchests 6 rows
-+                this.delegate = new ChestMenu(me.coderfrish.traium.config.TraiumConfig.enderChestSixRows ? net.minecraft.world.inventory.MenuType.GENERIC_9x6 : net.minecraft.world.inventory.MenuType.GENERIC_9x3, windowId, bottom, top, top.getContainerSize() / 9);
++                this.delegate = new ChestMenu(me.coderfrish.traium.config.TraiumConfig.enableEnderChestSixRows ? net.minecraft.world.inventory.MenuType.GENERIC_9x6 : net.minecraft.world.inventory.MenuType.GENERIC_9x3, windowId, bottom, top, top.getContainerSize() / 9);
 +                break;
              case BARREL:
 -                this.delegate = new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x3, windowId, bottom, top, top.getContainerSize() / 9);
