@@ -1,5 +1,6 @@
 package me.coderfrish.traium.command;
 
+import me.coderfrish.traium.command.subcommands.TraiumSubCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
