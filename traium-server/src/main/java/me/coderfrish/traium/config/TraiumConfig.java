@@ -96,7 +96,7 @@ public class TraiumConfig {
             String fullPath = String.format("%s.%s.%s",
                     configInfo.type().keyword(),
                     configInfo.parent(),
-                    field.getName()
+                    configInfo.name().isBlank() ? field.getName() : configInfo.name()
             );
 
             if (field.isAnnotationPresent(Deprecated.class))

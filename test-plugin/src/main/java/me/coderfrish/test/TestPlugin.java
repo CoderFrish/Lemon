@@ -1,44 +1,38 @@
 package me.coderfrish.test;
 
-import net.kyori.adventure.text.Component;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Random;
+
 public class TestPlugin extends JavaPlugin implements Listener, CommandExecutor {
-    @EventHandler
-    public void listenEntity(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof Player player && e.getEntity() instanceof Creeper creeper) {
-            // 点 1
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, (t) -> {
-                // 点2
-                player.teleportAsync(creeper.getLocation());
-            }, 5 * 20L, 30 * 20L);
-        }
-    }
+    private final Random random = new Random();
+    private volatile ScheduledTask task;
 
     @EventHandler
     public void listenBlock(PlayerInteractEvent e) {
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock().getType() == Material.STONE) {
-            Bukkit.getGlobalRegionScheduler().run(this, (t) -> {
-                e.getClickedBlock().setType(Material.GOLD_BLOCK);
-            });
+        Material[] materials = new Material[]{Material.DIAMOND_BLOCK, Material.GOLD_BLOCK, Material.IRON_BLOCK, Material.COMMAND_BLOCK};
+        Block clickedBlock = e.getClickedBlock();
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && clickedBlock.getType() == Material.STONE) {
+            this.task = Bukkit.getRegionScheduler().runAtFixedRate(this, clickedBlock.getLocation(), (t) -> {
+                clickedBlock.setType(materials[random.nextInt(materials.length)]);
+            }, 1L, 20L);
         }
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        Bukkit.getGlobalRegionScheduler().cancelTasks(this);
+        task.cancel();
         return super.onCommand(sender, command, label, args);
     }
 
