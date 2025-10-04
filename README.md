@@ -34,13 +34,6 @@ Maven
 </dependencies>
 ```
 
-Gradle
-```kotlin
-dependencies {
-    implementation("me.coderfrish.traium:traium-api:1.21.8-R0.1-SNAPSHOT")
-}
-```
-
 ## 3 | 最后
 > [!TIP]
 > 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
