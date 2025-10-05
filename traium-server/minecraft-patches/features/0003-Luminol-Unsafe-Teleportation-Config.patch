@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Frish2021 <1573880184@qq.com>
 Date: Fri, 3 Oct 2025 16:00:07 +0800
-Subject: [PATCH] Mint Unsafe Teleportation Config.
+Subject: [PATCH] Luminol Unsafe Teleportation Config.
 
 
 diff --git a/net/minecraft/world/entity/item/FallingBlockEntity.java b/net/minecraft/world/entity/item/FallingBlockEntity.java
