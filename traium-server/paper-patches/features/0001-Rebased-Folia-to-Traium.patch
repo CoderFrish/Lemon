@@ -29,3 +29,15 @@ index 10a0be7a4db1a51579d113d279af7a9effe7f438..9e8ac799f31e9c69dad9118c6322f7ed
              SharedConstants.getCurrentVersion().id(),
              SharedConstants.getCurrentVersion().name(),
              getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
+diff --git a/src/main/resources/data/minecraft/datapacks/bukkit/pack.mcmeta b/src/main/resources/data/minecraft/datapacks/bukkit/pack.mcmeta
+new file mode 100644
+index 0000000000000000000000000000000000000000..2936eb8b7b34d891a89497fe7c5f8c87a5d831a5
+--- /dev/null
++++ b/src/main/resources/data/minecraft/datapacks/bukkit/pack.mcmeta
+@@ -0,0 +1,6 @@
++{
++  "pack": {
++    "description": "Data pack for resources provided by Bukkit plugins",
++    "pack_format": 81
++  }
++}
