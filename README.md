@@ -34,13 +34,6 @@ Maven
 </dependencies>
 ```
 
-Gradle
-```kotlin
-dependencies {
-    implementation("me.coderfrish.traium:traium-api:1.21.8-R0.1-SNAPSHOT")
-}
-```
-
 ## 3 | Bstats
 
 [![bStats](https://bstats.org/signatures/server-implementation/Traium.svg)](https://bstats.org/plugin/server-implementation/Traium/)
