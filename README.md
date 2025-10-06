@@ -34,7 +34,11 @@ Maven
 </dependencies>
 ```
 
-## 3 | 最后
+## 3 | Bstats
+
+[![bStats](https://bstats.org/signatures/server-implementation/Traium.svg)](https://bstats.org/plugin/server-implementation/Traium/)
+
+## 4 | 最后
 > [!TIP]
 > 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
 
