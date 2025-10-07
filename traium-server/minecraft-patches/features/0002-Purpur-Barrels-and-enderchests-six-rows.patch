@@ -14,7 +14,7 @@ index 976a8982a0b0a9ae459cf08e13d69031d4238eca..d590baf0414653fd970b62f4735a6465
          } // Paper - Add sendOpLevel API
 +
 +        // Traium start - Purpur Barrels and enderchests 6 rows
-+        if (me.coderfrish.traium.config.TraiumConfig.enableEnderChestSixRows && me.coderfrish.traium.config.TraiumConfig.enderChestPermissionRows) {
++        if (me.coderfrish.traium.config.GlobalConfig.enableEnderChestSixRows && me.coderfrish.traium.config.GlobalConfig.enderChestPermissionRows) {
 +            org.bukkit.craftbukkit.entity.CraftHumanEntity bukkit = player.getBukkitEntity();
 +            if (bukkit.hasPermission("traium.enderchest.rows.six")) {
 +                player.sixRowEnderchestSlotCount = 54;
@@ -93,7 +93,7 @@ index 51148b7b95c93a9e25da70ac9275c63f1458d84c..f99ae15656dc20af88f644f8f217d4f1
  
      public PlayerEnderChestContainer(Player owner) {
 -        super(27);
-+        super(me.coderfrish.traium.config.TraiumConfig.enableEnderChestSixRows ? 54 : 27); // Traium - Purpur Barrels and enderchests 6 rows
++        super(me.coderfrish.traium.config.GlobalConfig.enableEnderChestSixRows ? 54 : 27); // Traium - Purpur Barrels and enderchests 6 rows
          this.owner = owner;
          // CraftBukkit end
      }
@@ -118,7 +118,7 @@ index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..811fafa9011a98a4b7d4afe3833cf780
                      new SimpleMenuProvider(
 -                        (containerId, playerInventory, player1) -> ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
 -                    )
-+                            (containerId, playerInventory, player1) -> me.coderfrish.traium.config.TraiumConfig.enableEnderChestSixRows ? getEnderChestSixRows(containerId, playerInventory, player, enderChestInventory) : ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
++                            (containerId, playerInventory, player1) -> me.coderfrish.traium.config.GlobalConfig.enableEnderChestSixRows ? getEnderChestSixRows(containerId, playerInventory, player, enderChestInventory) : ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
 +                    ) // Traium - Purpur Barrels and enderchests 6 rows
                  ).isPresent()) {
                  // Paper end - Fix InventoryOpenEvent cancellation - moved up;
@@ -129,7 +129,7 @@ index 5077a9ff7b78801bdc53536a37aee07b8d86ee4d..811fafa9011a98a4b7d4afe3833cf780
  
 +    // Traium start - Purupr Barrels and enderchests 6 rows
 +    private ChestMenu getEnderChestSixRows(int syncId, net.minecraft.world.entity.player.Inventory inventory, Player player, PlayerEnderChestContainer playerEnderChestContainer) {
-+        if (me.coderfrish.traium.config.TraiumConfig.enderChestPermissionRows) {
++        if (me.coderfrish.traium.config.GlobalConfig.enderChestPermissionRows) {
 +            org.bukkit.craftbukkit.entity.CraftHumanEntity bukkitPlayer = player.getBukkitEntity();
 +            if (bukkitPlayer.hasPermission("traium.enderchest.rows.six")) {
 +                player.sixRowEnderchestSlotCount = 54;
@@ -168,7 +168,7 @@ index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..561195318bb36d531a3946c20da62b65
      // CraftBukkit end
  
 -    private NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
-+    private NonNullList<ItemStack> items = NonNullList.withSize(switch (me.coderfrish.traium.config.TraiumConfig.barrelRows) {
++    private NonNullList<ItemStack> items = NonNullList.withSize(switch (me.coderfrish.traium.config.GlobalConfig.barrelRows) {
 +        case 6 -> 54;
 +        case 5 -> 45;
 +        case 4 -> 36;
@@ -185,7 +185,7 @@ index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..561195318bb36d531a3946c20da62b65
      @Override
      public int getContainerSize() {
 -        return 27;
-+        return switch (me.coderfrish.traium.config.TraiumConfig.barrelRows) {
++        return switch (me.coderfrish.traium.config.GlobalConfig.barrelRows) {
 +            case 6 -> 54;
 +            case 5 -> 45;
 +            case 4 -> 36;
@@ -203,7 +203,7 @@ index d679ab599dfd0bdbdc3ab5530d7fcd1c38baf7fa..561195318bb36d531a3946c20da62b65
      protected AbstractContainerMenu createMenu(int id, Inventory player) {
 -        return ChestMenu.threeRows(id, player, this);
 +        // Traium start - Purpur Barrels and enderchests 6 rows
-+        return switch (me.coderfrish.traium.config.TraiumConfig.barrelRows) {
++        return switch (me.coderfrish.traium.config.GlobalConfig.barrelRows) {
 +            case 6 -> ChestMenu.sixRows(id, player, this);
 +            case 5 -> ChestMenu.fiveRows(id, player, this);
 +            case 4 -> ChestMenu.fourRows(id, player, this);

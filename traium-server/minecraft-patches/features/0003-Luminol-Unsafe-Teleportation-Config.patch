@@ -13,7 +13,7 @@ index 34e31fa13e5107f13e166f694fafe58e306330ae..6fa6c8c57377fea28acce60c26d455b7
      @Nullable
      public CompoundTag blockData;
 -    public boolean forceTickAfterTeleportToDuplicate;
-+    public boolean forceTickAfterTeleportToDuplicate = me.coderfrish.traium.config.TraiumConfig.enableUnsafeTeleportation;
++    public boolean forceTickAfterTeleportToDuplicate = me.coderfrish.traium.config.GlobalConfig.enableUnsafeTeleportation;
      protected static final EntityDataAccessor<BlockPos> DATA_START_POS = SynchedEntityData.defineId(FallingBlockEntity.class, EntityDataSerializers.BLOCK_POS);
      public boolean autoExpire = true; // Paper - Expand FallingBlock API
  
@@ -22,7 +22,7 @@ index 34e31fa13e5107f13e166f694fafe58e306330ae..6fa6c8c57377fea28acce60c26d455b7
          boolean flag = (resourceKey1 == Level.END || resourceKey == Level.END) && resourceKey1 != resourceKey;
          Entity entity = super.teleport(teleportTransition);
 -        this.forceTickAfterTeleportToDuplicate = entity != null && flag && io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation; // Paper
-+        this.forceTickAfterTeleportToDuplicate = entity != null && flag && (io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation || me.coderfrish.traium.config.TraiumConfig.enableUnsafeTeleportation); // Paper
++        this.forceTickAfterTeleportToDuplicate = entity != null && flag && (io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation || me.coderfrish.traium.config.GlobalConfig.enableUnsafeTeleportation); // Paper
          return entity;
      }
  }
@@ -34,7 +34,7 @@ index 6e495b2c4176d5a30ea911f8e44a22655df92ef6..af1075ec3283d95ea2c20f7dab1d25ad
                  if (level.paperConfig().misc.disableEndCredits) {serverPlayer.seenCredits = true; return;} // Paper - Option to disable end credits
                  serverPlayer.showEndCredits();
              } else {
-+                if (me.coderfrish.traium.config.TraiumConfig.enableUnsafeTeleportation && !(entity instanceof net.minecraft.world.entity.player.Player)) {
++                if (me.coderfrish.traium.config.GlobalConfig.enableUnsafeTeleportation && !(entity instanceof net.minecraft.world.entity.player.Player)) {
 +                    entity.endPortalLogicAsync(pos);
 +                }
                  entity.setAsInsidePortal(this, pos);
