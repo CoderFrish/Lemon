@@ -25,7 +25,7 @@ index 196996aa8094bd53b61f2797b4ff3b9bcae16132..88afd5a855fab41698217a2000375067
  
      @DontObfuscate
      public String getServerModName() {
-+        if (true) return me.coderfrish.traium.config.TraiumConfig.serverBrandName;
++        if (true) return me.coderfrish.traium.config.GlobalConfig.serverBrandName;
          return io.papermc.paper.ServerBuildInfo.buildInfo().brandName(); // Paper
      }
  

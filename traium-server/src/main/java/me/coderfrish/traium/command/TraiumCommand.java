@@ -67,7 +67,7 @@ public class TraiumCommand extends Command {
             return subCommandMap.keySet().stream().toList();
         }
 
-        if (args.length > 1) {
+        if (args.length > 1 && subCommandMap.containsKey(args[0])) {
             return subCommandMap.get(args[0]).tabComplete(sender, alias, Arrays.copyOfRange(args, 1, args.length));
         }
 
