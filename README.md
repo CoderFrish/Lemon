@@ -9,6 +9,9 @@
 ![GitHub Downloads](https://img.shields.io/github/downloads/TraiumMC/Traium/total?style=for-the-badge&logo=github&label=Downloads&logoColor=white&color=c4a400)
 ![Created At](https://img.shields.io/github/created-at/TraiumMC/Traium?style=for-the-badge&color=blue)
 
+> [!IMPORTANT]
+> 该服务端可能会出现随机爆炸的问题，暂时未解决
+
 ## 1 | 下载与构建
 任何版本都可以在 [Release](https://github.com/TraiumMC/Traium/releases) 中找到，也可以通过以下步骤构建
 ```shell

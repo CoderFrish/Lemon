@@ -1,0 +1,63 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Wed, 8 Oct 2025 13:29:35 +0800
+Subject: [PATCH] Fixed legacy bukkit plugin deprecated api.
+
+
+diff --git a/io/papermc/paper/threadedregions/TickRegionScheduler.java b/io/papermc/paper/threadedregions/TickRegionScheduler.java
+index fa6b8d756195c1b430cc11214a901bd42eebc98d..276c94c4bad6cfb0dfdaf2424e48139e5ca5f081 100644
+--- a/io/papermc/paper/threadedregions/TickRegionScheduler.java
++++ b/io/papermc/paper/threadedregions/TickRegionScheduler.java
+@@ -5,6 +5,7 @@ import ca.spottedleaf.concurrentutil.util.TimeUtil;
+ import ca.spottedleaf.moonrise.common.util.TickThread;
+ import com.mojang.logging.LogUtils;
+ import io.papermc.paper.util.TraceUtil;
++import me.coderfrish.traium.unsafe.UnsafeWorldData;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.ChunkPos;
+@@ -75,6 +76,7 @@ public final class TickRegionScheduler {
+         if (region != null) {
+             tickThreadRunner.currentTickingWorldRegionizedData = region.regioniser.world.worldRegionData.get();
+             // Folia start - profiler
++            UnsafeWorldData.addUnsafeWorldData(tickThreadRunner.currentTickingWorldRegionizedData);
+             final ca.spottedleaf.leafprofiler.RegionizedProfiler.Handle profiler = region.getData().profiler;
+             tickThreadRunner.profiler = profiler == null ? ca.spottedleaf.leafprofiler.RegionizedProfiler.Handle.NO_OP_HANDLE : profiler;
+             // Folia end - profiler
+diff --git a/net/minecraft/world/level/Level.java b/net/minecraft/world/level/Level.java
+index 2049990edf0280d2b74b7284b32e78678a5ca6db..14d45cbe2551528919fc4db6ff46f36e9d414952 100644
+--- a/net/minecraft/world/level/Level.java
++++ b/net/minecraft/world/level/Level.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.world.level;
+ 
++import ca.spottedleaf.moonrise.common.util.TickThread;
+ import com.google.common.collect.Lists;
+ import com.mojang.serialization.Codec;
+ import java.io.IOException;
+@@ -11,6 +12,8 @@ import java.util.function.Consumer;
+ import java.util.function.Predicate;
+ import java.util.stream.Collectors;
+ import javax.annotation.Nullable;
++
++import me.coderfrish.traium.unsafe.UnsafeWorldData;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportedException;
+@@ -815,15 +818,7 @@ public abstract class Level implements LevelAccessor, UUIDLookup<Entity>, AutoCl
+     public final java.util.concurrent.ConcurrentHashMap.KeySetView<net.minecraft.server.level.ChunkHolder, Boolean> needsChangeBroadcasting = java.util.concurrent.ConcurrentHashMap.newKeySet();
+ 
+     public io.papermc.paper.threadedregions.RegionizedWorldData getCurrentWorldData() {
+-        final io.papermc.paper.threadedregions.RegionizedWorldData ret = io.papermc.paper.threadedregions.TickRegionScheduler.getCurrentRegionizedWorldData();
+-        if (ret == null) {
+-            return ret;
+-        }
+-        Level world = ret.world;
+-        if (world != this) {
+-            throw new IllegalStateException("World mismatch: expected " + this.getWorld().getName() + " but got " + world.getWorld().getName());
+-        }
+-        return ret;
++        return UnsafeWorldData.getUnsafeWorldData(this);
+     }
+ 
+     @Override

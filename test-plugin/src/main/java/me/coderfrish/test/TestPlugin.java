@@ -38,10 +38,8 @@ public class TestPlugin extends JavaPlugin implements Listener, CommandExecutor 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 //        task.cancel();
         Location test = new Location(Bukkit.getWorld("test"), 0, 2, 0);
-        Bukkit.getRegionScheduler().execute(this, test, () -> {
-            Block blockAt = Bukkit.getWorld("test").getBlockAt(test);
-            sender.sendMessage(blockAt.getType().toString());
-        });
+        Block blockAt = Bukkit.getWorld("test").getBlockAt(test);
+        sender.sendMessage(blockAt.getType().toString());
         return super.onCommand(sender, command, label, args);
     }
 
