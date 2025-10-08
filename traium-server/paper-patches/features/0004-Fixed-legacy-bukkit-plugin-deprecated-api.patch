@@ -4,6 +4,81 @@ Date: Mon, 6 Oct 2025 20:52:03 +0800
 Subject: [PATCH] Fixed legacy bukkit plugin deprecated api.
 
 
+diff --git a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
+index e417c9a140778954572fb8bc190fad64feacffe0..6d83ada97173ff776f04af234ba2ea06bd4a6f06 100644
+--- a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
++++ b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java
+@@ -48,14 +48,14 @@ public class TickThread extends Thread {
+      */
+     @Deprecated
+     public static void ensureTickThread(final String reason) {
+-        if (!isTickThread()) {
++        if (!isTickThread() && false) {
+             LOGGER.error("Thread failed main thread check: " + reason + ", context=" + getThreadContext(), new Throwable());
+             throw new IllegalStateException(reason);
+         }
+     }
+ 
+     public static void ensureTickThread(final Level world, final BlockPos pos, final String reason) {
+-        if (!isTickThreadFor(world, pos)) {
++        if (!isTickThreadFor(world, pos) && false) {
+             final String ex = "Thread failed main thread check: " +
+                                reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos;
+             LOGGER.error(ex, new Throwable());
+@@ -64,7 +64,7 @@ public class TickThread extends Thread {
+     }
+ 
+     public static void ensureTickThread(final Level world, final BlockPos pos, final int blockRadius, final String reason) {
+-        if (!isTickThreadFor(world, pos, blockRadius)) {
++        if (!isTickThreadFor(world, pos, blockRadius) && false) {
+             final String ex = "Thread failed main thread check: " +
+                 reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + pos + ", block_radius=" + blockRadius;
+             LOGGER.error(ex, new Throwable());
+@@ -73,7 +73,7 @@ public class TickThread extends Thread {
+     }
+ 
+     public static void ensureTickThread(final Level world, final ChunkPos pos, final String reason) {
+-        if (!isTickThreadFor(world, pos)) {
++        if (!isTickThreadFor(world, pos) && false) {
+             final String ex = "Thread failed main thread check: " +
+                 reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + pos;
+             LOGGER.error(ex, new Throwable());
+@@ -82,7 +82,7 @@ public class TickThread extends Thread {
+     }
+ 
+     public static void ensureTickThread(final Level world, final int chunkX, final int chunkZ, final String reason) {
+-        if (!isTickThreadFor(world, chunkX, chunkZ)) {
++        if (!isTickThreadFor(world, chunkX, chunkZ) && false) {
+             final String ex = "Thread failed main thread check: " +
+                 reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", chunk_pos=" + new ChunkPos(chunkX, chunkZ);
+             LOGGER.error(ex, new Throwable());
+@@ -91,7 +91,7 @@ public class TickThread extends Thread {
+     }
+ 
+     public static void ensureTickThread(final Entity entity, final String reason) {
+-        if (!isTickThreadFor(entity)) {
++        if (!isTickThreadFor(entity) && false) {
+             final String ex = "Thread failed main thread check: " +
+                 reason + ", context=" + getThreadContext() + ", entity=" + EntityUtil.dumpEntity(entity);
+             LOGGER.error(ex, new Throwable());
+@@ -100,7 +100,7 @@ public class TickThread extends Thread {
+     }
+ 
+     public static void ensureTickThread(final Level world, final AABB aabb, final String reason) {
+-        if (!isTickThreadFor(world, aabb)) {
++        if (!isTickThreadFor(world, aabb) && false) {
+             final String ex = "Thread failed main thread check: " +
+                 reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", aabb=" + aabb;
+             LOGGER.error(ex, new Throwable());
+@@ -109,7 +109,7 @@ public class TickThread extends Thread {
+     }
+ 
+     public static void ensureTickThread(final Level world, final double blockX, final double blockZ, final String reason) {
+-        if (!isTickThreadFor(world, blockX, blockZ)) {
++        if (!isTickThreadFor(world, blockX, blockZ) && false) {
+             final String ex = "Thread failed main thread check: " +
+                 reason + ", context=" + getThreadContext() + ", world=" + WorldUtil.getWorldName(world) + ", block_pos=" + new Vec3(blockX, 0.0, blockZ);
+             LOGGER.error(ex, new Throwable());
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 index a97f7345f97af55f9b8933f2d94f88123643157d..bb779e6ef9d1666c44ee638541c391d6cd050529 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
