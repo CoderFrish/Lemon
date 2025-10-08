@@ -10,13 +10,14 @@ public class UnsafeWorldData {
     private static final Map<Level, RegionizedWorldData> unsafeWorldData = new ConcurrentHashMap<>();
 
     public static RegionizedWorldData getUnsafeWorldData(Level world) {
-        if (!unsafeWorldData.containsKey(world))
-            return null;
-
         return unsafeWorldData.get(world);
     }
 
     public static void addUnsafeWorldData(RegionizedWorldData world) {
         unsafeWorldData.put(world.world, world);
+    }
+
+    public static RegionizedWorldData updateUnsafeWorldData(RegionizedWorldData world) {
+        return unsafeWorldData.replace(world.world, world);
     }
 }
