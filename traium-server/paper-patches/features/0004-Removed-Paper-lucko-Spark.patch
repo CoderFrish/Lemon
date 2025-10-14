@@ -1,0 +1,299 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Tue, 14 Oct 2025 17:38:43 +0800
+Subject: [PATCH] Removed Paper lucko Spark.
+
+
+diff --git a/src/main/java/io/papermc/paper/SparksFly.java b/src/main/java/io/papermc/paper/SparksFly.java
+deleted file mode 100644
+index b332645ed65928100f580221d8a9948bc77e362e..0000000000000000000000000000000000000000
+--- a/src/main/java/io/papermc/paper/SparksFly.java
++++ /dev/null
+@@ -1,208 +0,0 @@
+-package io.papermc.paper;
+-
+-import io.papermc.paper.configuration.GlobalConfiguration;
+-import io.papermc.paper.plugin.entrypoint.classloader.group.PaperPluginClassLoaderStorage;
+-import io.papermc.paper.plugin.provider.classloader.ConfiguredPluginClassLoader;
+-import io.papermc.paper.plugin.provider.classloader.PaperClassLoaderStorage;
+-import io.papermc.paper.util.MCUtil;
+-import java.util.Collection;
+-import java.util.List;
+-import java.util.concurrent.ConcurrentLinkedQueue;
+-import java.util.logging.Level;
+-import java.util.logging.Logger;
+-import me.lucko.spark.paper.api.Compatibility;
+-import me.lucko.spark.paper.api.PaperClassLookup;
+-import me.lucko.spark.paper.api.PaperScheduler;
+-import me.lucko.spark.paper.api.PaperSparkModule;
+-import net.kyori.adventure.text.Component;
+-import net.kyori.adventure.text.format.TextColor;
+-import net.minecraft.util.ExceptionCollector;
+-import org.bukkit.Server;
+-import org.bukkit.command.Command;
+-import org.bukkit.command.CommandSender;
+-import org.bukkit.craftbukkit.CraftServer;
+-
+-// It's like electricity.
+-public final class SparksFly {
+-    public static final String ID = "spark";
+-    public static final String COMMAND_NAME = "spark";
+-
+-    private static final String PREFER_SPARK_PLUGIN_PROPERTY = "paper.preferSparkPlugin";
+-
+-    private static final int SPARK_YELLOW = 0xffc93a;
+-
+-    private final Logger logger;
+-    private final PaperSparkModule spark;
+-    // Folia - region threading
+-
+-    private boolean enabled;
+-    private boolean disabledInConfigurationWarningLogged;
+-
+-    public SparksFly(final Server server) {
+-        // Folia - region threading
+-        this.logger = Logger.getLogger(ID);
+-        this.logger.log(Level.INFO, "This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling");
+-        this.spark = PaperSparkModule.create(Compatibility.VERSION_1_0, server, this.logger, new PaperScheduler() {
+-            @Override
+-            public void executeAsync(final Runnable runnable) {
+-                MCUtil.scheduleAsyncTask(this.catching(runnable, "asynchronous"));
+-            }
+-
+-            @Override
+-            public void executeSync(final Runnable runnable) {
+-                io.papermc.paper.threadedregions.RegionizedServer.getInstance().addTask(this.catching(runnable, "synchronous")); // Folia - region threading
+-            }
+-
+-            private Runnable catching(final Runnable runnable, final String type) {
+-                return () -> {
+-                    try {
+-                        runnable.run();
+-                    } catch (final Throwable t) {
+-                        SparksFly.this.logger.log(Level.SEVERE, "An exception was encountered while executing a " + type + " spark task", t);
+-                    }
+-                };
+-            }
+-        }, new PaperClassLookup() {
+-            @Override
+-            public Class<?> lookup(final String className) throws Exception {
+-                final ExceptionCollector<ClassNotFoundException> exceptions = new ExceptionCollector<>();
+-                try {
+-                    return Class.forName(className);
+-                } catch (final ClassNotFoundException e) {
+-                    exceptions.add(e);
+-                    for (final ConfiguredPluginClassLoader loader : ((PaperPluginClassLoaderStorage) PaperClassLoaderStorage.instance()).getGlobalGroup().getClassLoaders()) {
+-                        try {
+-                            final Class<?> loadedClass = loader.loadClass(className, true, false, true);
+-                            if (loadedClass != null) {
+-                                return loadedClass;
+-                            }
+-                        } catch (final ClassNotFoundException exception) {
+-                            exceptions.add(exception);
+-                        }
+-                    }
+-                    exceptions.throwIfPresent();
+-                    return null;
+-                }
+-            }
+-        });
+-    }
+-
+-    public void executeMainThreadTasks() {
+-        throw new UnsupportedOperationException(); // Folia - region threading
+-    }
+-
+-    public void enableEarlyIfRequested() {
+-        if (!isPluginPreferred() && shouldEnableImmediately()) {
+-            this.enable();
+-        }
+-    }
+-
+-    public void enableBeforePlugins() {
+-        if (!isPluginPreferred()) {
+-            this.enable();
+-        }
+-    }
+-
+-    public void enableAfterPlugins(final Server server) {
+-        final boolean isPluginPreferred = isPluginPreferred();
+-        final boolean isPluginEnabled = isPluginEnabled(server);
+-        if (!isPluginPreferred || !isPluginEnabled) {
+-            if (isPluginPreferred && !this.enabled) {
+-                this.logger.log(Level.INFO, "The spark plugin has been preferred but was not loaded. The bundled spark profiler will enabled instead.");
+-            }
+-            this.enable();
+-        }
+-    }
+-
+-    private void enable() {
+-        if (!this.enabled) {
+-            if (false) { // Folia - disable in-built spark profiler
+-                this.enabled = true;
+-                this.spark.enable();
+-            } else {
+-                if (!this.disabledInConfigurationWarningLogged) {
+-                    this.logger.log(Level.INFO, "The spark profiler will not be enabled because it is currently disabled in the configuration.");
+-                    this.disabledInConfigurationWarningLogged = true;
+-                }
+-            }
+-        }
+-    }
+-
+-    public void disable() {
+-        if (this.enabled) {
+-            this.spark.disable();
+-            this.enabled = false;
+-        }
+-    }
+-
+-    public void registerCommandBeforePlugins(final Server server) {
+-        if (!isPluginPreferred()) {
+-            this.registerCommand(server);
+-        }
+-    }
+-
+-    public void registerCommandAfterPlugins(final Server server) {
+-        if ((!isPluginPreferred() || !isPluginEnabled(server)) && server.getCommandMap().getCommand(COMMAND_NAME) == null) {
+-            this.registerCommand(server);
+-        }
+-    }
+-
+-    private void registerCommand(final Server server) {
+-        server.getCommandMap().register(COMMAND_NAME, "paper", new CommandImpl(COMMAND_NAME, this.spark.getPermissions()));
+-    }
+-
+-    public void tickStart() {
+-        this.spark.onServerTickStart();
+-    }
+-
+-    public void tickEnd(final double duration) {
+-        this.spark.onServerTickEnd(duration);
+-    }
+-
+-    void executeCommand(final CommandSender sender, final String[] args) {
+-        this.spark.executeCommand(sender, args);
+-    }
+-
+-    List<String> tabComplete(final CommandSender sender, final String[] args) {
+-        return this.spark.tabComplete(sender, args);
+-    }
+-
+-    public static boolean isPluginPreferred() {
+-        return true; // Folia - disable in-built spark profiler
+-    }
+-
+-    private static boolean isPluginEnabled(final Server server) {
+-        return server.getPluginManager().isPluginEnabled(ID);
+-    }
+-
+-    private static boolean shouldEnableImmediately() {
+-        return GlobalConfiguration.get().spark.enableImmediately;
+-    }
+-
+-    public static final class CommandImpl extends Command {
+-        CommandImpl(final String name, final Collection<String> permissions) {
+-            super(name);
+-            this.setPermission(String.join(";", permissions));
+-        }
+-
+-        @Override
+-        public boolean execute(final CommandSender sender, final String commandLabel, final String[] args) {
+-            final SparksFly spark = ((CraftServer) sender.getServer()).spark;
+-            if (spark.enabled) {
+-                spark.executeCommand(sender, args);
+-            } else {
+-                sender.sendMessage(Component.text("The spark profiler is currently disabled.", TextColor.color(SPARK_YELLOW)));
+-            }
+-            return true;
+-        }
+-
+-        @Override
+-        public List<String> tabComplete(final CommandSender sender, final String alias, final String[] args) throws IllegalArgumentException {
+-            final SparksFly spark = ((CraftServer) sender.getServer()).spark;
+-            if (spark.enabled) {
+-                return spark.tabComplete(sender, args);
+-            }
+-            return List.of();
+-        }
+-    }
+-}
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index 04826c91b624cf6e3c8f762a17de52f3693f4fe3..b970ea434e5464dcd2fec2931ffe1bf95fed4f62 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -97,13 +97,6 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean useDisplayNameInQuitMessage = false;
+     }
+ 
+-    public Spark spark;
+-
+-    public class Spark extends ConfigurationPart {
+-        public boolean enabled = true;
+-        public boolean enableImmediately = false;
+-    }
+-
+     public Proxies proxies;
+ 
+     public class Proxies extends ConfigurationPart {
+diff --git a/src/main/java/io/papermc/paper/plugin/provider/source/FileProviderSource.java b/src/main/java/io/papermc/paper/plugin/provider/source/FileProviderSource.java
+index a0b84535a9d3833d4df692b85b272f145559dd80..38b6614e1575342b8c879441c10522646cf5d159 100644
+--- a/src/main/java/io/papermc/paper/plugin/provider/source/FileProviderSource.java
++++ b/src/main/java/io/papermc/paper/plugin/provider/source/FileProviderSource.java
+@@ -1,7 +1,6 @@
+ package io.papermc.paper.plugin.provider.source;
+ 
+ import com.mojang.logging.LogUtils;
+-import io.papermc.paper.SparksFly;
+ import io.papermc.paper.plugin.PluginInitializerManager;
+ import io.papermc.paper.plugin.configuration.PluginMeta;
+ import io.papermc.paper.plugin.entrypoint.EntrypointHandler;
+@@ -86,12 +85,6 @@ public class FileProviderSource implements ProviderSource<Path, Path> {
+             );
+         }
+ 
+-        final PluginMeta config = type.getConfig(file);
+-        if ((config.getName().equals("spark") && config.getMainClass().equals("me.lucko.spark.bukkit.BukkitSparkPlugin")) && !SparksFly.isPluginPreferred()) {
+-            LOGGER.info("The spark plugin will not be loaded as this server bundles the spark profiler.");
+-            return;
+-        }
+-
+         type.register(entrypointHandler, file, context);
+     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index bb779e6ef9d1666c44ee638541c391d6cd050529..06a7e18a3a6eca455a76f12279cca41b2cd6f277 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -315,7 +315,6 @@ public final class CraftServer implements Server {
+     public static Exception excessiveVelEx;
+     private final io.papermc.paper.logging.SysoutCatcher sysoutCatcher = new io.papermc.paper.logging.SysoutCatcher();
+     private final io.papermc.paper.potion.PaperPotionBrewer potionBrewer;
+-    public final io.papermc.paper.SparksFly spark;
+     private final ServerConfiguration serverConfig = new PaperServerConfiguration();
+ 
+     // Paper start - Folia region threading API
+@@ -497,7 +496,6 @@ public final class CraftServer implements Server {
+         }
+         this.potionBrewer = new io.papermc.paper.potion.PaperPotionBrewer(console); // Paper - custom potion mixes
+         datapackManager = new io.papermc.paper.datapack.PaperDatapackManager(console.getPackRepository()); // Paper
+-        this.spark = new io.papermc.paper.SparksFly(this); // Paper - spark
+     }
+ 
+     public boolean getCommandBlockOverride(String command) {
+@@ -1113,7 +1111,6 @@ public final class CraftServer implements Server {
+         this.reloadData();
+         org.spigotmc.SpigotConfig.registerCommands(); // Spigot
+         io.papermc.paper.command.PaperCommands.registerCommands(this.console); // Paper
+-        this.spark.registerCommandBeforePlugins(this); // Paper - spark
+         this.overrideAllCommandBlockCommands = this.commandsConfiguration.getStringList("command-block-overrides").contains("*");
+         this.ignoreVanillaPermissions = this.commandsConfiguration.getBoolean("ignore-vanilla-permissions");
+ 
+@@ -1142,7 +1139,6 @@ public final class CraftServer implements Server {
+         this.loadPlugins();
+         this.enablePlugins(PluginLoadOrder.STARTUP);
+         this.enablePlugins(PluginLoadOrder.POSTWORLD);
+-        this.spark.registerCommandAfterPlugins(this); // Paper - spark
+         if (io.papermc.paper.plugin.PluginInitializerManager.instance().pluginRemapper != null) io.papermc.paper.plugin.PluginInitializerManager.instance().pluginRemapper.pluginsEnabled(); // Paper - Remap plugins
+         // Paper start - brigadier command API
+         io.papermc.paper.command.brigadier.PaperCommands.INSTANCE.setValid(); // to clear invalid state for event fire below
