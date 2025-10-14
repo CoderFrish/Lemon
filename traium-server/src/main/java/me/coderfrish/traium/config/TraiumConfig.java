@@ -2,6 +2,8 @@ package me.coderfrish.traium.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import me.coderfrish.traium.command.TraiumCommand;
+import me.coderfrish.traium.command.TraiumPermission;
+import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -28,12 +30,26 @@ public class TraiumConfig {
         }
     }
 
+    private static GlobalConfig globalConfig;
+
     public static void setupTraium() {
+        // Register Permission node.
+        for (TraiumPermission value : TraiumPermission.values()) {
+            Bukkit.getPluginManager().addPermission(value.permission());
+        }
+        // Register Command.
         new TraiumCommand().register();
+
+        /* setup sentry */
+        me.coderfrish.traium.utils.SentrySetup.setup(globalConfig);
     }
 
     public static void loadAllConfig() throws Exception {
-        new GlobalConfig();
+        globalConfig = new GlobalConfig();
+    }
+
+    public CommentedFileConfig getCurrentConfig() {
+        return configuration;
     }
 
     private void loadAllConfigValue() throws Exception {
