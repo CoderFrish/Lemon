@@ -5,36 +5,45 @@ Subject: [PATCH] Luminol Unsafe Teleportation Config.
 
 
 diff --git a/net/minecraft/world/entity/item/FallingBlockEntity.java b/net/minecraft/world/entity/item/FallingBlockEntity.java
-index 34e31fa13e5107f13e166f694fafe58e306330ae..6fa6c8c57377fea28acce60c26d455b7560687f7 100644
+index 34e31fa13e5107f13e166f694fafe58e306330ae..f1ffd6688d7558e93d650184fd9fad09c79a1c21 100644
 --- a/net/minecraft/world/entity/item/FallingBlockEntity.java
 +++ b/net/minecraft/world/entity/item/FallingBlockEntity.java
-@@ -70,7 +70,7 @@ public class FallingBlockEntity extends Entity {
+@@ -3,6 +3,8 @@ package net.minecraft.world.entity.item;
+ import com.mojang.logging.LogUtils;
+ import java.util.function.Predicate;
+ import javax.annotation.Nullable;
++
++import me.coderfrish.traium.config.WorldConfig;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+@@ -70,7 +72,7 @@ public class FallingBlockEntity extends Entity {
      public float fallDamagePerDistance = 0.0F;
      @Nullable
      public CompoundTag blockData;
 -    public boolean forceTickAfterTeleportToDuplicate;
-+    public boolean forceTickAfterTeleportToDuplicate = me.coderfrish.traium.config.GlobalConfig.enableUnsafeTeleportation;
++    public boolean forceTickAfterTeleportToDuplicate = WorldConfig.enableUnsafeTeleportation;
      protected static final EntityDataAccessor<BlockPos> DATA_START_POS = SynchedEntityData.defineId(FallingBlockEntity.class, EntityDataSerializers.BLOCK_POS);
      public boolean autoExpire = true; // Paper - Expand FallingBlock API
  
-@@ -387,7 +387,7 @@ public class FallingBlockEntity extends Entity {
+@@ -387,7 +389,7 @@ public class FallingBlockEntity extends Entity {
          ResourceKey<Level> resourceKey1 = this.level().dimension();
          boolean flag = (resourceKey1 == Level.END || resourceKey == Level.END) && resourceKey1 != resourceKey;
          Entity entity = super.teleport(teleportTransition);
 -        this.forceTickAfterTeleportToDuplicate = entity != null && flag && io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation; // Paper
-+        this.forceTickAfterTeleportToDuplicate = entity != null && flag && (io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation || me.coderfrish.traium.config.GlobalConfig.enableUnsafeTeleportation); // Paper
++        this.forceTickAfterTeleportToDuplicate = entity != null && flag && (io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation || WorldConfig.enableUnsafeTeleportation); // Paper
          return entity;
      }
  }
 diff --git a/net/minecraft/world/level/block/EndPortalBlock.java b/net/minecraft/world/level/block/EndPortalBlock.java
-index 6e495b2c4176d5a30ea911f8e44a22655df92ef6..af1075ec3283d95ea2c20f7dab1d25ade474db51 100644
+index 6e495b2c4176d5a30ea911f8e44a22655df92ef6..832838877f20b2c6ac114dc5928c229d3568a564 100644
 --- a/net/minecraft/world/level/block/EndPortalBlock.java
 +++ b/net/minecraft/world/level/block/EndPortalBlock.java
 @@ -69,6 +69,9 @@ public class EndPortalBlock extends BaseEntityBlock implements Portal {
                  if (level.paperConfig().misc.disableEndCredits) {serverPlayer.seenCredits = true; return;} // Paper - Option to disable end credits
                  serverPlayer.showEndCredits();
              } else {
-+                if (me.coderfrish.traium.config.GlobalConfig.enableUnsafeTeleportation && !(entity instanceof net.minecraft.world.entity.player.Player)) {
++                if (me.coderfrish.traium.config.WorldConfig.enableUnsafeTeleportation && !(entity instanceof net.minecraft.world.entity.player.Player)) {
 +                    entity.endPortalLogicAsync(pos);
 +                }
                  entity.setAsInsidePortal(this, pos);

@@ -46,6 +46,7 @@ public class TraiumConfig {
 
     public static void loadAllConfig() throws Exception {
         globalConfig = new GlobalConfig();
+        new WorldConfig();
     }
 
     public CommentedFileConfig getCurrentConfig() {
