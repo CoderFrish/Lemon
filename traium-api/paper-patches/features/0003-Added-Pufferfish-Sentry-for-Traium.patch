@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Tue, 14 Oct 2025 13:58:37 +0800
+Subject: [PATCH] Added Pufferfish Sentry for Traium.
+
+
+diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+index fd6bcad80e66a15232f6a61cbd60dd38ad43b575..ee23f0995c3fe1e34682dc591a4169bd2730f7ab 100644
+--- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
++++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+@@ -597,7 +597,9 @@ public final class SimplePluginManager implements PluginManager {
+ 
+     // Paper start
+     private void handlePluginException(String msg, Throwable ex, Plugin plugin) {
++        gg.pufferfish.pufferfish.sentry.SentryContext.setPluginContext(plugin); // Pufferfish
+         server.getLogger().log(Level.SEVERE, msg, ex);
++        gg.pufferfish.pufferfish.sentry.SentryContext.removePluginContext(); // Pufferfish
+         callEvent(new com.destroystokyo.paper.event.server.ServerExceptionEvent(new com.destroystokyo.paper.exception.ServerPluginEnableDisableException(msg, ex, plugin)));
+     }
+     // Paper end
+@@ -667,9 +669,11 @@ public final class SimplePluginManager implements PluginManager {
+                             ));
+                 }
+             } catch (Throwable ex) {
+-                // Paper start - error reporting
++                gg.pufferfish.pufferfish.sentry.SentryContext.setEventContext(event, registration); // Pufferfish
++                // Paper start - error reporting\
+                 String msg = "Could not pass event " + event.getEventName() + " to " + registration.getPlugin().getDescription().getFullName();
+                 server.getLogger().log(Level.SEVERE, msg, ex);
++                gg.pufferfish.pufferfish.sentry.SentryContext.removeEventContext(); // Pufferfish
+                 if (!(event instanceof com.destroystokyo.paper.event.server.ServerExceptionEvent)) { // We don't want to cause an endless event loop
+                     callEvent(new com.destroystokyo.paper.event.server.ServerExceptionEvent(new com.destroystokyo.paper.exception.ServerEventException(msg, ex, registration.getPlugin(), registration.getListener(), event)));
+                 }
+diff --git a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+index e9a24487f49cb5877d8556029329df0f858a7888..2d7a89607b5ca8116803619e952cb85df5ff3357 100644
+--- a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
++++ b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+@@ -329,7 +329,13 @@ public final class JavaPluginLoader implements PluginLoader {
+             try {
+                 jPlugin.setEnabled(true);
+             } catch (Throwable ex) {
++                gg.pufferfish.pufferfish.sentry.SentryContext.setPluginContext(plugin); // Pufferfish
+                 server.getLogger().log(Level.SEVERE, "Error occurred while enabling " + plugin.getDescription().getFullName() + " (Is it up to date?)", ex);
++                gg.pufferfish.pufferfish.sentry.SentryContext.removePluginContext(); // Pufferfish
++                // Paper start - Disable plugins that fail to load
++                this.server.getPluginManager().disablePlugin(jPlugin);
++                return;
++                // Paper end
+             }
+ 
+             // Perhaps abort here, rather than continue going, but as it stands,
+@@ -354,7 +360,9 @@ public final class JavaPluginLoader implements PluginLoader {
+             try {
+                 jPlugin.setEnabled(false);
+             } catch (Throwable ex) {
++                gg.pufferfish.pufferfish.sentry.SentryContext.setPluginContext(plugin); // Pufferfish
+                 server.getLogger().log(Level.SEVERE, "Error occurred while disabling " + plugin.getDescription().getFullName() + " (Is it up to date?)", ex);
++                gg.pufferfish.pufferfish.sentry.SentryContext.removePluginContext(); // Pufferfish
+             }
+ 
+             if (cloader instanceof PluginClassLoader) {

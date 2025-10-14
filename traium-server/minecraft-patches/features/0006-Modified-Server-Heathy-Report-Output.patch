@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Tue, 14 Oct 2025 13:31:24 +0800
+Subject: [PATCH] Modified Server Heathy Report Output.
+
+
+diff --git a/io/papermc/paper/threadedregions/commands/CommandServerHealth.java b/io/papermc/paper/threadedregions/commands/CommandServerHealth.java
+index 5e6b490ee58a90fd7c02fa09093830c0d9c67f6b..1e55e45714f043ae26b4ababe4211a8285e87ab0 100644
+--- a/io/papermc/paper/threadedregions/commands/CommandServerHealth.java
++++ b/io/papermc/paper/threadedregions/commands/CommandServerHealth.java
+@@ -24,6 +24,8 @@ import org.bukkit.command.CommandSender;
+ import org.bukkit.craftbukkit.CraftWorld;
+ import org.bukkit.entity.Entity;
+ import org.bukkit.entity.Player;
++
++import java.lang.management.*;
+ import java.text.DecimalFormat;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+@@ -268,10 +270,25 @@ public final class CommandServerHealth extends Command {
+             lowestRegionsBuilder.append(line);
+         }
+ 
++        final MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
++        final MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
++        final long usedMemory = heapUsage.getUsed() / (1024 * 1024);
++        final long maxMemory = heapUsage.getMax() / (1024 * 1024);
++        final long freeMemory = maxMemory - usedMemory;
++
+         sender.sendMessage(
+             Component.text()
+                 .append(Component.text("Server Health Report\n", HEADER, TextDecoration.BOLD))
+ 
++                .append(Component.text(" - ", LIST, TextDecoration.BOLD))
++                .append(Component.text("Server Software ", PRIMARY))
++                .append(Component.text(io.papermc.paper.ServerBuildInfo.buildInfo().brandName() + " ", INFORMATION))
++                .append(Component.text(io.papermc.paper.ServerBuildInfo.buildInfo().minecraftVersionName() + "\n", INFORMATION))
++
++                .append(Component.text(" - ", LIST, TextDecoration.BOLD))
++                .append(Component.text("Memory: ", PRIMARY))
++                .append(Component.text(usedMemory + "MB / " + maxMemory + "MB (" + freeMemory + "MB free)\n", INFORMATION))
++
+                 .append(Component.text(" - ", LIST, TextDecoration.BOLD))
+                 .append(Component.text("Online Players: ", PRIMARY))
+                 .append(Component.text(Bukkit.getOnlinePlayers().size() + "\n", INFORMATION))

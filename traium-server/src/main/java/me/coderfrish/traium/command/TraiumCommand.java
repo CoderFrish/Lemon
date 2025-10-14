@@ -1,6 +1,5 @@
 package me.coderfrish.traium.command;
 
-import me.coderfrish.traium.command.subcommands.TraiumSubCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -15,6 +14,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TraiumCommand extends Command {
+    private static final Component PERMISSION_MSG = Component.text("No permission to execute this command!").color(NamedTextColor.RED);
+    private static final Component SUB_COMMAND_NOT_EXIST_MSG = Component.text("Not exist command: ").color(NamedTextColor.RED);
     private static final Map<String, TraiumSubCommand> subCommandMap = new ConcurrentHashMap<>();
 
     public static void register(TraiumSubCommand subCommand) {
@@ -35,25 +36,23 @@ public class TraiumCommand extends Command {
     }
 
     @Override
-    public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
-        if (!testPermission(sender) || !sender.isOp()) {
-            sender.sendMessage(Component.text("No permission to execute this command!").color(NamedTextColor.RED));
-            return true;
-        }
-
+    public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String @NotNull [] args) {
         if (args.length == 0) {
             sender.sendMessage(Component.text("Usage: ").append(Component.text(this.getUsage())));
-
-            return true;
         }
 
-        if (args.length > 1) {
+        if (args.length > 0) {
             String subCommand = args[0];
 
             if (subCommandMap.containsKey(subCommand)) {
-                return subCommandMap.get(subCommand).execute(sender, subCommand, Arrays.copyOfRange(args, 1, args.length));
+                TraiumSubCommand traiumSubCommand = subCommandMap.get(subCommand);
+                if (sender.hasPermission(traiumSubCommand.permission.keyword())) {
+                    return subCommandMap.get(subCommand).execute(sender, subCommand, Arrays.copyOfRange(args, 1, args.length));
+                } else {
+                    sender.sendMessage(PERMISSION_MSG);
+                }
             } else {
-                sender.sendMessage(Component.text("Not exist command: " + subCommand).color(NamedTextColor.RED));
+                sender.sendMessage(SUB_COMMAND_NOT_EXIST_MSG.append(Component.text(subCommand).color(NamedTextColor.RED)));
                 return false;
             }
         }
@@ -64,11 +63,17 @@ public class TraiumCommand extends Command {
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String @NotNull [] args) throws IllegalArgumentException {
         if (args.length == 1){
-            return subCommandMap.keySet().stream().toList();
+            return subCommandMap.keySet().stream().filter(i -> sender.hasPermission(
+                    subCommandMap.get(i).permission.keyword())).toList();
         }
 
         if (args.length > 1 && subCommandMap.containsKey(args[0])) {
-            return subCommandMap.get(args[0]).tabComplete(sender, alias, Arrays.copyOfRange(args, 1, args.length));
+            TraiumSubCommand traiumSubCommand = subCommandMap.get(args[0]);
+            if (sender.hasPermission(traiumSubCommand.permission.keyword())) {
+                return traiumSubCommand.tabComplete(sender, alias, Arrays.copyOfRange(args, 1, args.length));
+            } else {
+                return List.of();
+            }
         }
 
         return List.of();

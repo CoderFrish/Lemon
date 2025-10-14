@@ -5,7 +5,7 @@ Subject: [PATCH] Rebased Folia to Traium.
 
 
 diff --git a/net/minecraft/server/Main.java b/net/minecraft/server/Main.java
-index fd3553bdc1c3cdbf6aa3dc00e0a4987f8eaa4fb8..423f14dfb1a70db26f120d37d7f077bd4ba83f12 100644
+index fd3553bdc1c3cdbf6aa3dc00e0a4987f8eaa4fb8..25f95dd6b57b37798c949abe578e43a9833906f6 100644
 --- a/net/minecraft/server/Main.java
 +++ b/net/minecraft/server/Main.java
 @@ -109,6 +109,8 @@ public class Main {
@@ -17,8 +17,33 @@ index fd3553bdc1c3cdbf6aa3dc00e0a4987f8eaa4fb8..423f14dfb1a70db26f120d37d7f077bd
              io.papermc.paper.plugin.PluginInitializerManager.load(optionSet); // Paper
              Bootstrap.bootStrap();
              Bootstrap.validate();
+@@ -232,24 +234,6 @@ public class Main {
+ 
+             PackRepository packRepository = ServerPacksSource.createPackRepository(levelStorageAccess);
+             // CraftBukkit start
+-            File bukkitDataPackFolder = new File(levelStorageAccess.getLevelPath(net.minecraft.world.level.storage.LevelResource.DATAPACK_DIR).toFile(), "bukkit");
+-            if (!bukkitDataPackFolder.exists()) {
+-                bukkitDataPackFolder.mkdirs();
+-            }
+-            File mcMeta = new File(bukkitDataPackFolder, "pack.mcmeta");
+-            try {
+-                com.google.common.io.Files.asCharSink(mcMeta, java.nio.charset.StandardCharsets.UTF_8).write("""
+-                    {
+-                        "pack": {
+-                            "description": "Data pack for resources provided by Bukkit plugins",
+-                            "pack_format": %d
+-                        }
+-                    }
+-                    """.formatted(SharedConstants.getCurrentVersion().packVersion(net.minecraft.server.packs.PackType.SERVER_DATA))
+-                );
+-            } catch (java.io.IOException ex) {
+-                throw new RuntimeException("Could not initialize Bukkit datapack", ex);
+-            }
+             java.util.concurrent.atomic.AtomicReference<WorldLoader.DataLoadContext> worldLoader = new java.util.concurrent.atomic.AtomicReference<>();
+             // CraftBukkit end
+ 
 diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
-index 196996aa8094bd53b61f2797b4ff3b9bcae16132..88afd5a855fab41698217a2000375067962d338a 100644
+index 196996aa8094bd53b61f2797b4ff3b9bcae16132..9fbb5b525bc547f765045e178865dcc1bdf21e89 100644
 --- a/net/minecraft/server/MinecraftServer.java
 +++ b/net/minecraft/server/MinecraftServer.java
 @@ -1968,6 +1968,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
@@ -42,20 +67,32 @@ index d8bab0ba6e2374fb74f3fa9f7db802f442240414..952bae0ab74dc849bd643317555e7502
          // Paper start - fix converting txt to json file; convert old users earlier after PlayerList creation but before file load/save
          if (this.convertOldUsers()) {
 diff --git a/net/minecraft/server/packs/repository/ServerPacksSource.java b/net/minecraft/server/packs/repository/ServerPacksSource.java
-index 3d482f3eed2d320477d5375a04ebdde22820a00f..c082c92f319804b9b9c648c0873514e50722c081 100644
+index 3d482f3eed2d320477d5375a04ebdde22820a00f..f4bb4d063f8b2d4ceb6df2a4816548675dcab8af 100644
 --- a/net/minecraft/server/packs/repository/ServerPacksSource.java
 +++ b/net/minecraft/server/packs/repository/ServerPacksSource.java
-@@ -71,9 +71,12 @@ public class ServerPacksSource extends BuiltInPackSource {
+@@ -71,8 +71,8 @@ public class ServerPacksSource extends BuiltInPackSource {
          // Paper start - custom built-in pack
          final PackLocationInfo info;
          final PackSelectionConfig packConfig;
 -        if ("paper".equals(id)) {
-+        if ("paper".equals(id) || "traium".equals(id)) {
-             info = new PackLocationInfo(id, title, PackSource.BUILT_IN, Optional.empty());
+-            info = new PackLocationInfo(id, title, PackSource.BUILT_IN, Optional.empty());
++        if ("paper".equals(id) || "traium".equals(id) || "bukkit".equals(id)) {
++            info = new PackLocationInfo(datapackId(id), title, datapackSource(id), Optional.empty());
              packConfig = new PackSelectionConfig(true, Pack.Position.TOP, true);
-+        } else if("bukkit".equals(id)) {
-+            info = new PackLocationInfo("file/bukkit", title, PackSource.WORLD, Optional.empty());
-+            packConfig = new PackSelectionConfig(true, Pack.Position.TOP, true);
          } else {
              info = createBuiltInPackLocation(id, title);
-             packConfig = FEATURE_SELECTION_CONFIG;
+@@ -82,6 +82,14 @@ public class ServerPacksSource extends BuiltInPackSource {
+         // Paper end - custom built-in pack
+     }
+ 
++    private static String datapackId(String id) {
++        return id.equals("bukkit") ? "file/bukkit" : id;
++    }
++
++    private static PackSource datapackSource(String id) {
++        return id.equals("bukkit") ? PackSource.WORLD : PackSource.BUILT_IN;
++    }
++
+     public static PackRepository createPackRepository(Path folder, DirectoryValidator validator) {
+         return new PackRepository(validator, new ServerPacksSource(validator), new FolderRepositorySource(folder, PackType.SERVER_DATA, PackSource.WORLD, validator)); // Paper - add validator
+     }

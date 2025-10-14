@@ -5,7 +5,7 @@ Subject: [PATCH] Fixed legacy bukkit plugin deprecated api.
 
 
 diff --git a/io/papermc/paper/threadedregions/RegionizedServer.java b/io/papermc/paper/threadedregions/RegionizedServer.java
-index b1e5e0546166d42855847d73de2dfccdffe7cfe9..5ead2dc0634d663b15300728b5824f0509036258 100644
+index e1842ab8f20271a8b20ab8462b09a4745a612a9a..8c0971eb48c64ba902d20c65ec7b4db93dd1d142 100644
 --- a/io/papermc/paper/threadedregions/RegionizedServer.java
 +++ b/io/papermc/paper/threadedregions/RegionizedServer.java
 @@ -20,6 +20,7 @@ import net.minecraft.server.level.ServerLevel;
