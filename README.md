@@ -20,7 +20,7 @@ cd Traium
 ./gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar
 ```
 
-## 2 | Development API
+## 2 | Plugin API
 
 Maven
 
@@ -34,11 +34,20 @@ Maven
 </dependencies>
 ```
 
-## 3 | Bstats
+## 3 | 配置文件
+
+服务端的配置文件位于根目录的traium_config里面
+```
+traium_config
+├─ traium_global.toml
+└─ traium_world.toml
+```
+
+## 4 | Bstats
 
 [![bStats](https://bstats.org/signatures/server-implementation/Traium.svg)](https://bstats.org/plugin/server-implementation/Traium/)
 
-## 4 | 最后
+## 5 | 最后
 > [!TIP]
 > 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
 

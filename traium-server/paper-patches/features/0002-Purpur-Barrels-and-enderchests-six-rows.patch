@@ -5,7 +5,7 @@ Subject: [PATCH] Purpur Barrels and enderchests six rows.
 
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
-index 2f41a92465b9da28e026297cc3528898bb1c8412..a99c3ef198c426c7142c862172c8fc0a4dee5a1d 100644
+index 2f41a92465b9da28e026297cc3528898bb1c8412..59623457cc68d462698ee58561fa81de98a9ad86 100644
 --- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
 @@ -148,8 +148,18 @@ public class CraftContainer extends AbstractContainerMenu {
@@ -13,11 +13,11 @@ index 2f41a92465b9da28e026297cc3528898bb1c8412..a99c3ef198c426c7142c862172c8fc0a
              case CHEST:
              case ENDER_CHEST:
 +                // Traium - Purpur Barrels and enderchests 6 rows
-+                this.delegate = new ChestMenu(me.coderfrish.traium.config.GlobalConfig.enableEnderChestSixRows ? net.minecraft.world.inventory.MenuType.GENERIC_9x6 : net.minecraft.world.inventory.MenuType.GENERIC_9x3, windowId, bottom, top, top.getContainerSize() / 9);
++                this.delegate = new ChestMenu(me.coderfrish.traium.config.WorldConfig.enableEnderChestSixRows ? net.minecraft.world.inventory.MenuType.GENERIC_9x6 : net.minecraft.world.inventory.MenuType.GENERIC_9x3, windowId, bottom, top, top.getContainerSize() / 9);
 +                break;
              case BARREL:
 -                this.delegate = new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x3, windowId, bottom, top, top.getContainerSize() / 9);
-+                this.delegate = new ChestMenu(switch (me.coderfrish.traium.config.GlobalConfig.barrelRows) {
++                this.delegate = new ChestMenu(switch (me.coderfrish.traium.config.WorldConfig.barrelRows) {
 +                    case 6 -> net.minecraft.world.inventory.MenuType.GENERIC_9x6;
 +                    case 5 -> net.minecraft.world.inventory.MenuType.GENERIC_9x5;
 +                    case 4 -> net.minecraft.world.inventory.MenuType.GENERIC_9x4;
