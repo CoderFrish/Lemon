@@ -1,7 +1,6 @@
 name: TestPlugin
 version: development
 main: me.coderfrish.test.TestPlugin
-folia-supported: true
 api-version: 1.21
 
 commands:
