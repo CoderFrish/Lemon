@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TraiumCommand extends Command {
-    private static final Component PERMISSION_MSG = Component.text("No permission to execute this command!").color(NamedTextColor.RED);
-    private static final Component SUB_COMMAND_NOT_EXIST_MSG = Component.text("Not exist command: ").color(NamedTextColor.RED);
+    static final Component PERMISSION_MSG = Component.text("No permission to execute this command!").color(NamedTextColor.RED);
+    static final Component SUB_COMMAND_NOT_EXIST_MSG = Component.text("Not exist command: ").color(NamedTextColor.RED);
     private static final Map<String, TraiumSubCommand> subCommandMap = new ConcurrentHashMap<>();
 
     public static void register(TraiumSubCommand subCommand) {
@@ -29,10 +29,11 @@ public class TraiumCommand extends Command {
 
     public void register() {
         Bukkit.getCommandMap().register("traium", this);
+        register(new NetworkCommand("network", TraiumPermission.TRAIUM_ADMIN_PERMISSION));
     }
 
     public TraiumCommand() {
-        super("traium", "A Main Command for traium.", "/traium <subcommand>", new ArrayList<>());
+        super("traium", "A Main Command for traium.", "/traium <command>", new ArrayList<>());
     }
 
     @Override

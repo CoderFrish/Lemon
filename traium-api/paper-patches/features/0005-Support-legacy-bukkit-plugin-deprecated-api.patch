@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Fri, 17 Oct 2025 19:41:46 +0800
+Subject: [PATCH] Support legacy bukkit plugin deprecated api.
+
+
+diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
+index 85b778980e762835ac278528087e91b2e3effb43..4f4f9af0da77c4014bd7685355d418b2eaa08fa5 100644
+--- a/src/main/java/org/bukkit/Bukkit.java
++++ b/src/main/java/org/bukkit/Bukkit.java
+@@ -785,9 +785,11 @@ public final class Bukkit {
+     /**
+      * Gets the scheduler for managing scheduled events.
+      *
++     * @deprecated This is a deprecated api since folia, in order to support legacy bukkit plugin so enabled this scheduler but new plugin don`t recommend to use this api.
+      * @return a scheduling service for this server
+      */
+     @NotNull
++    @Deprecated
+     public static BukkitScheduler getScheduler() {
+         return server.getScheduler();
+     }

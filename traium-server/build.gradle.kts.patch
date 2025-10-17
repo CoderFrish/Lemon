@@ -9,12 +9,11 @@
          upstream.patchDir("paperServer") {
              upstreamPath = "paper-server"
              excludes = setOf("src/minecraft", "patches", "build.gradle.kts")
-@@ -35,8 +_,23 @@
+@@ -35,8 +_,16 @@
          }
      }
  
 -    activeFork = fork
--
 +    val traium = forks.register("traium") {
 +        forks = folia
 +        upstream.patchRepo("paperServer") {
@@ -22,33 +21,24 @@
 +            patchesDir = rootDirectory.dir("traium-server/paper-patches")
 +            outputDir = rootDirectory.dir("paper-server")
 +        }
-+
-+        upstream.patchDir("foliaServer") {
-+            upstreamPath = "folia-server"
-+            excludes = setOf("src/minecraft", "paper-patches", "minecraft-patches", "build.gradle.kts", "build.gradle.kts.patch")
-+            patchesDir = rootDirectory.dir("traium-server/folia-patches")
-+            outputDir = rootDirectory.dir("folia-server")
-+        }
 +    }
-+
+ 
 +    activeFork = traium
  
      spigot {
          enabled = true
-@@ -121,12 +_,12 @@
- 
+@@ -122,11 +_,11 @@
  sourceSets {
      main {
--        java { srcDir("../paper-server/src/main/java"); srcDir("../paper-server/src/generated/java") }
+         java { srcDir("../paper-server/src/main/java"); srcDir("../paper-server/src/generated/java") }
 -        resources { srcDir("../paper-server/src/main/resources") }
-+        java { srcDir("../folia-server/src/main/java"); srcDir("../paper-server/src/main/java"); srcDir("../paper-server/src/generated/java") }
-+        resources { srcDir("../paper-server/src/main/resources"); srcDir("../folia-server/src/main/resources") }
++        resources { srcDir("../paper-server/src/main/resources"); }
      }
      test {
 -        java { srcDir("../paper-server/src/test/java") }
 -        resources { srcDir("../paper-server/src/test/resources") }
-+        java { srcDir("../folia-server/src/test/java"); srcDir("../paper-server/src/test/java"); }
-+        resources { srcDir("../folia-server/src/test/resources"); srcDir("../paper-server/src/test/resources"); }
++        java { srcDir("../paper-server/src/test/java"); }
++        resources { srcDir("../paper-server/src/test/resources"); }
      }
  }
  val log4jPlugins = sourceSets.create("log4jPlugins") {

@@ -5,14 +5,15 @@ Subject: [PATCH] Force fixed command block execution.
 
 
 diff --git a/net/minecraft/world/level/BaseCommandBlock.java b/net/minecraft/world/level/BaseCommandBlock.java
-index 8b8ce26de104211728d4b64e641a2b471ce89073..1a1a5efa991104723d480a51db465ea2e1783d3d 100644
+index 8b8ce26de104211728d4b64e641a2b471ce89073..cca4417b445392d71f9dfb8de4d3a98097e04416 100644
 --- a/net/minecraft/world/level/BaseCommandBlock.java
 +++ b/net/minecraft/world/level/BaseCommandBlock.java
-@@ -96,7 +96,6 @@ public abstract class BaseCommandBlock implements CommandSource {
+@@ -96,7 +96,7 @@ public abstract class BaseCommandBlock implements CommandSource {
      }
  
      public boolean performCommand(Level level) {
 -        if (true) return false; // Folia - region threading
++        if (!me.coderfrish.traium.config.WorldConfig.forceCommandBlockExecution) return false;
          if (level.isClientSide || level.getGameTime() == this.lastExecution) {
              return false;
          } else if ("Searge".equalsIgnoreCase(this.command)) {

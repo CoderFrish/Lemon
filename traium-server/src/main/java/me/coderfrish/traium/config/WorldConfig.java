@@ -11,6 +11,12 @@ public class WorldConfig extends TraiumConfig{
         super(CONFIG_WORLD_FILE);
     }
 
+    @ConfigField(name = "enabled", type = ConfigTypes.fixed, parent = "force_command_block_execution", comments = {
+            "If you want to use command block, please turn on this.",
+            "This config can enable command block execution, but you should assume the risk it causes by yourself."
+    })
+    public static boolean forceCommandBlockExecution = false;
+
     @ConfigField(name = "enabled", type = ConfigTypes.fixed, parent = "unsafe_teleportation", comments = {
             "If you want to use sand duping,please turn on this.",
             "Warning: This would cause some unsafe issues, you could learn more on : https://github.com/PaperMC/Folia/issues/297."
