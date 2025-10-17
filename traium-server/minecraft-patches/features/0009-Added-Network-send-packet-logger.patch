@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Fri, 17 Oct 2025 21:58:42 +0800
+Subject: [PATCH] Added Network send packet logger.
+
+
+diff --git a/net/minecraft/network/Connection.java b/net/minecraft/network/Connection.java
+index 1626b932a5e46ee77465ef08c2f4430c2e2753c1..6762067134667dae7af5b243f3d87ec5a1e31896 100644
+--- a/net/minecraft/network/Connection.java
++++ b/net/minecraft/network/Connection.java
+@@ -42,6 +42,10 @@ import java.util.function.Consumer;
+ import java.util.function.Supplier;
+ import javax.annotation.Nullable;
+ import javax.crypto.Cipher;
++
++import me.coderfrish.traium.profiler.NetworkProfiler;
++import me.coderfrish.traium.profiler.networkprofiler.NetworkBound;
++import me.coderfrish.traium.profiler.networkprofiler.NetworkData;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.Util;
+ import net.minecraft.network.chat.Component;
+@@ -62,6 +66,7 @@ import net.minecraft.server.RunningOnDifferentThreadException;
+ import net.minecraft.util.Mth;
+ import net.minecraft.util.debugchart.LocalSampleLogger;
+ import org.apache.commons.lang3.Validate;
++import org.bukkit.Bukkit;
+ import org.slf4j.Logger;
+ import org.slf4j.Marker;
+ import org.slf4j.MarkerFactory;
+@@ -273,6 +278,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
+     @Override
+     protected void channelRead0(ChannelHandlerContext context, Packet<?> packet) {
+         if (this.channel.isOpen()) {
++            Bukkit.getAsyncScheduler().runNow(me.coderfrish.traium.utils.Constants.FAKE_PLUGIN, (t) -> NetworkProfiler.listen(new NetworkData(this, packet, NetworkBound.C2S)));
+             PacketListener packetListener = this.packetListener;
+             if (packetListener == null) {
+                 throw new IllegalStateException("Received a packet before the packet listener was initialized");
+@@ -517,6 +523,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
+ 
+     private void doSendPacket(Packet<?> packet, @Nullable ChannelFutureListener channelFutureListener, boolean flag) {
+         // Paper start - Optimize network
++        Bukkit.getAsyncScheduler().runNow(me.coderfrish.traium.utils.Constants.FAKE_PLUGIN, (t) -> NetworkProfiler.listen(new NetworkData(this, packet, NetworkBound.S2C)));
+         final net.minecraft.server.level.ServerPlayer player = this.getPlayer();
+         if (!this.isConnected()) {
+             packet.onPacketDispatchFinish(player, null);

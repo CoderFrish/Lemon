@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Frish2021 <1573880184@qq.com>
 Date: Mon, 6 Oct 2025 20:52:03 +0800
-Subject: [PATCH] Fixed legacy bukkit plugin deprecated api.
+Subject: [PATCH] Support legacy bukkit plugin deprecated api.
 
 
 diff --git a/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java b/src/main/java/ca/spottedleaf/moonrise/common/util/TickThread.java

@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Frish2021 <1573880184@qq.com>
 Date: Wed, 8 Oct 2025 13:29:35 +0800
-Subject: [PATCH] Fixed legacy bukkit plugin deprecated api.
+Subject: [PATCH] Support legacy bukkit plugin deprecated api.
 
 
 diff --git a/io/papermc/paper/threadedregions/RegionizedServer.java b/io/papermc/paper/threadedregions/RegionizedServer.java
@@ -45,7 +45,7 @@ index fa6b8d756195c1b430cc11214a901bd42eebc98d..276c94c4bad6cfb0dfdaf2424e48139e
              tickThreadRunner.profiler = profiler == null ? ca.spottedleaf.leafprofiler.RegionizedProfiler.Handle.NO_OP_HANDLE : profiler;
              // Folia end - profiler
 diff --git a/net/minecraft/world/level/Level.java b/net/minecraft/world/level/Level.java
-index 2049990edf0280d2b74b7284b32e78678a5ca6db..ddf1c6317ea8988d725764aa11c43ac35e450650 100644
+index 2049990edf0280d2b74b7284b32e78678a5ca6db..27716e255013f4983e04437a66c729255c90b7d9 100644
 --- a/net/minecraft/world/level/Level.java
 +++ b/net/minecraft/world/level/Level.java
 @@ -1,5 +1,6 @@
@@ -64,7 +64,7 @@ index 2049990edf0280d2b74b7284b32e78678a5ca6db..ddf1c6317ea8988d725764aa11c43ac3
  import net.minecraft.CrashReport;
  import net.minecraft.CrashReportCategory;
  import net.minecraft.ReportedException;
-@@ -815,15 +818,21 @@ public abstract class Level implements LevelAccessor, UUIDLookup<Entity>, AutoCl
+@@ -815,15 +818,23 @@ public abstract class Level implements LevelAccessor, UUIDLookup<Entity>, AutoCl
      public final java.util.concurrent.ConcurrentHashMap.KeySetView<net.minecraft.server.level.ChunkHolder, Boolean> needsChangeBroadcasting = java.util.concurrent.ConcurrentHashMap.newKeySet();
  
      public io.papermc.paper.threadedregions.RegionizedWorldData getCurrentWorldData() {
@@ -73,23 +73,25 @@ index 2049990edf0280d2b74b7284b32e78678a5ca6db..ddf1c6317ea8988d725764aa11c43ac3
 -            return ret;
 +        io.papermc.paper.threadedregions.RegionizedWorldData region = io.papermc.paper.threadedregions.TickRegionScheduler.getCurrentRegionizedWorldData();
 +        if (region == null) {
-+            if (this instanceof ServerLevel) {
++            if (this instanceof ServerLevel)
 +                return UnsafeWorldData.getUnsafeWorldData(this);
-+            }
 +
-+            return region;
++            return null;
          }
 -        Level world = ret.world;
 -        if (world != this) {
 -            throw new IllegalStateException("World mismatch: expected " + this.getWorld().getName() + " but got " + world.getWorld().getName());
 +
-+        ServerLevel level = region.world;
-+        if (level != this) {
-+            return UnsafeWorldData.updateUnsafeWorldData(region);
++        try {
++            ServerLevel level = region.world;
++            if (level != this)
++                return UnsafeWorldData.getUnsafeWorldData(level);
++
++            return UnsafeWorldData.getUnsafeWorldData(this);
++        } finally {
++            UnsafeWorldData.updateUnsafeWorldData(region);
          }
 -        return ret;
-+
-+        return UnsafeWorldData.getUnsafeWorldData(this);
      }
  
      @Override
