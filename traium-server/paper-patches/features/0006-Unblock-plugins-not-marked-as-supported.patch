@@ -1,0 +1,91 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frish2021 <1573880184@qq.com>
+Date: Fri, 17 Oct 2025 18:19:00 +0800
+Subject: [PATCH] Unblock plugins not marked as supported.
+
+
+diff --git a/src/main/java/io/papermc/paper/plugin/provider/configuration/PaperPluginMeta.java b/src/main/java/io/papermc/paper/plugin/provider/configuration/PaperPluginMeta.java
+index fb7c6621e2805f4339c255f6c2e02c55ff4c502e..0436e9f98b25e377ea20c3146609e7ca4540c274 100644
+--- a/src/main/java/io/papermc/paper/plugin/provider/configuration/PaperPluginMeta.java
++++ b/src/main/java/io/papermc/paper/plugin/provider/configuration/PaperPluginMeta.java
+@@ -252,13 +252,6 @@ public class PaperPluginMeta implements PluginMeta {
+         return this.apiVersion.getVersionString();
+     }
+ 
+-    // Folia start
+-    @Override
+-    public boolean isFoliaSupported() {
+-        return this.foliaSupported;
+-    }
+-    // Folia end
+-
+     @Override
+     public @NotNull List<String> getProvidedPlugins() {
+         return this.provides;
+diff --git a/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java b/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java
+index 6369b13e1fcdbdb25dd9d6e4d3bffdedbee4f739..0a27b468560ccf4b9588cd12d50c02e442f3024f 100644
+--- a/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java
++++ b/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginProviderFactory.java
+@@ -24,11 +24,6 @@ class PaperPluginProviderFactory implements PluginTypeFactory<PaperPluginParent,
+ 
+     @Override
+     public PaperPluginParent build(JarFile file, PaperPluginMeta configuration, Path source) {
+-        // Folia start - block plugins not marked as supported
+-        if (!configuration.isFoliaSupported()) {
+-            throw new RuntimeException("Could not load plugin '" + configuration.getDisplayName() + "' as it is not marked as supporting Folia!");
+-        }
+-        // Folia end - block plugins not marked as supported
+         Logger jul = PaperPluginLogger.getLogger(configuration);
+         ComponentLogger logger = ComponentLogger.logger(jul.getName());
+         PluginProviderContext context = PluginProviderContextImpl.create(configuration, logger, source);
+diff --git a/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java b/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java
+index 335058589eeba934105bea31a0c3aea2293a5597..b9d6ac373e4cf913ee1d6e1453239320f198dfb5 100644
+--- a/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java
++++ b/src/main/java/io/papermc/paper/plugin/provider/type/spigot/SpigotPluginProviderFactory.java
+@@ -35,11 +35,6 @@ class SpigotPluginProviderFactory implements PluginTypeFactory<SpigotPluginProvi
+ 
+     @Override
+     public SpigotPluginProvider build(JarFile file, PluginDescriptionFile configuration, Path source) throws InvalidDescriptionException {
+-        // Folia start - block plugins not marked as supported
+-        if (!configuration.isFoliaSupported()) {
+-            throw new RuntimeException("Could not load plugin '" + configuration.getDisplayName() + "' as it is not marked as supporting Folia!");
+-        }
+-        // Folia end - block plugins not marked as supported
+         // Copied from SimplePluginManager#loadPlugins
+         // Spigot doesn't validate the name when the config is created, and instead when the plugin is loaded.
+         // Paper plugin configuration will do these checks in config serializer instead of when this is created.
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
+index 679529d94c16960527e5d76adb61c7e536f55d3e..c1aad9203af20102e560571435dfa75150b37c1b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
+@@ -366,12 +366,6 @@ public final class CraftMagicNumbers implements UnsafeValues {
+             throw new InvalidPluginException("Unsupported API version " + descriptionFile.getAPIVersion());
+         }
+ 
+-        // Folia start - block plugins not marked as supported
+-        if (!descriptionFile.isFoliaSupported()) {
+-            throw new InvalidPluginException("Plugin " + descriptionFile.getFullName() + " is not marked as supporting regionised multithreading");
+-        }
+-        // Folia end - block plugins not marked as supported
+-
+         if (toCheck.isOlderThan(minimumVersion)) {
+             // Older than supported
+             throw new InvalidPluginException("Plugin API version " + descriptionFile.getAPIVersion() + " is lower than the minimum allowed version. Please update or replace it.");
+diff --git a/src/test/java/io/papermc/paper/plugin/TestPluginMeta.java b/src/test/java/io/papermc/paper/plugin/TestPluginMeta.java
+index db9285c2ff0c805f5d9564b6e8520c33ea5bb65a..ba271c35eb2804f94cfc893bf94affb9ae13d3ba 100644
+--- a/src/test/java/io/papermc/paper/plugin/TestPluginMeta.java
++++ b/src/test/java/io/papermc/paper/plugin/TestPluginMeta.java
+@@ -20,13 +20,6 @@ public class TestPluginMeta implements PluginMeta {
+         this.identifier = identifier;
+     }
+ 
+-    // Folia start - region threading
+-    @Override
+-    public boolean isFoliaSupported() {
+-        return true;
+-    }
+-    // Folia end - region threading
+-
+     @Override
+     public @NotNull String getName() {
+         return this.identifier;

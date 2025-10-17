@@ -38,7 +38,7 @@ jobs:
           name: Traium ${{ env.mcversion }} - ${{ env.commit_id }}
           body: |
             ### 📦 Version: `${{ env.mcversion }}` | Commit: [${{ env.commit_id }}](https://github.com/CoderFrish/commit/${{ env.commit_id }})
-            ![download](https://img.shields.io/github/downloads/CoderFrish/Traium/${{ env.commit_id }}/total?style=for-the-badge)
+            ![download](https://img.shields.io/github/downloads/TraiumMC/Traium/${{ env.commit_id }}/total?style=for-the-badge)
               
             > This release is automatically built by GitHub Actions.
               
