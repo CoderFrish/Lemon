@@ -1,0 +1,69 @@
+name: Bug Report
+description: 报告Bug或者服务端插件兼容问题
+labels:
+  - bug
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请如实填写你所遇到的问题，如果此bug被尝试修复，您可以帮助我们测试并回复。若bug的确被修复，您可以关闭issue来让开发者确认。
+
+  - type: input
+    id: version
+    attributes:
+      label: 服务端版本号
+      description: |
+        Traium 服务端版本号，用于定位报错版本
+      placeholder: >
+        e.g. git-Traium-"d2e5925" (MC: 1.21.8)
+    validations:
+      required: true
+
+  - type: textarea
+    id: plugins
+    attributes:
+      label: 已加载的插件或者数据包
+      description: 你加载了什么插件，可以通过 `/plugins` 查看，数据包可以通过 `/datapack list`
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+      description: 你所希望看到的情况
+      placeholder: e.g. /traium 指令能够正常执行
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实现行为
+      description: 你所看到的实际情况
+      placeholder: e.g. /traium 不能正常运行，控制台报错
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description:
+        这里应该有一个图片、视频或其他信息来描述你是怎么触发bug。
+      placeholder: e.g. 执行/xxx指令后，执行/traium 指令报错无法执行
+    validations:
+      required: true
+
+  - type: textarea
+    id: logging
+    attributes:
+      label: 报错日志
+      description:
+        这里需要把日志片段或者日志文件来描述你的bug错误类型
+    validations:
+      required: true
+
+  - type: textarea
+    id: other
+    attributes:
+      label: 其他更多的详细信息
