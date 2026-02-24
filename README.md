@@ -2,7 +2,9 @@
 
 # Traium
 
-*基于Folia的服务端，在修复Bukkit被破坏的API同时，也为轻生电修复被破坏的原版特性。*
+~~*基于Folia的服务端，在修复Bukkit被破坏的API同时，也为轻生电修复被破坏的原版特性。*~~
+
+*暂时未找到自己的方向，现在只剩下空桥，至于后面干什么看作者 :)*
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/TraiumMC/Traium?style=for-the-badge&logo=github&label=Stars&logoColor=white&color=ffda65)
 ![GitHub Release Date](https://img.shields.io/github/release-date/TraiumMC/Traium?style=for-the-badge&logo=github&label=Release&logoColor=white&color=06d094)
@@ -29,14 +31,16 @@ Maven
     <dependency>
         <groupId>me.coderfrish.traium</groupId>
         <artifactId>traium-api</artifactId>
-        <version>1.21.8-R0.1-SNAPSHOT</version>
+        <version>1.21.11-R0.1-SNAPSHOT</version>
     </dependency>
 </dependencies>
 ```
 
 ## 3 | 配置文件
 
-服务端的配置文件位于根目录的traium_config里面
+(该端正在大量重构中...)
+
+~~服务端的配置文件位于根目录的traium_config里面~~
 ```
 traium_config
 ├─ traium_global.toml

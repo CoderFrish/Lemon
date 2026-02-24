@@ -1,8 +1,0 @@
-name: TestPlugin
-version: development
-main: me.coderfrish.test.TestPlugin
-api-version: 1.21
-
-commands:
-  cancel:
-    description: A Test Command.
