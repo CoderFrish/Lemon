@@ -1,6 +1,6 @@
 <img src="public/logo.png" width="200" align="left"/>
 
-# Traium
+# Lirael Project
 
 ~~*基于Folia的服务端，在修复Bukkit被破坏的API同时，也为轻生电修复被破坏的原版特性。*~~
 
@@ -15,10 +15,10 @@
 任何版本都可以在 [Release](https://github.com/TraiumMC/Traium/releases) 中找到，也可以通过以下步骤构建
 ```shell
 # 克隆Traium的代码仓库
-git clone https://github.com/TraiumMC/Traium.git
-cd Traium
+git clone https://github.com/TraiumMC/Lirael.git
+cd Lirael
 
-# 应用Traium的补丁并创建Paperclip Jar文件
+# 应用Lirael的补丁并创建Paperclip Jar文件
 ./gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar
 ```
 
@@ -29,7 +29,7 @@ Maven
 ```xml
 <dependencies>
     <dependency>
-        <groupId>me.coderfrish.traium</groupId>
+        <groupId>me.coderfrish.lirael</groupId>
         <artifactId>traium-api</artifactId>
         <version>1.21.11-R0.1-SNAPSHOT</version>
     </dependency>
