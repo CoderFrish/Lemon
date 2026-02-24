@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoderFrish <1573880184@qq.com>
+Date: Wed, 25 Feb 2026 00:48:43 +0800
+Subject: [PATCH] Rebase Folia to Lirael.
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+index 652ff54e7c50412503725d628bfe72ed03059790..378cc804f74e1a17b648aeb9e542534e1ab7a2dc 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -19,6 +19,11 @@ public interface ServerBuildInfo {
+      */
+     Key BRAND_PAPER_ID = Key.key("papermc", "paper");
+ 
++    /**
++     * The brand id for Lirael.
++     */
++    Key BRAND_LIRAEL_ID = Key.key("coderfrish", "lirael");
++
+     /**
+      * Gets the {@code ServerBuildInfo}.
+      *

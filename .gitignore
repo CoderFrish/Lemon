@@ -3,10 +3,8 @@
 build/
 run/
 
-traium-server/build.gradle.kts
-traium-api/build.gradle.kts
-traium-server/src/minecraft/
+lirael-server/build.gradle.kts
+lirael-api/build.gradle.kts
+lirael-server/src/minecraft/
 paper-server/
 paper-api/
-folia-server/
-folia-api/

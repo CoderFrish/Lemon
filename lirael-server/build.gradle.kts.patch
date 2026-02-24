@@ -1,0 +1,76 @@
+--- a/folia-server/build.gradle.kts
++++ b/folia-server/build.gradle.kts
+@@ -22,7 +_,8 @@
+     minecraftVersion = providers.gradleProperty("mcVersion")
+     gitFilePatches = false
+     
+-    val fork = forks.register("folia") {
++    val folia = forks.register("folia") {
++        rootDirectory = upstreamsDirectory().map { it.dir("folia") }
+         upstream.patchDir("paperServer") {
+             upstreamPath = "paper-server"
+             excludes = setOf("src/minecraft", "patches", "build.gradle.kts")
+@@ -31,7 +_,24 @@
+         }
+     }
+ 
+-    activeFork = fork
++    val lirael = forks.register("lirael") {
++        forks = folia
++        upstream.patchRepo("paperServer") {
++            upstreamRepo = folia.patchedRepo("paperServer")
++            patchesDir = rootDirectory.dir("lirael-server/paper-patches")
++            outputDir = rootDirectory.dir("paper-server")
++        }
++
++        /* Folia would never leave code in their own src even for ten thousand years :( */
++//        upstream.patchDir("foliaServer") {
++//            upstreamPath = "folia-server"
++//            excludes = setOf("src/minecraft", "paper-patches", "minecraft-patches", "build.gradle.kts", "build.gradle.kts.patch")
++//            patchesDir = rootDirectory.dir("lirael-server/folia-patches")
++//            outputDir = rootDirectory.dir("folia-server")
++//        }
++    }
++
++    activeFork = lirael
+ 
+ 
+     spigot {
+@@ -151,7 +_,7 @@
+ }
+ 
+ dependencies {
+-    implementation(project(":folia-api"))
++    implementation(project(":lirael-api"))
+     implementation("ca.spottedleaf:concurrentutil:0.0.8")
+     implementation("org.jline:jline-terminal-ffm:3.27.1") // use ffm on java 22+
+     implementation("org.jline:jline-terminal-jni:3.27.1") // fall back to jni on java 21
+@@ -222,14 +_,14 @@
+         val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
+         attributes(
+             "Main-Class" to "org.bukkit.craftbukkit.Main",
+-            "Implementation-Title" to "Folia",
++            "Implementation-Title" to "Lirael",
+             "Implementation-Version" to implementationVersion,
+             "Implementation-Vendor" to date,
+-            "Specification-Title" to "Folia",
++            "Specification-Title" to "Lirael",
+             "Specification-Version" to project.version,
+-            "Specification-Vendor" to "Paper Team",
+-            "Brand-Id" to "papermc:folia",
+-            "Brand-Name" to "Folia",
++            "Specification-Vendor" to "Lirael Project",
++            "Brand-Id" to "coderfrish:lirael",
++            "Brand-Name" to "Lirael",
+             "Build-Number" to (build ?: ""),
+             "Build-Time" to buildTime.toString(),
+             "Git-Branch" to gitBranch,
+@@ -381,7 +_,7 @@
+ }
+ 
+ fill {
+-    project("folia")
++    project("lirael")
+     versionFamily(paperweight.minecraftVersion.map { it.split(".", "-").takeWhile { part -> part.toIntOrNull() != null }.take(2).joinToString(".") })
+     version(paperweight.minecraftVersion)
+ 
