@@ -1,5 +1,6 @@
 package dev.coderfrish.lirael.config;
 
+import org.apache.logging.log4j.Level;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.Reader;
@@ -44,8 +45,17 @@ public class LiraelConfig {
 
     private static String server_mod_name = "Lirael";
 
+    private static String sentry_dsn = "";
+
+    public static String sentry_log_level = "WARN";
+
+    public static boolean sentry_only_log_thrown = true;
+
     private static void loadConfigs() {
         server_mod_name = configuration.getString("misc.server_mod_name.value");
+        sentry_dsn = configuration.getString("misc.sentry.dsn");
+        sentry_log_level = configuration.getString("misc.sentry.log_level");
+        sentry_only_log_thrown = configuration.getBoolean("misc.sentry.only_log_thrown");
     }
 
     private static void saveConfigs() {
@@ -54,9 +64,44 @@ public class LiraelConfig {
         configuration.setComments("misc.server_mod_name.value", List.of(
                 "This config is used to custom server brand name"
         ));
+
+        /* Pufferfish Sentry */
+        configuration.set("misc.sentry.dsn", sentry_dsn);
+        configuration.setComments("misc.sentry.dsn", List.of(
+                "Sentry DSN for improved error logging, leave blank to disable,",
+                "Obtain from https://sentry.io/"
+        ));
+
+        configuration.set("misc.sentry.log_level", sentry_log_level);
+        configuration.setComments("misc.sentry.log_level", List.of(
+                "Logs with a level higher than or equal to this level will be recorded."
+        ));
+
+        configuration.set("misc.sentry.only_log_thrown", sentry_only_log_thrown);
+        configuration.setComments("mmisc.sentry.only_log_thrown", List.of(
+                "Only log with a Throwable will be recorded after enabling this."
+        ));
+    }
+
+    private static void sentry() {
+        String sentryEnvironment = System.getenv("SENTRY_DSN");
+
+        sentry_dsn = sentryEnvironment != null && !sentryEnvironment.isBlank() ? sentryEnvironment: sentry_dsn;
+
+        if (sentry_dsn != null && !sentry_dsn.isBlank()) {
+            gg.pufferfish.pufferfish.sentry.SentryManager.init(Level.getLevel(sentry_log_level));
+        }
     }
 
     public static String getServerModName() {
         return server_mod_name;
+    }
+
+    public static String getSentryDsn() {
+        return sentry_dsn;
+    }
+
+    public static boolean isSentryOnlyLogThrown() {
+        return sentry_only_log_thrown;
     }
 }
