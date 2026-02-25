@@ -13,7 +13,7 @@
 目前暂时不提供 Release 下载，主要是Action脚本还没写好，需要的话请自行编译。
 ```shell
 # 克隆Traium的代码仓库
-git clone https://github.com/TraiumMC/Lirael.git
+git clone https://github.com/CoderFrish/Lirael.git
 cd Lirael
 
 # 应用Lirael的补丁并创建Paperclip Jar文件
