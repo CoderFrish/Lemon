@@ -2,6 +2,7 @@ package dev.coderfrish.lirael.listener;
 
 import dev.coderfrish.lirael.network.packets.fabric.FabricRecipeSyncPayload;
 import dev.coderfrish.lirael.network.packets.neoforge.NeoforgeRecipeSyncPayload;
+import dev.coderfrish.lirael.utility.FakePlugin;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -17,17 +18,35 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeMap;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
+import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.messaging.Messenger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 public class RecipeSyncListener implements Listener {
+    private static final FakePlugin fakePlugin = new FakePlugin();
+
+    public static void setupPecipeSync() {
+        if (!dev.coderfrish.lirael.config.LiraelConfig.isJeiRecipeSync())
+            return;
+
+        final Server server = Bukkit.getServer();
+        final Messenger messenger = server.getMessenger();
+
+        server.getPluginManager().registerEvents(new RecipeSyncListener(), fakePlugin);
+
+        messenger.registerOutgoingPluginChannel(fakePlugin, "neoforge:recipe_content");
+        messenger.registerOutgoingPluginChannel(fakePlugin, "fabric:recipe_sync");
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         final Player originalPlayer = event.getPlayer();

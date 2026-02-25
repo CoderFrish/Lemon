@@ -62,6 +62,8 @@ public class LiraelConfig {
 
     private static boolean ender_chest_permission_rows = false;
 
+    private static boolean jei_recipe_sync = false;
+
     private static void loadConfigs() {
         server_mod_name = configuration.getString("misc.server_mod_name.value");
         sentry_dsn = configuration.getString("misc.sentry.dsn");
@@ -71,6 +73,7 @@ public class LiraelConfig {
         barrel_rows = configuration.getInt("misc.ender_chest_six_rows.barrel_rows");
         ender_chest_six_rows = configuration.getBoolean("misc.ender_chest_six_rows.enabled");
         ender_chest_permission_rows = configuration.getBoolean("misc.ender_chest_six_rows.ender_chest_permission_rows");
+        jei_recipe_sync = configuration.getBoolean("misc.jei_recipe_sync.enabled");
     }
 
     private static void saveConfigs() {
@@ -123,6 +126,12 @@ public class LiraelConfig {
         ));
 
         purpurSixRowsChest();
+
+        /* jei mod sync recipe */
+        configuration.set("misc.jei_recipe_sync.enabled", jei_recipe_sync);
+        configuration.setComments("misc.jei_recipe_sync.enabled", List.of(
+                "Enable it can send server recipe to client in player joining game."
+        ));
     }
 
     private static void sentry() {
@@ -140,6 +149,10 @@ public class LiraelConfig {
             logger.warn("Barrel rows cannot is {} , Max: 6, Min: 1", barrel_rows);
             barrel_rows = 3;
         }
+    }
+
+    public static boolean isJeiRecipeSync() {
+        return jei_recipe_sync;
     }
 
     public static String getServerModName() {

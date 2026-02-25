@@ -24,9 +24,12 @@ cd Lirael
 
 配置文件是主目录中的 `lirael-config.yml`，如果需要了解配置系统相关配置请移步到 [configuration](public/document/configuration.md)
 
-## 3 | 相关特性
+## 3 | 主要功能
 
-是有特性，但是不多，可以自己找 ：）
+- [x] 可配置的原版特性
+- [x] Purpur的6格末影箱及桶
+- [x] JEI服务器配方同步
+- [x] 关闭正版验证后不丢失档案 (除了存档已有规模但是Lirael未在正版环境下运行过)
 
 ## 4 | 联系
 

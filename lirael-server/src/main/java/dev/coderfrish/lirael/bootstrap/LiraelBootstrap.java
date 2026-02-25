@@ -2,6 +2,7 @@ package dev.coderfrish.lirael.bootstrap;
 
 import dev.coderfrish.lirael.config.LiraelConfig;
 import dev.coderfrish.lirael.listener.RecipeSyncListener;
+import dev.coderfrish.lirael.profiles.OnlinePlayerProfile;
 import dev.coderfrish.lirael.utility.FakePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
@@ -11,16 +12,7 @@ public class LiraelBootstrap {
     private static final FakePlugin fakePlugin = new FakePlugin();
 
     public static void bootstrap() throws Exception {
+        OnlinePlayerProfile.loadProfile();
         LiraelConfig.load(); /* lirael config */
-    }
-
-    public static void startup() {
-        final Server server = Bukkit.getServer();
-        final Messenger messenger = server.getMessenger();
-
-        server.getPluginManager().registerEvents(new RecipeSyncListener(), fakePlugin);
-
-        messenger.registerOutgoingPluginChannel(fakePlugin, "neoforge:recipe_content");
-        messenger.registerOutgoingPluginChannel(fakePlugin, "fabric:recipe_sync");
     }
 }
