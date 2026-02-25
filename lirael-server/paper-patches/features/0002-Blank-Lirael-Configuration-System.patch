@@ -31,3 +31,19 @@ index d543b1b107ab8d3eeb1fc3c1cadf489928d2786e..39e9da5d514ef73d0b6b5e29bd51babc
          Main.main(options);
      }
  
+diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
+index 9d4d97fcb0f3cc94e9a263c61cc0e7e58fd322c3..0cde720d8a182de267f96db4e9932d450e1271b1 100644
+--- a/src/main/java/org/bukkit/craftbukkit/Main.java
++++ b/src/main/java/org/bukkit/craftbukkit/Main.java
+@@ -19,6 +19,11 @@ public class Main {
+     // Paper start - Reset loggers after shutdown
+     static {
+         System.setProperty("java.util.logging.manager", "io.papermc.paper.log.CustomLogManager");
++
++        if (System.console() == null) {
++            /* see https://github.com/MenthaMC/Mint/pull/24 */
++            System.setProperty(net.minecrell.terminalconsole.TerminalConsoleAppender.JLINE_OVERRIDE_PROPERTY, "false");
++        }
+     }
+     // Paper end - Reset loggers after shutdown
+ 
