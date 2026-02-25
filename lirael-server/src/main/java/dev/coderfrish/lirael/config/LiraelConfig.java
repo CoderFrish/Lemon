@@ -2,6 +2,8 @@ package dev.coderfrish.lirael.config;
 
 import org.apache.logging.log4j.Level;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Reader;
 import java.nio.charset.Charset;
@@ -20,6 +22,7 @@ public class LiraelConfig {
     );
     private static final int CONFIG_VERSION = 1;
     private static final Charset UTF8 = StandardCharsets.UTF_8;
+    private static final Logger logger = LoggerFactory.getLogger("Lirael");
 
     public static void load() throws Exception {
         if (!Files.exists(CONFIG_FILE)) return;
@@ -53,12 +56,21 @@ public class LiraelConfig {
 
     private static boolean unsafe_teleport = false;
 
+    private static int barrel_rows = 3;
+
+    private static boolean ender_chest_six_rows = false;
+
+    private static boolean ender_chest_permission_rows = false;
+
     private static void loadConfigs() {
         server_mod_name = configuration.getString("misc.server_mod_name.value");
         sentry_dsn = configuration.getString("misc.sentry.dsn");
         sentry_log_level = configuration.getString("misc.sentry.log_level");
         sentry_only_log_thrown = configuration.getBoolean("misc.sentry.only_log_thrown");
         unsafe_teleport = configuration.getBoolean("fixed.unsafe_teleport.enabled");
+        barrel_rows = configuration.getInt("misc.ender_chest_six_rows.barrel_rows");
+        ender_chest_six_rows = configuration.getBoolean("misc.ender_chest_six_rows.enabled");
+        ender_chest_permission_rows = configuration.getBoolean("misc.ender_chest_six_rows.ender_chest_permission_rows");
     }
 
     private static void saveConfigs() {
@@ -93,6 +105,24 @@ public class LiraelConfig {
                 "If you want to use sand duping,please turn on this.",
                 "Warning: This would cause some unsafe issues, you could learn more on : https://github.com/PaperMC/Folia/issues/297."
         ));
+
+        /* Purpur Six Rows Chest */
+        configuration.set("misc.ender_chest_six_rows.barrel_rows", barrel_rows);
+        configuration.setComments("misc.ender_chest_six_rows.barrel_rows", List.of(
+                "The amount of rows a barrel should have. Min: 1, Max: 6"
+        ));
+
+        configuration.set("misc.ender_chest_six_rows.enabled", ender_chest_six_rows);
+        configuration.setComments("misc.ender_chest_six_rows.enabled", List.of(
+                "When enabled, ender chests should have six rows of inventory space."
+        ));
+
+        configuration.set("misc.ender_chest_six_rows.ender_chest_permission_rows", ender_chest_permission_rows);
+        configuration.setComments("misc.ender_chest_six_rows.ender_chest_permission_rows", List.of(
+                "Use permission nodes to determine the number of rows. By default, with this setting enabled, all players have rows unless otherwise specified using permissions."
+        ));
+
+        purpurSixRowsChest();
     }
 
     private static void sentry() {
@@ -102,6 +132,13 @@ public class LiraelConfig {
 
         if (sentry_dsn != null && !sentry_dsn.isBlank()) {
             gg.pufferfish.pufferfish.sentry.SentryManager.init(Level.getLevel(sentry_log_level));
+        }
+    }
+
+    private static void purpurSixRowsChest() {
+        if (barrel_rows > 6 || barrel_rows < 1) {
+            logger.warn("Barrel rows cannot is {} , Max: 6, Min: 1", barrel_rows);
+            barrel_rows = 3;
         }
     }
 
@@ -119,5 +156,17 @@ public class LiraelConfig {
 
     public static boolean isUnsafeTeleport() {
         return unsafe_teleport;
+    }
+
+    public static int getBarrelRows() {
+        return barrel_rows;
+    }
+
+    public static boolean isEnderChestPermissionRows() {
+        return ender_chest_permission_rows;
+    }
+
+    public static boolean isEnderChestSixRows() {
+        return ender_chest_six_rows;
     }
 }

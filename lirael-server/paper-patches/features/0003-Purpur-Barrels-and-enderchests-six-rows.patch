@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoderFrish <1573880184@qq.com>
+Date: Wed, 25 Feb 2026 20:07:25 +0800
+Subject: [PATCH] Purpur Barrels and enderchests six rows.
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
+index 2f41a92465b9da28e026297cc3528898bb1c8412..c12dfe05f4cb0ffd854d1f6c9e7374a55c384f80 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
+@@ -148,8 +148,17 @@ public class CraftContainer extends AbstractContainerMenu {
+             case PLAYER:
+             case CHEST:
+             case ENDER_CHEST:
++                this.delegate = new ChestMenu(dev.coderfrish.lirael.config.LiraelConfig.isEnderChestSixRows() ? net.minecraft.world.inventory.MenuType.GENERIC_9x6 : net.minecraft.world.inventory.MenuType.GENERIC_9x3, windowId, bottom, top, top.getContainerSize() / 9);
++                break;
+             case BARREL:
+-                this.delegate = new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x3, windowId, bottom, top, top.getContainerSize() / 9);
++                this.delegate = new ChestMenu(switch (dev.coderfrish.lirael.config.LiraelConfig.getBarrelRows()) {
++                    case 6 -> net.minecraft.world.inventory.MenuType.GENERIC_9x6;
++                    case 5 -> net.minecraft.world.inventory.MenuType.GENERIC_9x5;
++                    case 4 -> net.minecraft.world.inventory.MenuType.GENERIC_9x4;
++                    case 2 -> net.minecraft.world.inventory.MenuType.GENERIC_9x2;
++                    case 1 -> net.minecraft.world.inventory.MenuType.GENERIC_9x1;
++                    default -> net.minecraft.world.inventory.MenuType.GENERIC_9x3;
++                }, windowId, bottom, top, top.getContainerSize() / 9);
+                 break;
+             case DISPENSER:
+             case DROPPER:
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
+index 9d5fe6fc727948955d89f9ed5e181185393a9611..f6e34c767ec6b8f413a8f2b5faae6616b36b8196 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
+@@ -85,7 +85,7 @@ public class CraftInventory implements Inventory {
+ 
+     @Override
+     public void setContents(ItemStack[] items) {
+-        Preconditions.checkArgument(items.length <= this.getSize(), "Invalid inventory size (%s); expected %s or less", items.length, this.getSize());
++//        Preconditions.checkArgument(items.length <= this.getSize(), "Invalid inventory size (%s); expected %s or less", items.length, this.getSize());
+ 
+         for (int i = 0; i < this.getSize(); i++) {
+             if (i >= items.length) {
