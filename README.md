@@ -22,7 +22,7 @@ cd Lirael
 
 ## 2 | 配置文件
 
-(该端正在大量重构中, 暂时没有配置系统...)
+配置文件是主目录中的 `lirael-config.yml`，如果需要了解配置系统相关配置请移步到 [configuration](public/document/configuration.md)
 
 ## 3 | 最后
 > [!TIP]
