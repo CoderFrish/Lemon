@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoderFrish <1573880184@qq.com>
+Date: Wed, 25 Feb 2026 14:10:39 +0800
+Subject: [PATCH] Blank Lirael Configuration System.
+
+
+diff --git a/src/main/java/io/papermc/paper/PaperBootstrap.java b/src/main/java/io/papermc/paper/PaperBootstrap.java
+index d543b1b107ab8d3eeb1fc3c1cadf489928d2786e..39e9da5d514ef73d0b6b5e29bd51babcf0971376 100644
+--- a/src/main/java/io/papermc/paper/PaperBootstrap.java
++++ b/src/main/java/io/papermc/paper/PaperBootstrap.java
+@@ -1,6 +1,8 @@
+ package io.papermc.paper;
+ 
+ import java.util.List;
++
++import dev.coderfrish.lirael.bootstrap.LiraelBootstrap;
+ import joptsimple.OptionSet;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.server.Main;
+@@ -13,11 +15,12 @@ public final class PaperBootstrap {
+     private PaperBootstrap() {
+     }
+ 
+-    public static void boot(final OptionSet options) {
++    public static void boot(final OptionSet options) throws Exception {
+         SharedConstants.tryDetectVersion();
+ 
+         getStartupVersionMessages().forEach(LOGGER::info);
+ 
++        LiraelBootstrap.bootstrap(); /* lirael server bootstrap */
+         Main.main(options);
+     }
+ 
