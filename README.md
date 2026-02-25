@@ -10,7 +10,9 @@
 ![Created At](https://img.shields.io/github/created-at/CoderFrish/Lirael?style=for-the-badge&color=blue)
 
 ## 1 | 下载与构建
-目前暂时不提供 Release 下载，主要是Action脚本还没写好，需要的话请自行编译。
+
+该服务端提供了 [Release](https://github.com/CoderFrish/Lirael/releases) 下载，如果你想自行编译可以参考以下。
+
 ```shell
 # 克隆Traium的代码仓库
 git clone https://github.com/CoderFrish/Lirael.git
