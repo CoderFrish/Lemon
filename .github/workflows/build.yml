@@ -1,0 +1,81 @@
+name: Lirael Action CI
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - ".github/workflows/**/**.yml"
+      - "lirael-api/**/*"
+      - "lirael-server/**/*"
+      - "scripts/**/*"
+      - "gradle.properties"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: default
+
+    steps:
+      - name: Checkout Git Repository
+        uses: actions/checkout@v6
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Config Git
+        run: |
+          git config --global user.email "no-reply@github.com"
+          git config --global user.name "Github Actions"
+
+      - name: Grant execute permission for gradlew
+        run: |
+          chmod +x gradlew
+
+      - name: Apply Patches
+        run: |
+          ./gradlew applyAllPatches
+
+      - name: CreateJar
+        run: |
+          ./gradlew createMojmapPaperclipJar
+
+      - name : SetENV
+        run: |
+          sh scripts/SetENV.sh
+
+      - name: Get build info
+        id: build-info
+        run: |
+          BUILD_DATE=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
+          echo "build_date=$BUILD_DATE" >> $GITHUB_ENV
+        
+      - name: Create Release
+        if: github.event_name != 'pull_request'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ env.tag }}
+          name: ${{ env.project_id_b }} ${{ env.mcversion }} - ${{ env.commit_id }}
+          body: |
+            ### 📦 Version: `${{ env.mcversion }}` | Commit: [${{ env.commit_id }}](https://github.com/${{ github.repository }}/commit/${{ env.commit_id }})
+            [![download](https://img.shields.io/github/downloads/CoderFrish/${{ env.project_id }}/${{ env.tag }}/total?color=red&style=flat-square)](https://github.com/CoderFrish/${{ env.project_id }}/releases/download/${{ env.tag }}/${{ env.jar }})
+
+            > This release is automatically built by GitHub Actions.
+
+            #### 📜 Latest Commit Message:
+            ${{ env.commit_msg }}
+
+            #### 📊 Build Information:
+            - **Build Status**: ✅ Success
+            - **Build Date**: ${{ env.build_date }}
+          artifacts: ${{ env.jar_dir }}
+          generateReleaseNotes: true
+          prerelease: ${{ env.pre }}
+          makeLatest: ${{ env.make_latest }}
+          token: ${{ secrets.GITHUB_TOKEN }}
