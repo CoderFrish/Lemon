@@ -24,7 +24,11 @@ cd Lirael
 
 配置文件是主目录中的 `lirael-config.yml`，如果需要了解配置系统相关配置请移步到 [configuration](public/document/configuration.md)
 
-## 3 | 最后
+## 3 | 相关特性
+
+是有特性，但是不多，可以自己找 ：）
+
+## 4 | 最后
 > [!TIP]
 > 你的每一个免费的 ⭐Star 就是我们每一个前进的动力！
 
