@@ -47,15 +47,18 @@ public class LiraelConfig {
 
     private static String sentry_dsn = "";
 
-    public static String sentry_log_level = "WARN";
+    private static String sentry_log_level = "WARN";
 
-    public static boolean sentry_only_log_thrown = true;
+    private static boolean sentry_only_log_thrown = true;
+
+    private static boolean unsafe_teleport = false;
 
     private static void loadConfigs() {
         server_mod_name = configuration.getString("misc.server_mod_name.value");
         sentry_dsn = configuration.getString("misc.sentry.dsn");
         sentry_log_level = configuration.getString("misc.sentry.log_level");
         sentry_only_log_thrown = configuration.getBoolean("misc.sentry.only_log_thrown");
+        unsafe_teleport = configuration.getBoolean("fixed.unsafe_teleport.enabled");
     }
 
     private static void saveConfigs() {
@@ -78,8 +81,17 @@ public class LiraelConfig {
         ));
 
         configuration.set("misc.sentry.only_log_thrown", sentry_only_log_thrown);
-        configuration.setComments("mmisc.sentry.only_log_thrown", List.of(
+        configuration.setComments("misc.sentry.only_log_thrown", List.of(
                 "Only log with a Throwable will be recorded after enabling this."
+        ));
+
+        sentry();
+
+        /* Unsafe Teleport */
+        configuration.set("fixed.unsafe_teleport.enabled", unsafe_teleport);
+        configuration.setComments("fixed.unsafe_teleport.enabled", List.of(
+                "If you want to use sand duping,please turn on this.",
+                "Warning: This would cause some unsafe issues, you could learn more on : https://github.com/PaperMC/Folia/issues/297."
         ));
     }
 
@@ -103,5 +115,9 @@ public class LiraelConfig {
 
     public static boolean isSentryOnlyLogThrown() {
         return sentry_only_log_thrown;
+    }
+
+    public static boolean isUnsafeTeleport() {
+        return unsafe_teleport;
     }
 }
