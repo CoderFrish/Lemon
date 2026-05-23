@@ -44,7 +44,7 @@ jobs:
 
       - name: CreateJar
         run: |
-          ./gradlew createMojmapPaperclipJar
+          ./gradlew createPaperclipJar
 
       - name : SetENV
         run: |
