@@ -5,10 +5,10 @@ Subject: [PATCH] JEI Recipe Sync Supported.
 
 
 diff --git a/net/minecraft/server/dedicated/DedicatedServer.java b/net/minecraft/server/dedicated/DedicatedServer.java
-index f7ba92c86c0612adecea729a4177eeadafaf58da..38de7a838443acc71d5ea8a231be9f6f33d9aae2 100644
+index e71d994b405772a8c6424613e1a0e2592c4eb933..a2dd5af4752e9801b19b43bcb76f40598301e92d 100644
 --- a/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -321,6 +321,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -342,6 +342,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.STARTUP);
          // CraftBukkit end
  

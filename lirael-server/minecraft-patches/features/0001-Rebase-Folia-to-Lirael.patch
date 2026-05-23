@@ -5,7 +5,7 @@ Subject: [PATCH] Rebase Folia to Lirael.
 
 
 diff --git a/net/minecraft/server/packs/repository/ServerPacksSource.java b/net/minecraft/server/packs/repository/ServerPacksSource.java
-index 547bdb2e7e150e0a608c06aa8dfa5b564c6a25a3..88cc91a1210a7bcbd465bcc90b98d6c60f5dd283 100644
+index 341ffe8c7654ee8c4eba9ca4e081cf8b7983cd0d..5108055ebd945b23bc755f63d5be2e55b7f7484a 100644
 --- a/net/minecraft/server/packs/repository/ServerPacksSource.java
 +++ b/net/minecraft/server/packs/repository/ServerPacksSource.java
 @@ -69,7 +69,7 @@ public class ServerPacksSource extends BuiltInPackSource {
@@ -14,6 +14,6 @@ index 547bdb2e7e150e0a608c06aa8dfa5b564c6a25a3..88cc91a1210a7bcbd465bcc90b98d6c6
          final PackSelectionConfig packConfig;
 -        if ("paper".equals(id)) {
 +        if ("paper".equals(id) || "lirael".equals(id)) {
-             info = new PackLocationInfo(id, title, PackSource.BUILT_IN, Optional.empty());
+             info = new PackLocationInfo(id, name, PackSource.BUILT_IN, Optional.empty());
              packConfig = new PackSelectionConfig(true, Pack.Position.TOP, true);
          } else {

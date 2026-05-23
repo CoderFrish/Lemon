@@ -5,7 +5,7 @@ Subject: [PATCH] Added Config for unsafe teleportation.
 
 
 diff --git a/net/minecraft/world/entity/item/FallingBlockEntity.java b/net/minecraft/world/entity/item/FallingBlockEntity.java
-index 8009dfe104d53ebfc10f0eb86e955d21831dbffc..2a9c488ed23aa0867e01e6736227036f8e6d0b95 100644
+index dffcc532e456e9576557ca08f468b8ba721628f6..5f88e91059a09c1152393b73aaa56381d9c81606 100644
 --- a/net/minecraft/world/entity/item/FallingBlockEntity.java
 +++ b/net/minecraft/world/entity/item/FallingBlockEntity.java
 @@ -69,7 +69,7 @@ public class FallingBlockEntity extends Entity {
@@ -17,22 +17,22 @@ index 8009dfe104d53ebfc10f0eb86e955d21831dbffc..2a9c488ed23aa0867e01e6736227036f
      protected static final EntityDataAccessor<BlockPos> DATA_START_POS = SynchedEntityData.defineId(FallingBlockEntity.class, EntityDataSerializers.BLOCK_POS);
      public boolean autoExpire = true; // Paper - Expand FallingBlock API
  
-@@ -384,7 +384,7 @@ public class FallingBlockEntity extends Entity {
-         ResourceKey<Level> resourceKey1 = this.level().dimension();
-         boolean flag = (resourceKey1 == Level.END || resourceKey == Level.END) && resourceKey1 != resourceKey;
-         Entity entity = super.teleport(teleportTransition);
--        this.forceTickAfterTeleportToDuplicate = entity != null && flag && io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation; // Paper
-+        this.forceTickAfterTeleportToDuplicate = entity != null && flag && (io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation || dev.coderfrish.lirael.config.LiraelConfig.isUnsafeTeleport()); // Paper
-         return entity;
+@@ -383,7 +383,7 @@ public class FallingBlockEntity extends Entity {
+         ResourceKey<Level> oldDimension = this.level().dimension();
+         boolean fromOrToEnd = (oldDimension == Level.END || newDimension == Level.END) && oldDimension != newDimension;
+         Entity newEntity = super.teleport(transition);
+-        this.forceTickAfterTeleportToDuplicate = newEntity != null && fromOrToEnd && io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation; // Paper
++        this.forceTickAfterTeleportToDuplicate = newEntity != null && fromOrToEnd && (io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation || dev.coderfrish.lirael.config.LiraelConfig.isUnsafeTeleport()); // Paper
+         return newEntity;
      }
  }
 diff --git a/net/minecraft/world/level/block/EndPortalBlock.java b/net/minecraft/world/level/block/EndPortalBlock.java
-index 6bff1704203c2de91eb01bda5220f4ea4d49c6ec..9cfc9a48fd06742fdde78c715bc51d7f9a8d652e 100644
+index aab09feaa3c3c90e33701072e24ed144226e6d53..eec9f1ed27f684cc2ba1635de97ab4e2d58fd274 100644
 --- a/net/minecraft/world/level/block/EndPortalBlock.java
 +++ b/net/minecraft/world/level/block/EndPortalBlock.java
-@@ -70,6 +70,9 @@ public class EndPortalBlock extends BaseEntityBlock implements Portal {
-                 if (level.paperConfig().misc.disableEndCredits) {serverPlayer.seenCredits = true; return;} // Paper - Option to disable end credits
-                 serverPlayer.showEndCredits();
+@@ -76,6 +76,9 @@ public class EndPortalBlock extends BaseEntityBlock implements Portal {
+                 if (level.paperConfig().misc.disableEndCredits) {player.seenCredits = true; return;} // Paper - Option to disable end credits
+                 player.showEndCredits();
              } else {
 +                if (dev.coderfrish.lirael.config.LiraelConfig.isUnsafeTeleport() && !(entity instanceof net.minecraft.world.entity.player.Player)) {
 +                    entity.endPortalLogicAsync(pos);

@@ -5,24 +5,24 @@ Subject: [PATCH] Online Player Profile Archives.
 
 
 diff --git a/net/minecraft/core/UUIDUtil.java b/net/minecraft/core/UUIDUtil.java
-index e0df8dcc542a2c158955f37abf4d3dd63310868a..d24ee0d3b722f100a1cb691c47778bd31a07bc9a 100644
+index fd08566668cb04b3826c2e90ebe578b9225c60f0..00cad6f50f94678087a264f2fe7f32b7392ed474 100644
 --- a/net/minecraft/core/UUIDUtil.java
 +++ b/net/minecraft/core/UUIDUtil.java
 @@ -86,6 +86,9 @@ public final class UUIDUtil {
      }
  
-     public static UUID createOfflinePlayerUUID(String username) {
-+        if (dev.coderfrish.lirael.profiles.OnlinePlayerProfile.has(username))
-+            return dev.coderfrish.lirael.profiles.OnlinePlayerProfile.getUUID(username);
+     public static UUID createOfflinePlayerUUID(final String playerName) {
++        if (dev.coderfrish.lirael.profiles.OnlinePlayerProfile.has(playerName))
++            return dev.coderfrish.lirael.profiles.OnlinePlayerProfile.getUUID(playerName);
 +
-         return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
+         return UUID.nameUUIDFromBytes(("OfflinePlayer:" + playerName).getBytes(StandardCharsets.UTF_8));
      }
  
 diff --git a/net/minecraft/server/dedicated/DedicatedServer.java b/net/minecraft/server/dedicated/DedicatedServer.java
-index 38de7a838443acc71d5ea8a231be9f6f33d9aae2..b526fc26d1d543b43c9340defb39c98a637b10ea 100644
+index a2dd5af4752e9801b19b43bcb76f40598301e92d..9113579a4ddefd1a8a2e44a55d2efad6d1909417 100644
 --- a/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -546,6 +546,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -579,6 +579,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
  
          try {
              dev.coderfrish.lirael.config.LiraelConfig.save(); /* lirael config */
@@ -31,10 +31,10 @@ index 38de7a838443acc71d5ea8a231be9f6f33d9aae2..b526fc26d1d543b43c9340defb39c98a
              throw new IllegalStateException(e);
          }
 diff --git a/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 69f694995848173c2f3137aa8e9706be6fd3a9ae..f8f8247c6fb0f3be8601fcbd7ded69b9795593ac 100644
+index d924369285878ff73811b8186cdb16e76f5dda90..1036b562cc4fab0ce4c3b0114cb8d358b398ca5f 100644
 --- a/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -324,6 +324,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -334,6 +334,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
          String playerName = gameprofile.name();
          java.net.InetAddress address = ((java.net.InetSocketAddress) this.connection.getRemoteAddress()).getAddress();
          java.util.UUID uniqueId = gameprofile.id();

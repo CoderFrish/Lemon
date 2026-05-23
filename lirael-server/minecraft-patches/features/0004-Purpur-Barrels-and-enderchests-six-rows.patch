@@ -5,10 +5,10 @@ Subject: [PATCH] Purpur Barrels and enderchests six rows.
 
 
 diff --git a/net/minecraft/server/players/PlayerList.java b/net/minecraft/server/players/PlayerList.java
-index 8274afe0d07c50ece420b1d3cb20165ed0162acb..2b822acd0d1dac96b45929bd318361e58c5f4276 100644
+index 2088a409b60a1dc160e523e8920b2b0b39dab23b..33215c4277266eaece40a2c96811d3dbafa00366 100644
 --- a/net/minecraft/server/players/PlayerList.java
 +++ b/net/minecraft/server/players/PlayerList.java
-@@ -947,6 +947,25 @@ public abstract class PlayerList {
+@@ -948,6 +948,25 @@ public abstract class PlayerList {
          player.getBukkitEntity().recalculatePermissions(); // CraftBukkit
          this.server.getCommands().sendCommands(player);
          } // Paper - Add sendOpLevel API
@@ -35,11 +35,11 @@ index 8274afe0d07c50ece420b1d3cb20165ed0162acb..2b822acd0d1dac96b45929bd318361e5
  
      // Paper start - whitelist verify event / login event
 diff --git a/net/minecraft/world/entity/player/Player.java b/net/minecraft/world/entity/player/Player.java
-index b39325b3c11b689a2fe7a57f679ec6a38563b257..2e9d94d1a9143d8e6ac7c9bfbb982567617eb063 100644
+index 4b57e9024f66810510886f8115d42007e374ee27..e7b0f5262487d20a52b499fe6356abb4ed0f9f11 100644
 --- a/net/minecraft/world/entity/player/Player.java
 +++ b/net/minecraft/world/entity/player/Player.java
-@@ -179,6 +179,7 @@ public abstract class Player extends Avatar implements ContainerUser {
-     private int currentImpulseContextResetGraceTime = 0;
+@@ -174,6 +174,7 @@ public abstract class Player extends Avatar implements ContainerUser {
+     public float hurtDir;
      public boolean affectsSpawning = true; // Paper - Affects Spawning API
      public net.kyori.adventure.util.TriState flyingFallDamage = net.kyori.adventure.util.TriState.NOT_SET; // Paper - flying fall damage
 +    public int sixRowEnderchestSlotCount = -1;
@@ -47,11 +47,11 @@ index b39325b3c11b689a2fe7a57f679ec6a38563b257..2e9d94d1a9143d8e6ac7c9bfbb982567
      // CraftBukkit start
      public boolean fauxSleeping;
 diff --git a/net/minecraft/world/inventory/ChestMenu.java b/net/minecraft/world/inventory/ChestMenu.java
-index 1fb3a34ea872dec73658fac59743e46ef8db5151..83edc41e0b2861d9d13bec13181f777fbf64cad4 100644
+index e77bfcd31cdcfd5836dc5db561e3fe2bc552a4b1..cde8ff15bc85e4cadf515e8e2ad663b28741e2dc 100644
 --- a/net/minecraft/world/inventory/ChestMenu.java
 +++ b/net/minecraft/world/inventory/ChestMenu.java
 @@ -70,10 +70,26 @@ public class ChestMenu extends AbstractContainerMenu {
-         return new ChestMenu(MenuType.GENERIC_9x3, containerId, playerInventory, container, 3);
+         return new ChestMenu(MenuType.GENERIC_9x3, containerId, inventory, container, 3);
      }
  
 +    public static ChestMenu fourRows(int syncId, Inventory playerInventory, Container inventory) {
@@ -62,8 +62,8 @@ index 1fb3a34ea872dec73658fac59743e46ef8db5151..83edc41e0b2861d9d13bec13181f777f
 +        return new ChestMenu(MenuType.GENERIC_9x5, syncId, playerInventory, inventory, 5);
 +    }
 +
-     public static ChestMenu sixRows(int containerId, Inventory playerInventory, Container container) {
-         return new ChestMenu(MenuType.GENERIC_9x6, containerId, playerInventory, container, 6);
+     public static ChestMenu sixRows(final int containerId, final Inventory inventory, final Container container) {
+         return new ChestMenu(MenuType.GENERIC_9x6, containerId, inventory, container, 6);
      }
  
 +    public static ChestMenu oneRow(int syncId, Inventory playerInventory, Container inventory) {
@@ -74,11 +74,11 @@ index 1fb3a34ea872dec73658fac59743e46ef8db5151..83edc41e0b2861d9d13bec13181f777f
 +        return new ChestMenu(MenuType.GENERIC_9x2, syncId, playerInventory, inventory, 2);
 +    }
 +
-     public ChestMenu(MenuType<?> type, int containerId, Inventory playerInventory, Container container, int rows) {
-         super(type, containerId);
+     public ChestMenu(final MenuType<?> menuType, final int containerId, final Inventory inventory, final Container container, final int rows) {
+         super(menuType, containerId);
          checkContainerSize(container, rows * 9);
 diff --git a/net/minecraft/world/inventory/PlayerEnderChestContainer.java b/net/minecraft/world/inventory/PlayerEnderChestContainer.java
-index 9749909b8253b432bb2f7fba2cd8ff17a8579b30..cb73549c4d8b1797f98a338b5c8bf3f67509d664 100644
+index 4df3a32faf85595372f4b250482d852c985ea3ab..c6c30abfae3df08fdfa05d6306b2486d678730b9 100644
 --- a/net/minecraft/world/inventory/PlayerEnderChestContainer.java
 +++ b/net/minecraft/world/inventory/PlayerEnderChestContainer.java
 @@ -26,11 +26,16 @@ public class PlayerEnderChestContainer extends SimpleContainer {
@@ -96,23 +96,24 @@ index 9749909b8253b432bb2f7fba2cd8ff17a8579b30..cb73549c4d8b1797f98a338b5c8bf3f6
 +        return owner.sixRowEnderchestSlotCount < 0 ? super.getContainerSize() : owner.sixRowEnderchestSlotCount;
 +    }
 +
-     public void setActiveChest(EnderChestBlockEntity enderChestBlockEntity) {
-         this.activeChest = enderChestBlockEntity;
+     public void setActiveChest(final EnderChestBlockEntity activeChest) {
+         this.activeChest = activeChest;
      }
 diff --git a/net/minecraft/world/level/block/EnderChestBlock.java b/net/minecraft/world/level/block/EnderChestBlock.java
-index 383e8285d366c7f594b0b4ff55b367970c9b69e4..5f95697ee7a460eeaba29bba75f58a75d107807b 100644
+index 24a2c411da0ebbb7f97d621bb76ff686621f9aae..63a46f6dcc2868c39e252bdbfa57bc69066069ab 100644
 --- a/net/minecraft/world/level/block/EnderChestBlock.java
 +++ b/net/minecraft/world/level/block/EnderChestBlock.java
-@@ -85,7 +85,7 @@ public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> i
-                 enderChestInventory.setActiveChest(enderChestBlockEntity); // Needs to happen before ChestMenu.threeRows as it is required for opening animations
+@@ -88,7 +88,8 @@ public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> i
+                 // Paper start - Fix InventoryOpenEvent cancellation - moved up;
+                 container.setActiveChest(enderChest); // Needs to happen before ChestMenu.threeRows as it is required for opening animations
                  if (level instanceof ServerLevel serverLevel && player.openMenu(
-                     new SimpleMenuProvider(
--                        (containerId, playerInventory, player1) -> ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
-+                            (containerId, playerInventory, player1) -> dev.coderfrish.lirael.config.LiraelConfig.isEnderChestSixRows() ? getEnderChestSixRows(containerId, playerInventory, player, enderChestInventory) : ChestMenu.threeRows(containerId, playerInventory, enderChestInventory), CONTAINER_TITLE
-                     )
+-                    new SimpleMenuProvider((containerId, inventory, p) -> ChestMenu.threeRows(containerId, inventory, container), CONTAINER_TITLE)
++                    new SimpleMenuProvider(
++                            (containerId, inventory, p) -> dev.coderfrish.lirael.config.LiraelConfig.isEnderChestSixRows() ? getEnderChestSixRows(containerId, inventory, player, container) : ChestMenu.threeRows(containerId, inventory, container), CONTAINER_TITLE)
                  ).isPresent()) {
                  // Paper end - Fix InventoryOpenEvent cancellation - moved up;
-@@ -100,6 +100,33 @@ public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> i
+                     player.awardStat(Stats.OPEN_ENDERCHEST);
+@@ -102,6 +103,33 @@ public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> i
          }
      }
  
@@ -144,22 +145,13 @@ index 383e8285d366c7f594b0b4ff55b367970c9b69e4..5f95697ee7a460eeaba29bba75f58a75
 +    }
 +
      @Override
-     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-         return new EnderChestBlockEntity(pos, state);
+     public BlockEntity newBlockEntity(final BlockPos worldPosition, final BlockState blockState) {
+         return new EnderChestBlockEntity(worldPosition, blockState);
 diff --git a/net/minecraft/world/level/block/entity/BarrelBlockEntity.java b/net/minecraft/world/level/block/entity/BarrelBlockEntity.java
-index 75c09a2079c89f9346391abdd01ef8790b9cbb13..ee9976156b287aaa48e7269939e776f027198c9c 100644
+index da5fdf77dd26d97c8b92bac9a6af8d922c31eb9c..e5bd19eb933b7b1f07c1eadf5d8a936473426ce0 100644
 --- a/net/minecraft/world/level/block/entity/BarrelBlockEntity.java
 +++ b/net/minecraft/world/level/block/entity/BarrelBlockEntity.java
-@@ -59,7 +59,7 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
-     }
-     // CraftBukkit end
-     private static final Component DEFAULT_NAME = Component.translatable("container.barrel");
--    private NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
-+    private NonNullList<ItemStack> items = NonNullList.withSize(dev.coderfrish.lirael.config.LiraelConfig.getBarrelRows() * 9, ItemStack.EMPTY);
-     public final ContainerOpenersCounter openersCounter = new ContainerOpenersCounter() {
-         @Override
-         protected void onOpen(Level level, BlockPos pos, BlockState state) {
-@@ -111,7 +111,7 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
+@@ -123,7 +123,7 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
  
      @Override
      public int getContainerSize() {
@@ -168,18 +160,18 @@ index 75c09a2079c89f9346391abdd01ef8790b9cbb13..ee9976156b287aaa48e7269939e776f0
      }
  
      @Override
-@@ -131,7 +131,14 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
+@@ -143,7 +143,14 @@ public class BarrelBlockEntity extends RandomizableContainerBlockEntity {
  
      @Override
-     protected AbstractContainerMenu createMenu(int id, Inventory player) {
--        return ChestMenu.threeRows(id, player, this);
+     protected AbstractContainerMenu createMenu(final int containerId, final Inventory inventory) {
+-        return ChestMenu.threeRows(containerId, inventory, this);
 +        return switch (dev.coderfrish.lirael.config.LiraelConfig.getBarrelRows()) {
-+            case 6 -> ChestMenu.sixRows(id, player, this);
-+            case 5 -> ChestMenu.fiveRows(id, player, this);
-+            case 4 -> ChestMenu.fourRows(id, player, this);
-+            case 2 -> ChestMenu.twoRows(id, player, this);
-+            case 1 -> ChestMenu.oneRow(id, player, this);
-+            default -> ChestMenu.threeRows(id, player, this);
++            case 6 -> ChestMenu.sixRows(containerId, inventory, this);
++            case 5 -> ChestMenu.fiveRows(containerId, inventory, this);
++            case 4 -> ChestMenu.fourRows(containerId, inventory, this);
++            case 2 -> ChestMenu.twoRows(containerId, inventory, this);
++            case 1 -> ChestMenu.oneRow(containerId, inventory, this);
++            default -> ChestMenu.threeRows(containerId, inventory, this);
 +        };
      }
  
